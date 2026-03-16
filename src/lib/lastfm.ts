@@ -18,17 +18,32 @@ async function getBpmAndKey(
   track: string
 ): Promise<{ bpm: number; key: string }> {
   try {
+    const query = `${artist} ${track}`;
+
     const searchRes = await fetchWithProxy(
-      `https://api.getsongbpm.com/search/?api_key=${GETSONGBPM_API_KEY}&type=song&lookup=song:${encodeURIComponent(
-        track
-      )}+artist:${encodeURIComponent(artist)}`
+      `https://api.getsongbpm.com/search/?api_key=${GETSONGBPM_API_KEY}&type=song&lookup=${encodeURIComponent(
+        query
+      )}`
     );
 
-    const searchData = (await searchRes.json()) as any;
+    const rawSearch = await searchRes.text();
+
+    // デバッグ
+    console.log("GetSongBPM raw search:", rawSearch);
+
+    let searchData: any;
+
+    try {
+      searchData = JSON.parse(rawSearch);
+    } catch {
+      console.log("GetSongBPM returned HTML instead of JSON");
+      return { bpm: 0, key: "" };
+    }
 
     const songId = searchData?.search?.[0]?.song_id;
 
     if (!songId) {
+      console.log("No BPM found:", artist, track);
       return { bpm: 0, key: "" };
     }
 
@@ -36,7 +51,18 @@ async function getBpmAndKey(
       `https://api.getsongbpm.com/song/?api_key=${GETSONGBPM_API_KEY}&id=${songId}`
     );
 
-    const songData = (await songRes.json()) as any;
+    const rawSong = await songRes.text();
+
+    console.log("GetSongBPM raw song:", rawSong);
+
+    let songData: any;
+
+    try {
+      songData = JSON.parse(rawSong);
+    } catch {
+      console.log("GetSongBPM song returned HTML");
+      return { bpm: 0, key: "" };
+    }
 
     const bpm = songData?.song?.tempo
       ? Math.round(Number(songData.song.tempo))
