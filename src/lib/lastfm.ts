@@ -3,6 +3,7 @@ import { ProxyAgent, fetch as undiciFetch } from "undici";
 const API_KEY = process.env.LASTFM_API_KEY!;
 const BASE_URL = "https://ws.audioscrobbler.com/2.0/";
 const PROXY_URL = process.env.HTTP_PROXY;
+const GETSONGBPM_API_KEY = process.env.GETSONGBPM_API_KEY!;
 
 const fetchWithProxy = async (url: string) => {
   if (PROXY_URL) {
@@ -11,6 +12,22 @@ const fetchWithProxy = async (url: string) => {
   }
   return fetch(url);
 };
+
+async function getBpmAndKey(artist: string, track: string): Promise<{ bpm: number; key: string }> {
+  try {
+    const res = await fetchWithProxy(
+      `https://api.getsongbpm.com/search/?api_key=${GETSONGBPM_API_KEY}&type=both&lookup=song:${encodeURIComponent(track)}+artist:${encodeURIComponent(artist)}`
+    );
+    const data = await res.json() as any;
+    const song = data.search?.[0];
+    if (!song) return { bpm: 0, key: "" };
+    const bpm = Math.round(parseFloat(song.tempo)) || 0;
+    const key = song.key_of || "";
+    return { bpm, key };
+  } catch {
+    return { bpm: 0, key: "" };
+  }
+}
 
 async function getItunesArtwork(artist: string, track: string): Promise<string | null> {
   try {
@@ -57,6 +74,8 @@ export async function searchTracks(query: string): Promise<Track[]> {
         imageUrl = await getItunesArtwork(t.artist, t.name) || `https://picsum.photos/seed/${i}/48`;
       }
 
+      const { bpm, key } = await getBpmAndKey(t.artist, t.name);
+
       return {
         id: t.mbid || `${i}-${t.name}`,
         name: t.name,
@@ -66,8 +85,8 @@ export async function searchTracks(query: string): Promise<Track[]> {
           images: [{ url: imageUrl }],
         },
         duration_ms: 0,
-        bpm: 0,
-        key: "",
+        bpm,
+        key,
         url: t.url,
       };
     } catch {
@@ -110,6 +129,8 @@ export async function getSimilarTracks(artist: string, track: string): Promise<T
         imageUrl = await getItunesArtwork(t.artist.name, t.name) || `https://picsum.photos/seed/${i}/48`;
       }
 
+      const { bpm, key } = await getBpmAndKey(t.artist.name, t.name);
+
       return {
         id: t.mbid || `${i}-${t.name}`,
         name: t.name,
@@ -119,8 +140,8 @@ export async function getSimilarTracks(artist: string, track: string): Promise<T
           images: [{ url: imageUrl }],
         },
         duration_ms: t.duration * 1000 || 0,
-        bpm: 0,
-        key: "",
+        bpm,
+        key,
         url: t.url,
       };
     } catch {
