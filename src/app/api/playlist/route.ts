@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getServerSession } from "next-auth";
 
 export async function GET() {
-  const { data, error } = await supabase
+  const session = await getServerSession();
+  const userEmail = session?.user?.email;
+
+  const query = supabase
     .from("playlists")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (userEmail) {
+    query.eq("user_email", userEmail);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -15,6 +25,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await getServerSession();
+  const userEmail = session?.user?.email || null;
   const { name, tracks } = await request.json();
 
   if (!name || !tracks) {
@@ -23,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("playlists")
-    .insert({ name, tracks })
+    .insert({ name, tracks, user_email: userEmail })
     .select()
     .single();
 
