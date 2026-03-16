@@ -2,7 +2,15 @@ import { ProxyAgent, fetch as undiciFetch } from "undici";
 
 const API_KEY = process.env.LASTFM_API_KEY!;
 const BASE_URL = "https://ws.audioscrobbler.com/2.0/";
-const proxyAgent = new ProxyAgent("http://172.16.71.1:3128");
+const PROXY_URL = process.env.HTTP_PROXY;
+
+const fetchWithProxy = async (url: string) => {
+  if (PROXY_URL) {
+    const proxyAgent = new ProxyAgent(PROXY_URL);
+    return undiciFetch(url, { dispatcher: proxyAgent });
+  }
+  return fetch(url);
+};
 
 export type Track = {
   id: string;
@@ -16,9 +24,8 @@ export type Track = {
 };
 
 export async function searchTracks(query: string): Promise<Track[]> {
-  const res = await undiciFetch(
-    `${BASE_URL}?method=track.search&track=${encodeURIComponent(query)}&api_key=${API_KEY}&format=json&limit=20`,
-    { dispatcher: proxyAgent }
+  const res = await fetchWithProxy(
+    `${BASE_URL}?method=track.search&track=${encodeURIComponent(query)}&api_key=${API_KEY}&format=json&limit=20`
   );
   const data = await res.json() as any;
   const tracks = data.results?.trackmatches?.track ?? [];
@@ -39,9 +46,8 @@ export async function searchTracks(query: string): Promise<Track[]> {
 }
 
 export async function getSimilarTracks(artist: string, track: string): Promise<Track[]> {
-  const res = await undiciFetch(
-    `${BASE_URL}?method=track.getsimilar&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&api_key=${API_KEY}&format=json&limit=20`,
-    { dispatcher: proxyAgent }
+  const res = await fetchWithProxy(
+    `${BASE_URL}?method=track.getsimilar&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&api_key=${API_KEY}&format=json&limit=20`
   );
   const data = await res.json() as any;
   const tracks = data.similartracks?.track ?? [];
