@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { type Track } from "@/lib/lastfm";
 
@@ -19,6 +19,9 @@ export default function Home() {
   const [bpmMin, setBpmMin] = useState("");
   const [bpmMax, setBpmMax] = useState("");
   const [showBpmFilter, setShowBpmFilter] = useState(false);
+  const [savedPlaylists, setSavedPlaylists] = useState<{id: string; name: string; tracks: Track[]}[]>([]);
+  const [playlistName, setPlaylistName] = useState("DJ Discovery Playlist");
+  const [showSaved, setShowSaved] = useState(false);
 
   const search = async () => {
     if (!query) return;
@@ -58,7 +61,7 @@ export default function Home() {
     const res = await fetch("/api/youtube/playlist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "DJ Discovery Playlist", tracks: playlist }),
+      body: JSON.stringify({ title: playlistName, tracks: playlist }),
     });
     const data = await res.json();
     if (data.url) {
@@ -66,6 +69,35 @@ export default function Home() {
     } else {
       alert("エラーが発生しました");
     }
+  };
+
+  const savePlaylist = async () => {
+    if (playlist.length === 0) return;
+    const res = await fetch("/api/playlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: playlistName, tracks: playlist }),
+    });
+    const data = await res.json();
+    if (data.playlist) {
+      alert("プレイリストを保存しました！");
+      loadPlaylists();
+    }
+  };
+
+  const loadPlaylists = async () => {
+    const res = await fetch("/api/playlist");
+    const data = await res.json();
+    setSavedPlaylists(data.playlists ?? []);
+  };
+
+  const deletePlaylist = async (id: string) => {
+    await fetch("/api/playlist", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    loadPlaylists();
   };
 
   const setAsMainSeed = (track: Track) => setMainSeed(track);
@@ -94,6 +126,10 @@ export default function Home() {
   });
 
   const displayTracks = mode === "similar" ? filteredSimilar : tracks;
+
+  useEffect(() => {
+    loadPlaylists();
+  }, []);
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#111", fontFamily: "sans-serif", color: "#fff" }}>
@@ -268,6 +304,44 @@ export default function Home() {
               </div>
             ))}
           </div>
+          <input
+            type="text"
+            value={playlistName}
+            onChange={(e) => setPlaylistName(e.target.value)}
+            style={{ width: "100%", padding: "6px 8px", background: "#222", border: "0.5px solid #444", borderRadius: "6px", color: "#fff", fontSize: "11px", outline: "none" }}
+          />
+          <button
+            onClick={savePlaylist}
+            style={{ width: "100%", padding: "8px", background: playlist.length > 0 ? "#1db954" : "#222", border: "none", borderRadius: "8px", color: playlist.length > 0 ? "#fff" : "#555", fontSize: "13px", fontWeight: 500, cursor: playlist.length > 0 ? "pointer" : "default" }}
+          >
+            保存する
+          </button>
+          <button
+            onClick={() => setShowSaved(!showSaved)}
+            style={{ width: "100%", padding: "6px", background: "#222", border: "none", borderRadius: "6px", color: "#888", fontSize: "11px", cursor: "pointer" }}
+          >
+            {showSaved ? "保存済みを隠す" : `保存済み（${savedPlaylists.length}）`}
+          </button>
+          {showSaved && savedPlaylists.map((p) => (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "6px", background: "#1a1a1a", borderRadius: "6px", padding: "6px 8px" }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#fff", fontSize: "11px" }}>{p.name}</div>
+                <div style={{ color: "#666", fontSize: "10px" }}>{p.tracks.length}曲</div>
+              </div>
+              <button
+                onClick={() => setPlaylist(p.tracks)}
+                style={{ padding: "2px 6px", background: "#333", border: "none", borderRadius: "4px", color: "#aaa", fontSize: "10px", cursor: "pointer" }}
+              >
+                読込
+              </button>
+              <button
+                onClick={() => deletePlaylist(p.id)}
+                style={{ background: "none", border: "none", color: "#555", fontSize: "12px", cursor: "pointer" }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
           {!session ? (
             <button
               onClick={() => signIn("google")}
