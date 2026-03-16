@@ -1,0 +1,345 @@
+"use client";
+
+import { useState } from "react";
+import { type Track } from "@/lib/lastfm";
+
+type Mode = "search" | "similar";
+
+export default function Home() {
+  const [query, setQuery] = useState("");
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [mainSeed, setMainSeed] = useState<Track | null>(null);
+  const [subSeeds, setSubSeeds] = useState<Track[]>([]);
+  const [similarTracks, setSimilarTracks] = useState<Track[]>([]);
+  const [playlist, setPlaylist] = useState<Track[]>([]);
+  const [mode, setMode] = useState<Mode>("search");
+  const [bpmMin, setBpmMin] = useState("");
+  const [bpmMax, setBpmMax] = useState("");
+  const [showBpmFilter, setShowBpmFilter] = useState(false);
+
+  const search = async () => {
+    if (!query) return;
+    setLoading(true);
+    setMode("search");
+    setSimilarTracks([]);
+    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    setTracks(data.tracks);
+    setLoading(false);
+  };
+
+  const exploreSimilar = async () => {
+    if (!mainSeed) return;
+    setLoading(true);
+    setMode("similar");
+    const artist = mainSeed.artists[0].name;
+    const track = mainSeed.name;
+    const res = await fetch(
+      `/api/similar?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`
+    );
+    const data = await res.json();
+    setSimilarTracks(data.tracks);
+    setLoading(false);
+  };
+
+  const setAsMainSeed = (track: Track) => {
+    setMainSeed(track);
+  };
+
+  const addToSubSeed = (track: Track) => {
+    if (subSeeds.find((t) => t.id === track.id)) return;
+    if (mainSeed?.id === track.id) return;
+    setSubSeeds([...subSeeds, track]);
+  };
+
+  const removeSubSeed = (id: string) => {
+    setSubSeeds(subSeeds.filter((t) => t.id !== id));
+  };
+
+  const addToPlaylist = (track: Track) => {
+    if (playlist.find((t) => t.id === track.id)) return;
+    setPlaylist([...playlist, track]);
+  };
+
+  const removeFromPlaylist = (id: string) => {
+    setPlaylist(playlist.filter((t) => t.id !== id));
+  };
+
+  const isInPlaylist = (track: Track) =>
+    !!playlist.find((t) => t.id === track.id);
+
+  const filteredSimilar = similarTracks.filter((track) => {
+    if (bpmMin && track.bpm < parseInt(bpmMin)) return false;
+    if (bpmMax && track.bpm > parseInt(bpmMax)) return false;
+    return true;
+  });
+
+  const displayTracks = mode === "similar" ? filteredSimilar : tracks;
+
+  return (
+    <div style={{ display: "flex", height: "100vh", background: "#111", fontFamily: "sans-serif", color: "#fff" }}>
+
+      {/* サイドバー */}
+      <div style={{ width: "200px", background: "#0a0a0a", padding: "1.5rem 1rem", display: "flex", flexDirection: "column", gap: "4px", borderRight: "0.5px solid #333" }}>
+        <div style={{ fontSize: "16px", fontWeight: 500, color: "#fff", marginBottom: "1.5rem", paddingLeft: "8px" }}>DJ Discovery</div>
+        <div style={{ padding: "8px 12px", borderRadius: "8px", background: "#1db954", color: "#fff", fontSize: "13px", fontWeight: 500 }}>Search</div>
+        <div style={{ padding: "8px 12px", borderRadius: "8px", color: "#888", fontSize: "13px" }}>Discovery Graph</div>
+        <div style={{ padding: "8px 12px", borderRadius: "8px", color: "#888", fontSize: "13px" }}>Playlist Builder</div>
+      </div>
+
+      {/* メインコンテンツ */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+        {/* 検索バー */}
+        <div style={{ padding: "1.25rem 1.5rem", borderBottom: "0.5px solid #333", display: "flex", gap: "12px", alignItems: "center" }}>
+          <input
+            type="text"
+            placeholder="曲名・アーティストを入力"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && search()}
+            style={{ flex: 1, padding: "8px 14px", background: "#222", border: "0.5px solid #444", borderRadius: "8px", color: "#fff", fontSize: "14px", outline: "none" }}
+          />
+          <button
+            onClick={search}
+            style={{ padding: "8px 20px", background: "#1db954", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 500, cursor: "pointer" }}
+          >
+            検索
+          </button>
+        </div>
+
+        {/* モード表示 + BPMフィルター */}
+        <div style={{ display: "flex", gap: "8px", padding: "1rem 1.5rem", borderBottom: "0.5px solid #222", alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ fontSize: "12px", color: "#666", marginRight: "4px" }}>
+            {mode === "search" ? "検索結果" : "類似曲"}
+          </div>
+
+          {mode === "similar" && (
+            <>
+              <button
+                onClick={() => setShowBpmFilter(!showBpmFilter)}
+                style={{ padding: "4px 12px", background: bpmMin || bpmMax ? "#1db95422" : "#222", border: bpmMin || bpmMax ? "0.5px solid #1db954" : "0.5px solid transparent", borderRadius: "20px", color: bpmMin || bpmMax ? "#1db954" : "#aaa", fontSize: "12px", cursor: "pointer" }}
+              >
+                {bpmMin || bpmMax ? `BPM: ${bpmMin}–${bpmMax}` : "BPM フィルター"}
+              </button>
+
+              {showBpmFilter && (
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <input
+                    type="number"
+                    placeholder="最小"
+                    value={bpmMin}
+                    onChange={(e) => setBpmMin(e.target.value)}
+                    style={{ width: "70px", padding: "4px 8px", background: "#222", border: "0.5px solid #444", borderRadius: "6px", color: "#fff", fontSize: "12px", outline: "none" }}
+                  />
+                  <span style={{ color: "#666", fontSize: "12px" }}>–</span>
+                  <input
+                    type="number"
+                    placeholder="最大"
+                    value={bpmMax}
+                    onChange={(e) => setBpmMax(e.target.value)}
+                    style={{ width: "70px", padding: "4px 8px", background: "#222", border: "0.5px solid #444", borderRadius: "6px", color: "#fff", fontSize: "12px", outline: "none" }}
+                  />
+                  <button
+                    onClick={() => { setBpmMin(""); setBpmMax(""); setShowBpmFilter(false); }}
+                    style={{ padding: "4px 8px", background: "#333", border: "none", borderRadius: "6px", color: "#aaa", fontSize: "12px", cursor: "pointer" }}
+                  >
+                    クリア
+                  </button>
+                </div>
+              )}
+
+              <div style={{ color: "#666", fontSize: "12px" }}>
+                {filteredSimilar.length}曲
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* 曲一覧 */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "1rem 1.5rem", display: "flex", flexDirection: "column", gap: "8px" }}>
+          {loading && <p style={{ color: "#888" }}>読み込み中...</p>}
+
+          {mode === "search" && !loading && tracks.length === 0 && (
+            <p style={{ color: "#555", fontSize: "13px" }}>曲を検索してSeedを選んでください</p>
+          )}
+
+          {displayTracks.map((track) => (
+            <div
+              key={track.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                background: "#1a1a1a",
+                border: mainSeed?.id === track.id ? "0.5px solid #1db954" : "0.5px solid transparent",
+                borderRadius: "8px",
+                padding: "10px 12px",
+              }}
+            >
+              <img
+                src={track.album.images[0]?.url}
+                alt={track.album.name}
+                width={48}
+                height={48}
+                style={{ borderRadius: "4px", flexShrink: 0 }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#fff", fontSize: "14px", fontWeight: 500 }}>{track.name}</div>
+                <div style={{ color: "#888", fontSize: "12px" }}>{track.artists.map((a) => a.name).join(", ")}</div>
+              </div>
+              <div style={{ textAlign: "right", minWidth: "60px" }}>
+                <div style={{ color: "#1db954", fontSize: "12px", fontWeight: 500 }}>{track.bpm ? `${track.bpm} BPM` : ""}</div>
+                <div style={{ color: "#666", fontSize: "11px" }}>{track.key}</div>
+              </div>
+
+              {mode === "search" && (
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button
+                    onClick={() => setAsMainSeed(track)}
+                    style={{
+                      padding: "4px 8px",
+                      background: mainSeed?.id === track.id ? "#1db954" : "#222",
+                      border: "none",
+                      borderRadius: "4px",
+                      color: mainSeed?.id === track.id ? "#fff" : "#aaa",
+                      fontSize: "11px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {mainSeed?.id === track.id ? "★ メイン" : "メイン"}
+                  </button>
+                  <button
+                    onClick={() => addToSubSeed(track)}
+                    style={{
+                      padding: "4px 8px",
+                      background: subSeeds.find((t) => t.id === track.id) ? "#333" : "#222",
+                      border: "none",
+                      borderRadius: "4px",
+                      color: subSeeds.find((t) => t.id === track.id) ? "#1db954" : "#aaa",
+                      fontSize: "11px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {subSeeds.find((t) => t.id === track.id) ? "✓ サブ" : "+ サブ"}
+                  </button>
+                </div>
+              )}
+
+              {mode === "similar" && (
+                <button
+                  onClick={() => addToPlaylist(track)}
+                  style={{
+                    padding: "4px 10px",
+                    background: isInPlaylist(track) ? "#1db954" : "#222",
+                    border: "none",
+                    borderRadius: "4px",
+                    color: isInPlaylist(track) ? "#fff" : "#aaa",
+                    fontSize: "11px",
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {isInPlaylist(track) ? "追加済み" : "+ プレイリスト"}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 右パネル：Seed + プレイリスト */}
+      <div style={{ width: "240px", background: "#0d0d0d", borderLeft: "0.5px solid #333", padding: "1.25rem 1rem", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
+
+        {/* Seedセクション */}
+        <div>
+          <div style={{ fontSize: "12px", fontWeight: 500, color: "#aaa", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Seed</div>
+
+          {/* メインSeed */}
+          <div style={{ marginBottom: "10px" }}>
+            <div style={{ fontSize: "11px", color: "#666", marginBottom: "6px" }}>メイン</div>
+            {mainSeed ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#1db95422", border: "0.5px solid #1db95444", borderRadius: "6px", padding: "8px" }}>
+                <img src={mainSeed.album.images[0]?.url} alt={mainSeed.album.name} width={32} height={32} style={{ borderRadius: "3px", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: "#fff", fontSize: "11px" }}>{mainSeed.name}</div>
+                  <div style={{ color: "#666", fontSize: "10px" }}>{mainSeed.artists[0].name}</div>
+                </div>
+                <button onClick={() => setMainSeed(null)} style={{ background: "none", border: "none", color: "#555", fontSize: "14px", cursor: "pointer" }}>×</button>
+              </div>
+            ) : (
+              <div style={{ padding: "8px", background: "#1a1a1a", borderRadius: "6px", color: "#555", fontSize: "11px", textAlign: "center" }}>
+                検索結果からメインを選択
+              </div>
+            )}
+          </div>
+
+          {/* サブSeed */}
+          <div>
+            <div style={{ fontSize: "11px", color: "#666", marginBottom: "6px" }}>サブ</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {subSeeds.length === 0 && (
+                <div style={{ padding: "8px", background: "#1a1a1a", borderRadius: "6px", color: "#555", fontSize: "11px", textAlign: "center" }}>
+                  サブSeedを追加
+                </div>
+              )}
+              {subSeeds.map((track) => (
+                <div key={track.id} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#1a1a1a", borderRadius: "6px", padding: "8px" }}>
+                  <img src={track.album.images[0]?.url} alt={track.album.name} width={28} height={28} style={{ borderRadius: "3px", flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: "#aaa", fontSize: "11px" }}>{track.name}</div>
+                    <div style={{ color: "#555", fontSize: "10px" }}>{track.artists[0].name}</div>
+                  </div>
+                  <button onClick={() => removeSubSeed(track.id)} style={{ background: "none", border: "none", color: "#555", fontSize: "14px", cursor: "pointer" }}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 類似曲探索ボタン */}
+          <button
+            onClick={exploreSimilar}
+            disabled={!mainSeed}
+            style={{ width: "100%", marginTop: "12px", padding: "8px", background: mainSeed ? "#1db954" : "#222", border: "none", borderRadius: "8px", color: mainSeed ? "#fff" : "#555", fontSize: "13px", fontWeight: 500, cursor: mainSeed ? "pointer" : "default" }}
+          >
+            類似曲を探索
+          </button>
+        </div>
+
+        {/* 区切り線 */}
+        <div style={{ borderTop: "0.5px solid #333" }} />
+
+        {/* プレイリストセクション */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 500, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em" }}>プレイリスト（{playlist.length}曲）</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {playlist.length === 0 && (
+              <div style={{ padding: "8px", background: "#1a1a1a", borderRadius: "6px", color: "#555", fontSize: "11px", textAlign: "center" }}>
+                類似曲から追加
+              </div>
+            )}
+            {playlist.map((track) => (
+              <div key={track.id} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#1a1a1a", borderRadius: "6px", padding: "8px" }}>
+                <img src={track.album.images[0]?.url} alt={track.album.name} width={28} height={28} style={{ borderRadius: "3px", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: "#fff", fontSize: "11px" }}>{track.name}</div>
+                  <div style={{ color: "#666", fontSize: "10px" }}>{track.artists[0].name}</div>
+                </div>
+                <button onClick={() => removeFromPlaylist(track.id)} style={{ background: "none", border: "none", color: "#555", fontSize: "14px", cursor: "pointer" }}>×</button>
+              </div>
+            ))}
+          </div>
+          <button
+            style={{ width: "100%", padding: "8px", background: playlist.length > 0 ? "#1db954" : "#222", border: "none", borderRadius: "8px", color: playlist.length > 0 ? "#fff" : "#555", fontSize: "13px", fontWeight: 500, cursor: playlist.length > 0 ? "pointer" : "default", marginTop: "auto" }}
+          >
+            YouTubeに書き出し
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
