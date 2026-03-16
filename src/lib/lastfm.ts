@@ -15,16 +15,22 @@ const fetchWithProxy = async (url: string) => {
 
 async function getBpmAndKey(artist: string, track: string): Promise<{ bpm: number; key: string }> {
   try {
-    const res = await fetchWithProxy(
-      `https://api.getsongbpm.com/search/?api_key=${GETSONGBPM_API_KEY}&type=both&lookup=song:${encodeURIComponent(track)}+artist:${encodeURIComponent(artist)}`
+    const searchRes = await fetchWithProxy(
+      `https://api.getsongbpm.com/search/?api_key=${GETSONGBPM_API_KEY}&type=song&lookup=song:${encodeURIComponent(track)}+artist:${encodeURIComponent(artist)}`
     );
-    const data = await res.json() as any;
-    const song = data.search?.[0];
-    if (!song) return { bpm: 0, key: "" };
-    const bpm = Math.round(parseFloat(song.tempo)) || 0;
-    const key = song.key_of || "";
+    const searchData = await searchRes.json() as any;
+    const songId = searchData.search?.[0]?.id;
+    if (!songId) return { bpm: 0, key: "" };
+
+    const songRes = await fetchWithProxy(
+      `https://api.getsongbpm.com/song/?api_key=${GETSONGBPM_API_KEY}&id=${songId}`
+    );
+    const songData = await songRes.json() as any;
+    const bpm = Math.round(parseFloat(songData.song?.tempo)) || 0;
+    const key = songData.song?.key_of || "";
     return { bpm, key };
-  } catch {
+  } catch (e) {
+    console.log("GetSongBPM error:", e);
     return { bpm: 0, key: "" };
   }
 }
