@@ -10,7 +10,7 @@ export type GeminiMetadata = {
   confidence: "high" | "medium" | "low";
 };
 
-const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 // Gemini 2.5はthinkingパートとtextパートが分かれる場合があるため全パートを結合して検索
 function extractText(data: any): string {
