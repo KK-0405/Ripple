@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { type Track, type SavedPlaylist, type YoutubePlaylist } from "@/types";
 
@@ -27,6 +27,21 @@ export default function PlaylistPanel({
   const [youtubePlaylists, setYoutubePlaylists] = useState<YoutubePlaylist[]>([]);
   const [selectedYoutubePlaylist, setSelectedYoutubePlaylist] = useState("new");
   const [exporting, setExporting] = useState(false);
+  const dragIndexRef = useRef<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    dragIndexRef.current = index;
+  };
+
+  const handleDrop = (index: number) => {
+    const from = dragIndexRef.current;
+    if (from === null || from === index) return;
+    const updated = [...playlist];
+    const [item] = updated.splice(from, 1);
+    updated.splice(index, 0, item);
+    setPlaylist(updated);
+    dragIndexRef.current = null;
+  };
 
   const handleYoutubeExportClick = async () => {
     if (playlist.length === 0) return;
@@ -51,8 +66,15 @@ export default function PlaylistPanel({
         {playlist.length === 0 && (
           <div style={{ padding: "8px", background: "#1a1a1a", borderRadius: "6px", color: "#555", fontSize: "11px", textAlign: "center" }}>類似曲から追加</div>
         )}
-        {playlist.map((track) => (
-          <div key={track.id} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#1a1a1a", borderRadius: "6px", padding: "8px" }}>
+        {playlist.map((track, index) => (
+          <div
+            key={track.id}
+            draggable
+            onDragStart={() => handleDragStart(index)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => handleDrop(index)}
+            style={{ display: "flex", alignItems: "center", gap: "8px", background: "#1a1a1a", borderRadius: "6px", padding: "8px", cursor: "grab" }}
+          >
             <img src={track.album.images[0]?.url} alt={track.album.name} width={28} height={28} style={{ borderRadius: "3px", flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <div style={{ color: "#fff", fontSize: "11px" }}>{track.name}</div>

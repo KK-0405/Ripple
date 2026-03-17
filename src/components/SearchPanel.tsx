@@ -91,10 +91,28 @@ export default function SearchPanel({
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: 0 });
   }, [displayTracks]);
+
+  const togglePreview = (track: Track) => {
+    if (!track.preview) return;
+    if (playingId === track.id) {
+      audioRef.current?.pause();
+      setPlayingId(null);
+    } else {
+      audioRef.current?.pause();
+      const audio = new Audio(track.preview);
+      audio.volume = 0.6;
+      audio.onended = () => setPlayingId(null);
+      audio.play();
+      audioRef.current = audio;
+      setPlayingId(track.id);
+    }
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -141,7 +159,17 @@ export default function SearchPanel({
               key={track.id}
               style={{ display: "flex", alignItems: "center", gap: "12px", background: "#1a1a1a", border: mainSeed?.id === track.id ? "0.5px solid #1db954" : "0.5px solid transparent", borderRadius: "8px", padding: "10px 12px" }}
             >
-              <img src={track.album.images[0]?.url} alt={track.album.name} width={48} height={48} style={{ borderRadius: "4px", flexShrink: 0 }} />
+              <div style={{ position: "relative", flexShrink: 0, width: 48, height: 48 }}>
+                <img src={track.album.images[0]?.url} alt={track.album.name} width={48} height={48} style={{ borderRadius: "4px", display: "block" }} />
+                {track.preview && (
+                  <button
+                    onClick={() => togglePreview(track)}
+                    style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "4px", cursor: "pointer", color: "#fff", fontSize: "16px" }}
+                  >
+                    {playingId === track.id ? "■" : "▶"}
+                  </button>
+                )}
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ color: "#fff", fontSize: "14px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.name}</div>
                 <div style={{ color: "#888", fontSize: "12px" }}>{track.artists.map((a) => a.name).join(", ")}</div>
@@ -164,7 +192,7 @@ export default function SearchPanel({
                         {b.label}
                       </span>
                     )) : (
-                      <span style={{ fontSize: "10px", color: "#444" }}>一致なし</span>
+                      <span style={{ fontSize: "10px", color: "#777" }}>一致なし</span>
                     )}
                   </div>
                 )}
@@ -172,13 +200,13 @@ export default function SearchPanel({
                 {/* ジャンルタグ + エネルギー等（常に表示） */}
                 <div style={{ display: "flex", gap: "4px", marginTop: "3px", flexWrap: "wrap", alignItems: "center" }}>
                   {track.energy !== undefined && (
-                    <span style={{ fontSize: "10px", color: "#666" }}>E:{Math.round(track.energy * 10)}</span>
+                    <span style={{ fontSize: "10px", color: "#aaa" }}>E:{Math.round(track.energy * 10)}</span>
                   )}
                   {track.is_vocal !== undefined && (
-                    <span style={{ fontSize: "10px", color: "#555" }}>{track.is_vocal ? "🎤" : "🎸"}</span>
+                    <span style={{ fontSize: "10px", color: "#aaa" }}>{track.is_vocal ? "🎤" : "🎸"}</span>
                   )}
                   {track.genre_tags?.slice(0, 3).map((g) => (
-                    <span key={g} style={{ fontSize: "9px", color: "#555", background: "#111", padding: "1px 5px", borderRadius: "3px" }}>{g}</span>
+                    <span key={g} style={{ fontSize: "9px", color: "#bbb", background: "#2a2a2a", padding: "1px 5px", borderRadius: "3px" }}>{g}</span>
                   ))}
                 </div>
               </div>
