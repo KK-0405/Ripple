@@ -32,6 +32,7 @@ export default function Home() {
   const [filters, setFilters] = useState<SimilarFilters>(DEFAULT_FILTERS);
   const [similarCount, setSimilarCount] = useState<20 | 50 | 100>(50);
   const [metadataLoading, setMetadataLoading] = useState(false);
+  const [seedAnalyzing, setSeedAnalyzing] = useState(false);
   const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>([]);
   const [playlistName, setPlaylistName] = useState("DJ Discovery Playlist");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -174,7 +175,39 @@ export default function Home() {
     loadPlaylists();
   };
 
-  const setAsMainSeed = (track: Track) => setMainSeed(track);
+  const analyzeSeed = async (track: Track) => {
+    setSeedAnalyzing(true);
+    try {
+      const res = await fetch("/api/track-metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tracks: [{ id: track.id, title: track.name, artist: track.artists[0]?.name ?? "", preview: track.preview }],
+        }),
+      });
+      const data = await res.json();
+      const m = data.metadata?.[0];
+      if (m) {
+        setMainSeed((prev) => prev ? {
+          ...prev,
+          key: m.key || prev.key,
+          camelot: m.camelot,
+          energy: m.energy,
+          danceability: m.danceability,
+          is_vocal: m.is_vocal,
+          genre_tags: m.genre_tags,
+          release_year: prev.release_year || m.release_year,
+          bpm: prev.bpm || m.bpm,
+        } : prev);
+      }
+    } catch { /* ignore */ }
+    setSeedAnalyzing(false);
+  };
+
+  const setAsMainSeed = (track: Track) => {
+    setMainSeed(track);
+    analyzeSeed(track);
+  };
   const addToSubSeed = (track: Track) => {
     if (subSeeds.find((t) => t.id === track.id)) return;
     if (mainSeed?.id === track.id) return;
@@ -281,6 +314,7 @@ export default function Home() {
           exploreSimilar={exploreSimilar}
           filters={filters} setFilters={setFilters}
           similarCount={similarCount} setSimilarCount={setSimilarCount}
+          seedAnalyzing={seedAnalyzing}
         />
         <div style={{ borderTop: "0.5px solid #333" }} />
         <PlaylistPanel

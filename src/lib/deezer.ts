@@ -31,6 +31,7 @@ function mapTrack(t: any): Track {
     key: "",
     url: t.link ?? `https://www.deezer.com/track/${t.id}`,
     preview: t.preview ?? undefined,
+    release_year: t.release_date ? parseInt(t.release_date.slice(0, 4)) : undefined,
   };
 }
 
