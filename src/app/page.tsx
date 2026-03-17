@@ -7,6 +7,43 @@ import SearchPanel from "@/components/SearchPanel";
 import SeedPanel from "@/components/SeedPanel";
 import PlaylistPanel from "@/components/PlaylistPanel";
 
+// Geminiメタデータをブラウザにキャッシュ（同じ曲は二度APIを呼ばない）
+const CACHE_KEY = "dj_gemini_v1";
+function cacheKey(title: string, artist: string) {
+  return `${title}|||${artist}`.toLowerCase();
+}
+function readCache(): Record<string, any> {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) ?? "{}"); } catch { return {}; }
+}
+function writeCache(cache: Record<string, any>) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch { /* quota full */ }
+}
+// キャッシュに存在するtrackをフィルタし、APIレスポンスとマージして返す
+function applyCache(
+  tracks: { id: string; title: string; artist: string }[],
+  metadata: (any | null)[]
+): { uncachedIndices: number[]; results: (any | null)[] } {
+  const cache = readCache();
+  const results: (any | null)[] = new Array(tracks.length).fill(null);
+  const uncachedIndices: number[] = [];
+  tracks.forEach((t, i) => {
+    const hit = cache[cacheKey(t.title, t.artist)];
+    if (hit) { results[i] = hit; }
+    else { uncachedIndices.push(i); }
+  });
+  // APIレスポンスを未キャッシュ分に埋め込み、同時にキャッシュ更新
+  const newCache = { ...cache };
+  uncachedIndices.forEach((origIdx, pos) => {
+    const m = metadata[pos];
+    if (m) {
+      results[origIdx] = m;
+      newCache[cacheKey(tracks[origIdx].title, tracks[origIdx].artist)] = m;
+    }
+  });
+  if (uncachedIndices.length > 0) writeCache(newCache);
+  return { uncachedIndices, results };
+}
+
 const DEFAULT_FILTERS: SimilarFilters = {
   bpmRange: null,
   sameKey: false,
@@ -60,38 +97,44 @@ export default function Home() {
   };
 
   const enrichSearchTracks = async (trackList: Track[]) => {
-    try {
-      const res = await fetch("/api/track-metadata", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tracks: trackList.slice(0, 10).map((t) => ({
-            id: t.id,
-            title: t.name,
-            artist: t.artists[0]?.name ?? "",
-          })),
-        }),
-      });
-      const data = await res.json();
-      const metadata: (any | null)[] = data.metadata ?? [];
-      setTracks((prev) =>
-        prev.map((track, i) => {
-          const m = metadata[i];
-          if (!m) return track;
-          return {
-            ...track,
-            bpm: track.bpm || m.bpm,
-            key: m.key || track.key,
-            camelot: m.camelot,
-            energy: m.energy,
-            danceability: m.danceability,
-            is_vocal: m.is_vocal,
-            genre_tags: m.genre_tags,
-            release_year: track.release_year || m.release_year,
-          };
-        })
-      );
-    } catch { /* ignore */ }
+    const targets = trackList.slice(0, 10).map((t) => ({
+      id: t.id,
+      title: t.name,
+      artist: t.artists[0]?.name ?? "",
+    }));
+    // キャッシュ済みをチェックして未キャッシュ分だけAPIを呼ぶ
+    const cache = readCache();
+    const uncachedTargets = targets.filter((t) => !cache[cacheKey(t.title, t.artist)]);
+    let apiMetadata: (any | null)[] = [];
+    if (uncachedTargets.length > 0) {
+      try {
+        const res = await fetch("/api/track-metadata", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tracks: uncachedTargets }),
+        });
+        const data = await res.json();
+        apiMetadata = data.metadata ?? [];
+      } catch { /* ignore */ }
+    }
+    const { results } = applyCache(targets, apiMetadata.length ? apiMetadata : new Array(uncachedTargets.length).fill(null));
+    setTracks((prev) =>
+      prev.map((track, i) => {
+        const m = results[i];
+        if (!m) return track;
+        return {
+          ...track,
+          bpm: track.bpm || m.bpm,
+          key: m.key || track.key,
+          camelot: m.camelot,
+          energy: m.energy,
+          danceability: m.danceability,
+          is_vocal: m.is_vocal,
+          genre_tags: m.genre_tags,
+          release_year: track.release_year || m.release_year,
+        };
+      })
+    );
   };
 
   const exploreSimilar = async () => {
@@ -172,31 +215,34 @@ export default function Home() {
   const analyzeSeed = async (track: Track) => {
     setSeedAnalyzing(true);
     setSeedError(null);
+    const artist = track.artists[0]?.name ?? "";
+
+    // キャッシュ確認（同じ曲は二度Geminiを呼ばない）
+    const cached = readCache()[cacheKey(track.name, artist)];
+    if (cached) {
+      setMainSeed((prev) => prev ? { ...prev, bpm: prev.bpm || cached.bpm, key: cached.key || prev.key, camelot: cached.camelot, energy: cached.energy, danceability: cached.danceability, is_vocal: cached.is_vocal, genre_tags: cached.genre_tags, release_year: prev.release_year || cached.release_year } : prev);
+      setSeedAnalyzing(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/track-metadata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tracks: [{ id: track.id, title: track.name, artist: track.artists[0]?.name ?? "" }],
+          tracks: [{ id: track.id, title: track.name, artist }],
         }),
       });
       const data = await res.json();
       if (data._debug) setSeedError(String(data._debug));
       const m = data.metadata?.[0];
       if (m) {
+        // キャッシュに保存
+        const newCache = { ...readCache(), [cacheKey(track.name, artist)]: m };
+        writeCache(newCache);
         setMainSeed((prev) =>
           prev
-            ? {
-                ...prev,
-                bpm: prev.bpm || m.bpm,
-                key: m.key || prev.key,
-                camelot: m.camelot,
-                energy: m.energy,
-                danceability: m.danceability,
-                is_vocal: m.is_vocal,
-                genre_tags: m.genre_tags,
-                release_year: prev.release_year || m.release_year,
-              }
+            ? { ...prev, bpm: prev.bpm || m.bpm, key: m.key || prev.key, camelot: m.camelot, energy: m.energy, danceability: m.danceability, is_vocal: m.is_vocal, genre_tags: m.genre_tags, release_year: prev.release_year || m.release_year }
             : prev
         );
       } else {
@@ -216,26 +262,30 @@ export default function Home() {
     if (subSeeds.find((t) => t.id === track.id)) return;
     if (mainSeed?.id === track.id) return;
     setSubSeeds((prev) => [...prev, track]);
-    try {
-      const res = await fetch("/api/track-metadata", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tracks: [{ id: track.id, title: track.name, artist: track.artists[0]?.name ?? "" }],
-        }),
-      });
-      const data = await res.json();
-      const m = data.metadata?.[0];
-      if (m) {
-        setSubSeeds((prev) =>
-          prev.map((t) =>
-            t.id === track.id
-              ? { ...t, genre_tags: m.genre_tags, energy: m.energy, danceability: m.danceability, is_vocal: m.is_vocal, camelot: m.camelot, bpm: t.bpm || m.bpm, release_year: m.release_year }
-              : t
-          )
-        );
-      }
-    } catch { /* ignore */ }
+    const artist = track.artists[0]?.name ?? "";
+    // キャッシュ確認
+    let m = readCache()[cacheKey(track.name, artist)] ?? null;
+    if (!m) {
+      try {
+        const res = await fetch("/api/track-metadata", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tracks: [{ id: track.id, title: track.name, artist }] }),
+        });
+        const data = await res.json();
+        m = data.metadata?.[0] ?? null;
+        if (m) writeCache({ ...readCache(), [cacheKey(track.name, artist)]: m });
+      } catch { /* ignore */ }
+    }
+    if (m) {
+      setSubSeeds((prev) =>
+        prev.map((t) =>
+          t.id === track.id
+            ? { ...t, genre_tags: m.genre_tags, energy: m.energy, danceability: m.danceability, is_vocal: m.is_vocal, camelot: m.camelot, bpm: t.bpm || m.bpm, release_year: m.release_year }
+            : t
+        )
+      );
+    }
   };
   const removeSubSeed = (id: string) => setSubSeeds(subSeeds.filter((t) => t.id !== id));
   const addToPlaylist = (track: Track) => {
