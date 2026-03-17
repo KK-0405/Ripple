@@ -10,8 +10,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "artist and track are required" }, { status: 400 });
   }
 
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "50")));
+
   try {
-    const tracks = await getSimilarTracks(artist, track);
+    const tracks = await getSimilarTracks(artist, track, limit);
     return NextResponse.json({ tracks });
   } catch (error) {
     console.error("Similar error:", error);

@@ -5,8 +5,21 @@ export type { Track };
 export type Mode = "search" | "similar";
 
 export type SimilarFilters = {
+  // リズム・テンポ
   bpmRange: null | 5 | 10;
+  // キー・ハーモニー
+  sameKey: boolean;
+  camelotAdjacent: boolean;
+  // ジャンル
+  genreMatch: boolean;
+  // エネルギー・ムード
+  energyLevel: null | "high" | "medium" | "low";
+  danceabilityHigh: boolean;
+  // アーティスト・時代
   sameArtist: boolean;
+  decade: string | null; // e.g. "2010s"
+  // サウンド特性
+  vocalType: null | "vocal" | "instrumental";
 };
 
 export type SavedPlaylist = {

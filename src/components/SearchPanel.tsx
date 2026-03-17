@@ -16,12 +16,13 @@ type Props = {
   addToPlaylist: (track: Track) => void;
   isInPlaylist: (track: Track) => boolean;
   filteredSimilarCount: number;
+  metadataLoading: boolean;
 };
 
 export default function SearchPanel({
   query, setQuery, search, loading, mode, displayTracks,
   mainSeed, subSeeds, setAsMainSeed, addToSubSeed,
-  addToPlaylist, isInPlaylist, filteredSimilarCount,
+  addToPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
 }: Props) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -47,6 +48,11 @@ export default function SearchPanel({
         <div style={{ fontSize: "12px", color: "#666" }}>
           {mode === "search" ? "検索結果" : `類似曲 ${filteredSimilarCount}曲`}
         </div>
+        {metadataLoading && (
+          <div style={{ fontSize: "11px", color: "#1db954", marginLeft: "8px" }}>
+            ✦ Gemini解析中...
+          </div>
+        )}
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "1rem 1.5rem", display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -63,9 +69,27 @@ export default function SearchPanel({
             <div style={{ flex: 1 }}>
               <div style={{ color: "#fff", fontSize: "14px", fontWeight: 500 }}>{track.name}</div>
               <div style={{ color: "#888", fontSize: "12px" }}>{track.artists.map((a) => a.name).join(", ")}</div>
-              <div style={{ color: "#1db954", fontSize: "11px", fontWeight: 500, marginTop: "2px" }}>
-                {track.bpm ? `${track.bpm} BPM` : "-- BPM"}
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "3px", flexWrap: "wrap" }}>
+                <span style={{ color: "#1db954", fontSize: "11px", fontWeight: 500 }}>
+                  {track.bpm ? `${track.bpm} BPM` : "-- BPM"}
+                </span>
+                {track.camelot && (
+                  <span style={{ color: "#888", fontSize: "10px", background: "#222", padding: "1px 5px", borderRadius: "4px" }}>{track.camelot}</span>
+                )}
+                {track.energy !== undefined && (
+                  <span style={{ color: "#888", fontSize: "10px" }}>E:{Math.round(track.energy * 10)}</span>
+                )}
+                {track.is_vocal !== undefined && (
+                  <span style={{ color: "#555", fontSize: "10px" }}>{track.is_vocal ? "🎤" : "🎸"}</span>
+                )}
               </div>
+              {track.genre_tags && track.genre_tags.length > 0 && (
+                <div style={{ display: "flex", gap: "4px", marginTop: "3px", flexWrap: "wrap" }}>
+                  {track.genre_tags.slice(0, 3).map((g) => (
+                    <span key={g} style={{ fontSize: "9px", color: "#666", background: "#1a1a1a", padding: "1px 5px", borderRadius: "3px" }}>{g}</span>
+                  ))}
+                </div>
+              )}
             </div>
             {mode === "search" && (
               <div style={{ display: "flex", gap: "6px" }}>
