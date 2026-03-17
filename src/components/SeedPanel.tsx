@@ -14,6 +14,7 @@ type Props = {
   similarCount: 10 | 20 | 30;
   setSimilarCount: (n: 10 | 20 | 30) => void;
   seedAnalyzing: boolean;
+  seedError: string | null;
 };
 
 function Section({ title }: { title: string }) {
@@ -51,7 +52,7 @@ const DECADES = ["1970s", "1980s", "1990s", "2000s", "2010s", "2020s"];
 
 export default function SeedPanel({
   mainSeed, setMainSeed, subSeeds, removeSubSeed, exploreSimilar,
-  filters, setFilters, similarCount, setSimilarCount, seedAnalyzing,
+  filters, setFilters, similarCount, setSimilarCount, seedAnalyzing, seedError,
 }: Props) {
   const [showFilters, setShowFilters] = useState(false);
 
@@ -91,6 +92,7 @@ export default function SeedPanel({
                 {mainSeed.energy !== undefined && <span style={{ color: "#888", fontSize: "10px" }}>E:{Math.round(mainSeed.energy * 10)}</span>}
                 {mainSeed.release_year && <span style={{ color: "#666", fontSize: "10px" }}>{mainSeed.release_year}</span>}
                 {seedAnalyzing && <span style={{ color: "#1db954", fontSize: "10px" }}>✦ 解析中...</span>}
+                {seedError && <span style={{ color: "#ff4444", fontSize: "9px", wordBreak: "break-all" }}>ERR: {seedError}</span>}
               </div>
             </div>
             <button onClick={() => setMainSeed(null)} style={{ background: "none", border: "none", color: "#555", fontSize: "14px", cursor: "pointer", flexShrink: 0 }}>×</button>

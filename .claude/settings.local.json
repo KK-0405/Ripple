@@ -9,7 +9,13 @@
       "WebFetch(domain:api.vercel.com)",
       "Bash",
       "Skill(update-config)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(node -e \":*)",
+      "Bash(node --env-file=.env.local -e \":*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(git commit -m \"fix: simplify getMetadataBatch by removing buggy cache logic:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

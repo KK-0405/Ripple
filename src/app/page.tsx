@@ -33,6 +33,7 @@ export default function Home() {
   const [similarCount, setSimilarCount] = useState<10 | 20 | 30>(20);
   const [metadataLoading, setMetadataLoading] = useState(false);
   const [seedAnalyzing, setSeedAnalyzing] = useState(false);
+  const [seedError, setSeedError] = useState<string | null>(null);
   const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>([]);
   const [playlistName, setPlaylistName] = useState("DJ Discovery Playlist");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -170,6 +171,7 @@ export default function Home() {
 
   const analyzeSeed = async (track: Track) => {
     setSeedAnalyzing(true);
+    setSeedError(null);
     try {
       const res = await fetch("/api/track-metadata", {
         method: "POST",
@@ -179,6 +181,7 @@ export default function Home() {
         }),
       });
       const data = await res.json();
+      if (data._debug) setSeedError(String(data._debug));
       const m = data.metadata?.[0];
       if (m) {
         setMainSeed((prev) =>
@@ -196,8 +199,12 @@ export default function Home() {
               }
             : prev
         );
+      } else {
+        setSeedError((prev) => prev ?? "metadata[0] is null");
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      setSeedError(String(e));
+    }
     setSeedAnalyzing(false);
   };
 
@@ -332,6 +339,7 @@ export default function Home() {
           filters={filters} setFilters={setFilters}
           similarCount={similarCount} setSimilarCount={setSimilarCount}
           seedAnalyzing={seedAnalyzing}
+          seedError={seedError}
         />
         <div style={{ borderTop: "0.5px solid #333" }} />
         <PlaylistPanel
