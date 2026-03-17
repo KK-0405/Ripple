@@ -73,9 +73,32 @@ export type BatchResult = {
   error?: string;
 };
 
+function mockMetadata(title: string): GeminiMetadata {
+  // タイトルのハッシュ値で値をばらけさせる
+  const h = [...title].reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0xffff, 0);
+  const bpms = [120, 124, 128, 132, 138, 140, 96, 100, 110, 115];
+  const camelots = ["1A","2A","3A","4A","5A","6A","1B","2B","3B","4B","5B","6B","7A","8A"];
+  const keys = ["C major","D minor","F major","G major","A minor","E major","B minor"];
+  const genres = [["House","Deep House"],["Techno","Minimal"],["Disco","Funk"],["Hip-Hop","R&B"],["Pop","Synth-pop"]];
+  return {
+    bpm: bpms[h % bpms.length],
+    key: keys[h % keys.length],
+    camelot: camelots[h % camelots.length],
+    energy: 0.4 + (h % 6) * 0.1,
+    danceability: 0.5 + (h % 5) * 0.1,
+    is_vocal: h % 3 !== 0,
+    genre_tags: genres[h % genres.length],
+    release_year: 2000 + (h % 24),
+    confidence: "high",
+  };
+}
+
 export async function getMetadataBatch(
   tracks: { title: string; artist: string }[]
 ): Promise<BatchResult> {
+  if (process.env.GEMINI_MOCK === "true") {
+    return { results: tracks.map((t) => mockMetadata(t.title)) };
+  }
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { results: tracks.map(() => null), error: "GEMINI_API_KEY not set" };
 
@@ -125,6 +148,21 @@ export async function getSimilarTrackSuggestions(
   subSeeds: { title: string; artist: string; genre_tags?: string[] }[],
   count: number
 ): Promise<TrackSuggestion[]> {
+  if (process.env.GEMINI_MOCK === "true") {
+    const mockSongs = [
+      { title: "Get Lucky", artist: "Daft Punk" },
+      { title: "One More Time", artist: "Daft Punk" },
+      { title: "Around the World", artist: "Daft Punk" },
+      { title: "Harder Better Faster Stronger", artist: "Daft Punk" },
+      { title: "Le Freak", artist: "Chic" },
+      { title: "Good Times", artist: "Chic" },
+      { title: "Superstition", artist: "Stevie Wonder" },
+      { title: "September", artist: "Earth Wind & Fire" },
+      { title: "Boogie Wonderland", artist: "Earth Wind & Fire" },
+      { title: "I Feel Love", artist: "Donna Summer" },
+    ];
+    return mockSongs.slice(0, count).map((s) => ({ ...s, ...mockMetadata(s.title) }));
+  }
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return [];
 
