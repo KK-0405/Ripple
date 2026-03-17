@@ -123,6 +123,8 @@ export default function Home() {
 
   const isInPlaylist = (track: Track) => !!playlist.find((t) => t.id === track.id);
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const filteredSimilar = similarTracks.filter((track) => {
     if (bpmMin && track.bpm < parseInt(bpmMin)) return false;
     if (bpmMax && track.bpm > parseInt(bpmMax)) return false;
@@ -138,20 +140,35 @@ export default function Home() {
   return (
     <div style={{ display: "flex", height: "100vh", background: "#111", fontFamily: "sans-serif", color: "#fff" }}>
 
-      {/* サイドバー */}
-      <div style={{ width: "200px", background: "#0a0a0a", padding: "1.5rem 1rem", display: "flex", flexDirection: "column", gap: "4px", borderRight: "0.5px solid #333" }}>
-        <div style={{ fontSize: "16px", fontWeight: 500, color: "#fff", marginBottom: "1.5rem", paddingLeft: "8px" }}>DJ Discovery</div>
-        <div style={{ padding: "8px 12px", borderRadius: "8px", background: "#1db954", color: "#fff", fontSize: "13px", fontWeight: 500 }}>Search</div>
-        <div style={{ padding: "8px 12px", borderRadius: "8px", color: "#888", fontSize: "13px" }}>Discovery Graph</div>
-        <div style={{ padding: "8px 12px", borderRadius: "8px", color: "#888", fontSize: "13px" }}>Playlist Builder</div>
-        <div style={{ marginTop: "auto", paddingTop: "12px" }}>
-          {session && (
-            <div style={{ fontSize: "11px", color: "#666", textAlign: "center" }}>
-              {session.user?.email}
-            </div>
-          )}
-        </div>
+      {/* サイドバートグルボタン（常時表示） */}
+      <div style={{ width: "48px", background: "#0a0a0a", borderRight: "0.5px solid #333", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "1rem", gap: "8px", flexShrink: 0 }}>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          title="メニュー"
+          style={{ width: "32px", height: "32px", background: "transparent", border: "none", color: "#888", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "4px", borderRadius: "6px", padding: 0 }}
+        >
+          <span style={{ display: "block", width: "16px", height: "1.5px", background: "currentColor" }} />
+          <span style={{ display: "block", width: "16px", height: "1.5px", background: "currentColor" }} />
+          <span style={{ display: "block", width: "16px", height: "1.5px", background: "currentColor" }} />
+        </button>
       </div>
+
+      {/* サイドバー（開閉） */}
+      {sidebarOpen && (
+        <div style={{ width: "200px", background: "#0a0a0a", padding: "1.5rem 1rem", display: "flex", flexDirection: "column", gap: "4px", borderRight: "0.5px solid #333", flexShrink: 0 }}>
+          <div style={{ fontSize: "16px", fontWeight: 500, color: "#fff", marginBottom: "1.5rem", paddingLeft: "8px" }}>DJ Discovery</div>
+          <div style={{ padding: "8px 12px", borderRadius: "8px", background: "#1db954", color: "#fff", fontSize: "13px", fontWeight: 500 }}>Search</div>
+          <div style={{ padding: "8px 12px", borderRadius: "8px", color: "#888", fontSize: "13px" }}>Discovery Graph</div>
+          <div style={{ padding: "8px 12px", borderRadius: "8px", color: "#888", fontSize: "13px" }}>Playlist Builder</div>
+          <div style={{ marginTop: "auto", paddingTop: "12px" }}>
+            {session && (
+              <div style={{ fontSize: "11px", color: "#666", textAlign: "center" }}>
+                {session.user?.email}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 検索パネル */}
       <SearchPanel
