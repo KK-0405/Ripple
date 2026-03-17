@@ -182,16 +182,22 @@ export default function SeedPanel({
 
             {/* ジャンル */}
             <Section title="ジャンル" />
-            <Row
-              label="ジャンル一致"
-              value={mainSeed?.genre_tags?.length ? mainSeed.genre_tags.slice(0, 2).join(" / ") : undefined}
-              available={hasGemini}
-            >
-              <input type="checkbox" checked={filters.genreMatch} onChange={(e) => set({ genreMatch: e.target.checked })} style={{ accentColor: "#1db954", cursor: "pointer" }} />
-            </Row>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "3px 0", opacity: hasGemini ? 1 : 0.3 }}>
+              <span style={{ fontSize: "11px", color: hasGemini ? "#ccc" : "#666" }}>ジャンル一致</span>
+              <div style={{ pointerEvents: hasGemini ? "auto" : "none" }}>
+                <input type="checkbox" checked={filters.genreMatch} onChange={(e) => set({ genreMatch: e.target.checked })} style={{ accentColor: "#1db954", cursor: "pointer" }} />
+              </div>
+            </div>
+            {hasGemini && mainSeed?.genre_tags?.length && (
+              <div style={{ fontSize: "10px", padding: "2px 0 3px" }}>
+                <span style={{ color: "#555" }}>メインジャンル：</span>
+                <span style={{ color: "#1db954" }}>{mainSeed.genre_tags.join(" / ")}</span>
+              </div>
+            )}
             {subSeeds.some((t) => (t.genre_tags?.length ?? 0) > 0) && (
-              <div style={{ fontSize: "10px", color: "#666", padding: "2px 0" }}>
-                サブジャンル：<span style={{ color: "#aaa" }}>{[...new Set(subSeeds.flatMap((t) => t.genre_tags ?? []))].slice(0, 3).join(" / ")}</span>
+              <div style={{ fontSize: "10px", padding: "2px 0 3px" }}>
+                <span style={{ color: "#555" }}>サブジャンル：</span>
+                <span style={{ color: "#aaa" }}>{[...new Set(subSeeds.flatMap((t) => t.genre_tags ?? []))].join(" / ")}</span>
               </div>
             )}
             {!hasGemini && <div style={{ fontSize: "10px", color: "#444" }}>※ Gemini解析後に解除</div>}
