@@ -31,12 +31,15 @@ export async function GET() {
       `https://api.spotify.com/v1/search?q=radwimps&type=track&limit=3`,
       { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
     );
-    const searchData = (await searchRes.json()) as any;
+    const searchRaw = await searchRes.text();
+    let searchData: any = null;
+    try { searchData = JSON.parse(searchRaw); } catch { /* not json */ }
 
     return NextResponse.json({
       step: "search",
       tokenOk: true,
       searchStatus: searchRes.status,
+      searchRaw: searchData ? null : searchRaw.slice(0, 300),
       tracks: searchData?.tracks?.items?.map((t: any) => ({ name: t.name, artist: t.artists[0]?.name })) ?? [],
       error: searchData?.error ?? null,
     });
