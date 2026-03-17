@@ -11,30 +11,14 @@ export type GeminiMetadata = {
 };
 
 const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-const MAX_RETRIES = 3;
-
 async function geminiPost(apiKey: string, body: object): Promise<any> {
-  let waitMs = 5000;
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    const res = await fetch(`${GEMINI_API}?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = (await res.json()) as any;
-    if (res.status === 429) {
-      if (attempt === MAX_RETRIES) return { __error: data, __status: 429 };
-      // エラーレスポンスのretryDelayがあればそれを使う、なければ指数バックオフ
-      const retryDelaySec = data?.error?.details?.find((d: any) => d.retryDelay)?.retryDelay;
-      const delayMs = retryDelaySec
-        ? Math.ceil(parseFloat(retryDelaySec) * 1000)
-        : waitMs;
-      await new Promise((r) => setTimeout(r, delayMs));
-      waitMs *= 2;
-      continue;
-    }
-    return { __data: data, __status: res.status, __ok: res.ok };
-  }
+  const res = await fetch(`${GEMINI_API}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = (await res.json()) as any;
+  return { __data: data, __status: res.status, __ok: res.ok };
 }
 
 function extractText(data: any): string {
