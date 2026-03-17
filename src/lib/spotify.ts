@@ -1,6 +1,5 @@
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!;
-const GETSONGBPM_API_KEY = process.env.GETSONGBPM_API_KEY!;
 
 // SpotifyはHTTPS直接接続（プロキシ経由だとブロックされる）
 const spotifyFetch = (url: string, init?: RequestInit) => fetch(url, init);
@@ -27,24 +26,15 @@ async function getAccessToken(): Promise<string> {
   return cachedToken!;
 }
 
-// BPM・キーはGetSongBPMから取得（SpotifyのAudio Features APIは新規アプリに制限あり）
+// BPMはDeezer APIから取得（無料・認証不要）
 async function getBpmAndKey(artist: string, track: string): Promise<{ bpm: number; key: string }> {
   try {
-    const query = `${artist} ${track}`;
-    const searchRes = await fetch(
-      `https://api.getsongbpm.com/search/?api_key=${GETSONGBPM_API_KEY}&type=song&lookup=${encodeURIComponent(query)}`
+    const res = await fetch(
+      `https://api.deezer.com/search?q=${encodeURIComponent(`${track} ${artist}`)}&limit=1`
     );
-    const searchData = (await searchRes.json()) as any;
-    const songId = searchData?.search?.[0]?.song_id;
-    if (!songId) return { bpm: 0, key: "" };
-
-    const songRes = await fetch(
-      `https://api.getsongbpm.com/song/?api_key=${GETSONGBPM_API_KEY}&id=${songId}`
-    );
-    const songData = (await songRes.json()) as any;
-    const bpm = songData?.song?.tempo ? Math.round(Number(songData.song.tempo)) : 0;
-    const key = songData?.song?.key_of || "";
-    return { bpm, key };
+    const data = (await res.json()) as any;
+    const bpm = data?.data?.[0]?.bpm ?? 0;
+    return { bpm: bpm ? Math.round(bpm) : 0, key: "" };
   } catch {
     return { bpm: 0, key: "" };
   }
