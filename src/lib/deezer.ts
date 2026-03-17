@@ -35,49 +35,6 @@ function mapTrack(t: any): Track {
   };
 }
 
-async function fetchBpm(trackId: string, artist: string, title: string): Promise<number> {
-  try {
-    const res = await fetch(`https://api.deezer.com/track/${trackId}`);
-    const data = (await res.json()) as any;
-    if (data?.bpm) return Math.round(data.bpm);
-  } catch { /* fall through */ }
-
-  const apiKey = process.env.GETSONGBPM_API_KEY;
-  if (!apiKey) return 0;
-  try {
-    const query = encodeURIComponent(`${artist} ${title}`);
-    const searchRes = await fetch(
-      `https://api.getsongbpm.com/search/?api_key=${apiKey}&type=song&lookup=${query}`,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "application/json",
-          "Referer": "https://getsongbpm.com/",
-        },
-      }
-    );
-    if (!searchRes.ok) return 0;
-    const searchData = (await searchRes.json()) as any;
-    const songId = searchData?.search?.[0]?.song_id;
-    if (!songId) return 0;
-
-    const songRes = await fetch(
-      `https://api.getsongbpm.com/song/?api_key=${apiKey}&id=${songId}`,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "application/json",
-          "Referer": "https://getsongbpm.com/",
-        },
-      }
-    );
-    if (!songRes.ok) return 0;
-    const songData = (await songRes.json()) as any;
-    return songData?.song?.tempo ? Math.round(Number(songData.song.tempo)) : 0;
-  } catch {
-    return 0;
-  }
-}
 
 export async function searchTracks(query: string): Promise<Track[]> {
   const encoded = encodeURIComponent(query);

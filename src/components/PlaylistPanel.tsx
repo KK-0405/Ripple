@@ -144,11 +144,6 @@ export default function PlaylistPanel({
         </div>
       )}
 
-      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "0.5px solid #222", textAlign: "center" }}>
-        <a href="https://getsongbpm.com" target="_blank" rel="noreferrer" style={{ color: "#444", fontSize: "10px", textDecoration: "none" }}>
-          BPM data by GetSongBPM
-        </a>
-      </div>
     </div>
   );
 }
