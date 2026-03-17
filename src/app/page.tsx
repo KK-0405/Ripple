@@ -64,11 +64,10 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tracks: trackList.slice(0, 30).map((t) => ({
+          tracks: trackList.slice(0, 10).map((t) => ({
             id: t.id,
             title: t.name,
             artist: t.artists[0]?.name ?? "",
-            preview: t.preview,
           })),
         }),
       });
@@ -92,69 +91,6 @@ export default function Home() {
         })
       );
     } catch { /* ignore */ }
-  };
-
-  const fetchGeminiMetadata = async (trackList: Track[], seed: Track | null) => {
-    setMetadataLoading(true);
-    try {
-      // シード曲も含めてメタデータ取得
-      const targets = seed ? [seed, ...trackList] : trackList;
-      const res = await fetch("/api/track-metadata", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tracks: targets.map((t) => ({
-            id: t.id,
-            title: t.name,
-            artist: t.artists[0]?.name ?? "",
-            preview: t.preview,
-          })),
-        }),
-      });
-      const data = await res.json();
-      const metadata: (any | null)[] = data.metadata ?? [];
-
-      // シード曲のメタデータを更新
-      if (seed && metadata[0]) {
-        const m = metadata[0];
-        setMainSeed((prev) =>
-          prev ? {
-            ...prev,
-            key: m.key || prev.key,
-            camelot: m.camelot,
-            energy: m.energy,
-            danceability: m.danceability,
-            is_vocal: m.is_vocal,
-            genre_tags: m.genre_tags,
-            release_year: m.release_year,
-            bpm: prev.bpm || m.bpm,
-          } : prev
-        );
-      }
-
-      // 類似曲のメタデータを更新
-      const trackMetadata = seed ? metadata.slice(1) : metadata;
-      setSimilarTracks((prev) =>
-        prev.map((track, i) => {
-          const m = trackMetadata[i];
-          if (!m) return track;
-          return {
-            ...track,
-            key: m.key || track.key,
-            camelot: m.camelot,
-            energy: m.energy,
-            danceability: m.danceability,
-            is_vocal: m.is_vocal,
-            genre_tags: m.genre_tags,
-            release_year: m.release_year,
-            bpm: track.bpm || m.bpm,
-          };
-        })
-      );
-    } catch {
-      // ignore
-    }
-    setMetadataLoading(false);
   };
 
   const exploreSimilar = async () => {
@@ -233,72 +169,64 @@ export default function Home() {
   };
 
   const analyzeSeed = async (track: Track) => {
-    // 既にenrichSearchTracksで解析済みならスキップ
-    if (track.energy !== undefined && track.camelot && track.genre_tags?.length) {
-      return;
-    }
     setSeedAnalyzing(true);
     try {
       const res = await fetch("/api/track-metadata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tracks: [{ id: track.id, title: track.name, artist: track.artists[0]?.name ?? "", preview: track.preview }],
+          tracks: [{ id: track.id, title: track.name, artist: track.artists[0]?.name ?? "" }],
         }),
       });
       const data = await res.json();
       const m = data.metadata?.[0];
       if (m) {
-        setMainSeed((prev) => prev ? {
-          ...prev,
-          key: m.key || prev.key,
-          camelot: m.camelot,
-          energy: m.energy,
-          danceability: m.danceability,
-          is_vocal: m.is_vocal,
-          genre_tags: m.genre_tags,
-          release_year: prev.release_year || m.release_year,
-          bpm: prev.bpm || m.bpm,
-        } : prev);
+        setMainSeed((prev) =>
+          prev
+            ? {
+                ...prev,
+                bpm: prev.bpm || m.bpm,
+                key: m.key || prev.key,
+                camelot: m.camelot,
+                energy: m.energy,
+                danceability: m.danceability,
+                is_vocal: m.is_vocal,
+                genre_tags: m.genre_tags,
+                release_year: prev.release_year || m.release_year,
+              }
+            : prev
+        );
       }
     } catch { /* ignore */ }
     setSeedAnalyzing(false);
   };
 
   const setAsMainSeed = (track: Track) => {
-    // tracksステートから最新の解析済みデータを参照する
-    const enriched = tracks.find((t) => t.id === track.id) ?? track;
-    setMainSeed(enriched);
-    analyzeSeed(enriched);
+    setMainSeed(track);
+    analyzeSeed(track);
   };
   const addToSubSeed = async (track: Track) => {
     if (subSeeds.find((t) => t.id === track.id)) return;
     if (mainSeed?.id === track.id) return;
-    const enriched = tracks.find((t) => t.id === track.id) ?? track;
-    setSubSeeds((prev) => [...prev, enriched]);
-    // 既に解析済みならGemini呼び出し不要
-    if (enriched.energy !== undefined && enriched.camelot && enriched.genre_tags?.length) return;
+    setSubSeeds((prev) => [...prev, track]);
     try {
       const res = await fetch("/api/track-metadata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tracks: [{ id: enriched.id, title: enriched.name, artist: enriched.artists[0]?.name ?? "", preview: enriched.preview }],
+          tracks: [{ id: track.id, title: track.name, artist: track.artists[0]?.name ?? "" }],
         }),
       });
       const data = await res.json();
       const m = data.metadata?.[0];
       if (m) {
-        setSubSeeds((prev) => prev.map((t) => t.id === enriched.id ? {
-          ...t,
-          genre_tags: m.genre_tags,
-          energy: m.energy,
-          danceability: m.danceability,
-          is_vocal: m.is_vocal,
-          camelot: m.camelot,
-          bpm: t.bpm || m.bpm,
-          release_year: m.release_year,
-        } : t));
+        setSubSeeds((prev) =>
+          prev.map((t) =>
+            t.id === track.id
+              ? { ...t, genre_tags: m.genre_tags, energy: m.energy, danceability: m.danceability, is_vocal: m.is_vocal, camelot: m.camelot, bpm: t.bpm || m.bpm, release_year: m.release_year }
+              : t
+          )
+        );
       }
     } catch { /* ignore */ }
   };

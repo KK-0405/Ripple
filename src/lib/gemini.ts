@@ -12,10 +12,8 @@ export type GeminiMetadata = {
 
 const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-// Gemini 2.5はthinkingパートとtextパートが分かれる場合があるため全パートを結合して検索
 function extractText(data: any): string {
   const parts: any[] = data?.candidates?.[0]?.content?.parts ?? [];
-  // thought=trueのパートを除いたテキストを優先、なければ全部結合
   const textParts = parts.filter((p: any) => !p.thought && typeof p.text === "string");
   if (textParts.length > 0) return textParts.map((p: any) => p.text).join("");
   return parts.map((p: any) => p.text ?? "").join("");
@@ -48,10 +46,8 @@ function sanitize(m: any): GeminiMetadata {
 export type BatchResult = {
   results: (GeminiMetadata | null)[];
   error?: string;
-  rawResponse?: unknown;
 };
 
-// テキストベースで複数トラックのメタデータを一括取得（1回のAPI呼び出し）
 export async function getMetadataBatch(
   tracks: { title: string; artist: string }[]
 ): Promise<BatchResult> {
@@ -60,23 +56,13 @@ export async function getMetadataBatch(
 
   const list = tracks.map((t, i) => `${i + 1}. "${t.title}" by ${t.artist}`).join("\n");
 
-  const prompt = `You are a music expert with deep knowledge of songs and their audio characteristics.
-For each song below, provide accurate music metadata in JSON format.
-Return ONLY a JSON array in the same order as the input. No explanation.
+  const prompt = `You are a music expert. For each song below, return music metadata as a JSON array.
+Return ONLY a JSON array, same order as input. No explanation, no markdown.
 
 Songs:
 ${list}
 
-For each song return an object with these fields:
-- bpm: integer (actual/estimated tempo)
-- key: string (e.g. "F# minor", "C major")
-- camelot: string (Camelot wheel notation, e.g. "11A", "8B")
-- energy: float 0-1 (0=very calm, 1=very intense)
-- danceability: float 0-1 (0=not danceable, 1=very danceable)
-- is_vocal: boolean (true if song has vocals, false if instrumental)
-- genre_tags: string array, max 4 tags
-- release_year: integer
-- confidence: "high" if you know this song well, "medium" if somewhat familiar, "low" if unfamiliar`;
+Each object: { bpm: integer, key: string, camelot: string, energy: float 0-1, danceability: float 0-1, is_vocal: boolean, genre_tags: string[], release_year: integer, confidence: "high"|"medium"|"low" }`;
 
   try {
     const res = await fetch(`${GEMINI_API}?key=${apiKey}`, {
@@ -86,17 +72,18 @@ For each song return an object with these fields:
     });
     const data = (await res.json()) as any;
     if (!res.ok || data?.error) {
-      return { results: tracks.map(() => null), error: `HTTP ${res.status}`, rawResponse: data };
+      return { results: tracks.map(() => null), error: `HTTP ${res.status}: ${JSON.stringify(data?.error)}` };
     }
     const text = extractText(data);
     const parsed = parseJson(text);
     if (!Array.isArray(parsed)) {
-      return { results: tracks.map(() => null), error: "Response was not a JSON array", rawResponse: text };
+      return { results: tracks.map(() => null), error: "Not a JSON array" };
     }
-    const results = tracks.map((_, i) => {
-      try { return parsed[i] ? sanitize(parsed[i]) : null; } catch { return null; }
-    });
-    return { results };
+    return {
+      results: tracks.map((_, i) => {
+        try { return parsed[i] ? sanitize(parsed[i]) : null; } catch { return null; }
+      }),
+    };
   } catch (e) {
     return { results: tracks.map(() => null), error: String(e) };
   }
@@ -104,7 +91,6 @@ For each song return an object with these fields:
 
 export type TrackSuggestion = { title: string; artist: string } & Partial<GeminiMetadata>;
 
-// シードのメタデータをもとに類似曲の提案とメタデータを1回のAPI呼び出しで取得
 export async function getSimilarTrackSuggestions(
   seed: {
     title: string;
@@ -152,49 +138,5 @@ Each object must have: title, artist, bpm (integer), key (e.g. "F# minor"), came
       .filter(Boolean) as TrackSuggestion[];
   } catch {
     return [];
-  }
-}
-
-// 音声ファイルベースでメタデータを解析（低信頼度トラック向けフォールバック）
-export async function getMetadataFromAudio(
-  title: string,
-  artist: string,
-  audioBase64: string
-): Promise<GeminiMetadata | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
-
-  const prompt = `Analyze this 30-second audio preview of "${title}" by ${artist}.
-Provide music metadata in JSON format. Return ONLY the JSON object, no explanation.
-{
-  "bpm": <integer, actual detected tempo>,
-  "key": <string, detected musical key e.g. "F# minor">,
-  "camelot": <string, Camelot wheel notation e.g. "11A">,
-  "energy": <float 0-1>,
-  "danceability": <float 0-1>,
-  "is_vocal": <boolean>,
-  "genre_tags": <string array max 4>,
-  "release_year": <integer, estimate from audio style if unknown>,
-  "confidence": "high"
-}`;
-
-  try {
-    const res = await fetch(`${GEMINI_API}?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: "audio/mpeg", data: audioBase64 } },
-          ],
-        }],
-      }),
-    });
-    const data = (await res.json()) as any;
-    const text = extractText(data);
-    return sanitize(parseJson(text));
-  } catch {
-    return null;
   }
 }
