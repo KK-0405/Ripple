@@ -1,8 +1,9 @@
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!;
+const GETSONGBPM_API_KEY = process.env.GETSONGBPM_API_KEY!;
 
 // SpotifyはHTTPS直接接続（プロキシ経由だとブロックされる）
-const fetchWithProxy = (url: string, init?: RequestInit) => fetch(url, init);
+const spotifyFetch = (url: string, init?: RequestInit) => fetch(url, init);
 
 // アクセストークンのキャッシュ
 let cachedToken: string | null = null;
@@ -11,7 +12,7 @@ let tokenExpiry = 0;
 async function getAccessToken(): Promise<string> {
   if (cachedToken && Date.now() < tokenExpiry) return cachedToken;
 
-  const res = await fetchWithProxy("https://accounts.spotify.com/api/token", {
+  const res = await spotifyFetch("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -26,11 +27,27 @@ async function getAccessToken(): Promise<string> {
   return cachedToken!;
 }
 
-const KEY_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+// BPM・キーはGetSongBPMから取得（SpotifyのAudio Features APIは新規アプリに制限あり）
+async function getBpmAndKey(artist: string, track: string): Promise<{ bpm: number; key: string }> {
+  try {
+    const query = `${artist} ${track}`;
+    const searchRes = await fetch(
+      `https://api.getsongbpm.com/search/?api_key=${GETSONGBPM_API_KEY}&type=song&lookup=${encodeURIComponent(query)}`
+    );
+    const searchData = (await searchRes.json()) as any;
+    const songId = searchData?.search?.[0]?.song_id;
+    if (!songId) return { bpm: 0, key: "" };
 
-function formatKey(key: number, mode: number): string {
-  if (key === -1) return "";
-  return `${KEY_NAMES[key]}${mode === 0 ? "m" : ""}`;
+    const songRes = await fetch(
+      `https://api.getsongbpm.com/song/?api_key=${GETSONGBPM_API_KEY}&id=${songId}`
+    );
+    const songData = (await songRes.json()) as any;
+    const bpm = songData?.song?.tempo ? Math.round(Number(songData.song.tempo)) : 0;
+    const key = songData?.song?.key_of || "";
+    return { bpm, key };
+  } catch {
+    return { bpm: 0, key: "" };
+  }
 }
 
 export type Track = {
@@ -47,7 +64,7 @@ export type Track = {
 export async function searchTracks(query: string): Promise<Track[]> {
   const token = await getAccessToken();
 
-  const res = await fetchWithProxy(
+  const res = await spotifyFetch(
     `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -57,38 +74,31 @@ export async function searchTracks(query: string): Promise<Track[]> {
 
   if (items.length === 0) return [];
 
-  // BPM・キーをバッチ取得
-  const ids = items.map((t: any) => t.id).join(",");
-  const featRes = await fetchWithProxy(
-    `https://api.spotify.com/v1/audio-features?ids=${ids}`,
-    { headers: { Authorization: `Bearer ${token}` } }
+  return Promise.all(
+    items.map(async (t: any) => {
+      const { bpm, key } = await getBpmAndKey(t.artists[0]?.name ?? "", t.name);
+      return {
+        id: t.id,
+        name: t.name,
+        artists: t.artists.map((a: any) => ({ name: a.name })),
+        album: {
+          name: t.album.name,
+          images: t.album.images,
+        },
+        duration_ms: t.duration_ms,
+        bpm,
+        key,
+        url: t.external_urls.spotify,
+      };
+    })
   );
-  const featData = (await featRes.json()) as any;
-  const features = featData?.audio_features ?? [];
-
-  return items.map((t: any, i: number) => {
-    const feat = features[i];
-    return {
-      id: t.id,
-      name: t.name,
-      artists: t.artists.map((a: any) => ({ name: a.name })),
-      album: {
-        name: t.album.name,
-        images: t.album.images,
-      },
-      duration_ms: t.duration_ms,
-      bpm: feat ? Math.round(feat.tempo) : 0,
-      key: feat ? formatKey(feat.key, feat.mode) : "",
-      url: t.external_urls.spotify,
-    };
-  });
 }
 
 export async function getSimilarTracks(artist: string, track: string): Promise<Track[]> {
   const token = await getAccessToken();
 
   // まずトラックIDを取得
-  const searchRes = await fetchWithProxy(
+  const searchRes = await spotifyFetch(
     `https://api.spotify.com/v1/search?q=${encodeURIComponent(`${track} ${artist}`)}&type=track&limit=1`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -99,7 +109,7 @@ export async function getSimilarTracks(artist: string, track: string): Promise<T
   if (!seedTrack) return [];
 
   // レコメンデーション取得
-  const recRes = await fetchWithProxy(
+  const recRes = await spotifyFetch(
     `https://api.spotify.com/v1/recommendations?seed_tracks=${seedTrack.id}&limit=20`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -109,29 +119,22 @@ export async function getSimilarTracks(artist: string, track: string): Promise<T
 
   if (tracks.length === 0) return [];
 
-  // BPM・キーをバッチ取得
-  const ids = tracks.map((t: any) => t.id).join(",");
-  const featRes = await fetchWithProxy(
-    `https://api.spotify.com/v1/audio-features?ids=${ids}`,
-    { headers: { Authorization: `Bearer ${token}` } }
+  return Promise.all(
+    tracks.map(async (t: any) => {
+      const { bpm, key } = await getBpmAndKey(t.artists[0]?.name ?? "", t.name);
+      return {
+        id: t.id,
+        name: t.name,
+        artists: t.artists.map((a: any) => ({ name: a.name })),
+        album: {
+          name: t.album.name,
+          images: t.album.images,
+        },
+        duration_ms: t.duration_ms,
+        bpm,
+        key,
+        url: t.external_urls.spotify,
+      };
+    })
   );
-  const featData = (await featRes.json()) as any;
-  const features = featData?.audio_features ?? [];
-
-  return tracks.map((t: any, i: number) => {
-    const feat = features[i];
-    return {
-      id: t.id,
-      name: t.name,
-      artists: t.artists.map((a: any) => ({ name: a.name })),
-      album: {
-        name: t.album.name,
-        images: t.album.images,
-      },
-      duration_ms: t.duration_ms,
-      bpm: feat ? Math.round(feat.tempo) : 0,
-      key: feat ? formatKey(feat.key, feat.mode) : "",
-      url: t.external_urls.spotify,
-    };
-  });
 }
