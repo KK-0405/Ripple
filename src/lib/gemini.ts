@@ -10,7 +10,10 @@ export type GeminiMetadata = {
   confidence: "high" | "medium" | "low";
 };
 
-const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+// APIクォータ節約のためのメモリキャッシュ（サーバー再起動でクリア）
+const metadataCache = new Map<string, GeminiMetadata>();
 
 // Gemini 2.5はthinkingパートとtextパートが分かれる場合があるため全パートを結合して検索
 function extractText(data: any): string {
@@ -58,7 +61,16 @@ export async function getMetadataBatch(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { results: tracks.map(() => null), error: "GEMINI_API_KEY not set" };
 
-  const list = tracks.map((t, i) => `${i + 1}. "${t.title}" by ${t.artist}`).join("\n");
+  // キャッシュ済みのトラックを除外してAPI呼び出しを最小化
+  const cacheKeys = tracks.map((t) => `${t.title}|||${t.artist}`.toLowerCase());
+  const uncachedIndices = cacheKeys.map((k, i) => metadataCache.has(k) ? -1 : i).filter(i => i >= 0);
+
+  if (uncachedIndices.length === 0) {
+    return { results: cacheKeys.map((k) => metadataCache.get(k) ?? null) };
+  }
+
+  const uncachedTracks = uncachedIndices.map((i) => tracks[i]);
+  const list = uncachedTracks.map((t, i) => `${i + 1}. "${t.title}" by ${t.artist}`).join("\n");
 
   const prompt = `You are a music expert with deep knowledge of songs and their audio characteristics.
 For each song below, provide accurate music metadata in JSON format.
@@ -93,9 +105,22 @@ For each song return an object with these fields:
     if (!Array.isArray(parsed)) {
       return { results: tracks.map(() => null), error: "Response was not a JSON array", rawResponse: text };
     }
+    const uncachedResults = parsed.map((m: any) => {
+      try { return sanitize(m); } catch { return null; }
+    });
+
+    // キャッシュに保存
+    uncachedIndices.forEach((origIdx, i) => {
+      const result = uncachedResults[i];
+      if (result) metadataCache.set(cacheKeys[origIdx], result);
+    });
+
+    // キャッシュ済み含めて元のインデックス順に結果を組み立て
     return {
-      results: parsed.map((m: any) => {
-        try { return sanitize(m); } catch { return null; }
+      results: cacheKeys.map((k, i) => {
+        const uncachedPos = uncachedIndices.indexOf(i);
+        if (uncachedPos >= 0) return uncachedResults[uncachedPos] ?? null;
+        return metadataCache.get(k) ?? null;
       }),
     };
   } catch (e) {
