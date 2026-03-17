@@ -64,24 +64,20 @@ export async function searchTracks(query: string): Promise<Track[]> {
 
   if (items.length === 0) return [];
 
-  return Promise.all(
-    items.map(async (t: any) => {
-      const { bpm, key } = await getBpmAndKey(t.artists[0]?.name ?? "", t.name);
-      return {
-        id: t.id,
-        name: t.name,
-        artists: t.artists.map((a: any) => ({ name: a.name })),
-        album: {
-          name: t.album.name,
-          images: t.album.images,
-        },
-        duration_ms: t.duration_ms,
-        bpm,
-        key,
-        url: t.external_urls.spotify,
-      };
-    })
-  );
+  // 検索結果はBPMなし（速度優先）
+  return items.map((t: any) => ({
+    id: t.id,
+    name: t.name,
+    artists: t.artists.map((a: any) => ({ name: a.name })),
+    album: {
+      name: t.album.name,
+      images: t.album.images,
+    },
+    duration_ms: t.duration_ms,
+    bpm: 0,
+    key: "",
+    url: t.external_urls.spotify,
+  }));
 }
 
 export async function getSimilarTracks(artist: string, track: string): Promise<Track[]> {
