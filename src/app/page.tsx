@@ -86,10 +86,6 @@ export default function Home() {
       const fetched: Track[] = data.tracks ?? [];
       setTracks(fetched);
       setLoading(false);
-      // 検索結果のBPM・Key等をGeminiで非同期取得
-      if (fetched.length > 0) {
-        enrichSearchTracks(fetched);
-      }
     } catch {
       setTracks([]);
       setLoading(false);
