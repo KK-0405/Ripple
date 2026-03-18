@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { type Track, type Mode, type SavedPlaylist, type SimilarFilters } from "@/types";
 import AuthModal from "@/components/AuthModal";
@@ -60,6 +60,18 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showUserMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showUserMenu]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
   const [mainSeed, setMainSeed] = useState<Track | null>(null);
@@ -396,23 +408,20 @@ export default function Home() {
               </button>
 
               {showUserMenu && (
-                <>
-                  <div onClick={() => setShowUserMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 50 }} />
-                  <div style={{ position: "absolute", bottom: "calc(100% + 6px)", left: 0, right: 0, background: "#fff", borderRadius: "10px", boxShadow: "0 4px 20px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)", zIndex: 51, overflow: "hidden" }}>
-                    <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: "#1d1d1f" }}>{userProfile?.user_id}</div>
-                      <div style={{ fontSize: "11px", color: "#aeaeb2", marginTop: "1px" }}>{session.user?.email}</div>
-                    </div>
-                    <button
-                      onClick={async () => { await signOut(); setShowUserMenu(false); }}
-                      style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#ff3b30", fontSize: "13px", fontWeight: 500, cursor: "pointer", textAlign: "left" as const }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,59,48,0.06)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                    >
-                      ログアウト
-                    </button>
+                <div ref={userMenuRef} style={{ position: "absolute", bottom: "calc(100% + 6px)", left: 0, right: 0, background: "#fff", borderRadius: "10px", boxShadow: "0 4px 20px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)", zIndex: 51, overflow: "hidden" }}>
+                  <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+                    <div style={{ fontSize: "12px", fontWeight: 600, color: "#1d1d1f" }}>{userProfile?.user_id}</div>
+                    <div style={{ fontSize: "11px", color: "#aeaeb2", marginTop: "1px" }}>{session.user?.email}</div>
                   </div>
-                </>
+                  <button
+                    onClick={async () => { await signOut(); setShowUserMenu(false); }}
+                    style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#ff3b30", fontSize: "13px", fontWeight: 500, cursor: "pointer", textAlign: "left" as const }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,59,48,0.06)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                  >
+                    ログアウト
+                  </button>
+                </div>
               )}
             </div>
           ) : (
