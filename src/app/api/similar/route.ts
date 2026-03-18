@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSimilarTrackSuggestions } from "@/lib/gemini";
+import { getSimilarTrackSuggestions, isJapanese } from "@/lib/gemini";
 
 // Deezerが返したトラックのアーティスト名で最終フィルター
 const BLOCKED_ARTISTS = [
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     const cap = Math.min(count, 30);
+    const japaneseSeed = isJapanese(seed.title) || isJapanese(seed.artist);
 
     // Step1: Geminiに類似曲の提案＋メタデータを1回で取得
     // gemini側でバッファ込みで多めに取得するため、capをそのまま渡す
@@ -90,6 +91,10 @@ export async function POST(request: NextRequest) {
         const s = suggestions[i];
         return {
           ...track,
+          // 日本語シードの場合: Deezerはローマジタイトルをもつことがあるため
+          // Geminiが返した日本語タイトル/アーティストを優先して上書きする
+          name: (japaneseSeed && s.title) ? s.title : track.name,
+          artists: (japaneseSeed && s.artist) ? [{ name: s.artist }] : track.artists,
           bpm: track.bpm || s.bpm || 0,
           key: s.key ?? "",
           camelot: s.camelot ?? "",

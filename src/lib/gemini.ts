@@ -123,7 +123,7 @@ export type SimilarResult = {
   error?: string;
 };
 
-function isJapanese(text: string): boolean {
+export function isJapanese(text: string): boolean {
   return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
 }
 
@@ -177,7 +177,7 @@ function buildSimilarPrompt(
 
   const japaneseSeed = isJapanese(seed.title) || isJapanese(seed.artist);
   const langRule = japaneseSeed
-    ? "- Output title and artist fields in Japanese (use Japanese characters — kanji/kana — not romaji). Japanese songs should have Japanese titles."
+    ? `- ⚠️ LANGUAGE IS JAPANESE. You MUST write title and artist in Japanese script (漢字・ひらがな・カタカナ). Romaji is ABSOLUTELY FORBIDDEN. WRONG: "Yoru ni Kakeru" / CORRECT: "夜に駆ける". WRONG: "Ado" in romaji artist / CORRECT: "Ado" or "あど". Every single title must contain Japanese characters if the song is Japanese.`
     : "- Output title and artist fields in English (use Latin alphabet).";
 
   return `You are a DJ and music expert.
