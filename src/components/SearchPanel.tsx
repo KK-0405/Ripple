@@ -123,7 +123,7 @@ export default function SearchPanel({
   type YtData = { videoUrl?: string; viewCount?: string | null; searchUrl?: string; loading: boolean };
   const [ytData, setYtData] = useState<YtData>({ loading: false });
   const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(0.6);
+  const [volume, setVolume] = useState(0.2);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [suggestions, setSuggestions] = useState<Track[]>([]);
@@ -802,76 +802,95 @@ export default function SearchPanel({
         )}
       </div>
 
-      {/* ミニプレーヤーバー */}
-      {playingId && playingTrack && (
-        <div style={{
-          borderTop: `1px solid ${C.sep}`,
-          background: C.s1,
-          padding: "10px 14px 12px",
-          flexShrink: 0,
-        }}>
-          {/* シークバー */}
-          <div
-            onClick={handleSeek}
-            style={{
-              height: "4px", borderRadius: "2px", background: C.s3,
-              cursor: "pointer", marginBottom: "10px", position: "relative",
-            }}
-          >
-            <div style={{ height: "100%", width: `${progress * 100}%`, borderRadius: "2px", background: C.acc, transition: "width 0.2s linear" }} />
-          </div>
+      {/* ミニプレーヤーバー（常時表示） */}
+      <div style={{
+        borderTop: `1px solid ${C.sep}`,
+        background: C.s1,
+        padding: "10px 14px 12px",
+        flexShrink: 0,
+      }}>
+        {/* シークバー */}
+        <div
+          onClick={playingTrack ? handleSeek : undefined}
+          style={{
+            height: "4px", borderRadius: "2px", background: C.s3,
+            cursor: playingTrack ? "pointer" : "default", marginBottom: "10px",
+          }}
+        >
+          <div style={{ height: "100%", width: `${progress * 100}%`, borderRadius: "2px", background: C.acc, transition: "width 0.2s linear" }} />
+        </div>
 
-          {/* コントロール行 */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {/* アルバムアート */}
+        {/* コントロール行 */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* アルバムアート or プレースホルダー */}
+          {playingTrack ? (
             <img
               src={playingTrack.album.images[0]?.url}
               alt={playingTrack.album.name}
               style={{ width: 32, height: 32, borderRadius: "6px", flexShrink: 0, objectFit: "cover" }}
             />
+          ) : (
+            <div style={{ width: 32, height: 32, borderRadius: "6px", background: C.s2, flexShrink: 0 }} />
+          )}
 
-            {/* 曲情報 */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "12px", fontWeight: 600, color: C.t1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {playingTrack.name}
-              </div>
-              <div style={{ fontSize: "11px", color: C.t2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {playingTrack.artists.map((a) => a.name).join(", ")}
-              </div>
-            </div>
+          {/* 曲情報 */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {playingTrack ? (
+              <>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: C.t1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {playingTrack.name}
+                </div>
+                <div style={{ fontSize: "11px", color: C.t2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {playingTrack.artists.map((a) => a.name).join(", ")}
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: "11px", color: C.t3 }}>再生していません</div>
+            )}
+          </div>
 
-            {/* 再生/停止 */}
-            <button
-              onClick={() => togglePreview(playingTrack)}
-              style={{
-                width: 30, height: 30,
-                background: C.acc, border: "none", borderRadius: "50%",
-                color: "#fff", fontSize: "13px",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", flexShrink: 0,
-              }}
-            >
-              ⏸
-            </button>
-
-            {/* 音量 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={volume === 0 ? C.t3 : C.t2} strokeWidth="1.6" strokeLinecap="round">
-                <path d="M2 5.5h2.5l4-3v11l-4-3H2z"/>
-                {volume > 0 && <path d="M11 5.5a3 3 0 0 1 0 5"/>}
-                {volume > 0.5 && <path d="M12.5 3.5a5.5 5.5 0 0 1 0 9"/>}
+          {/* 再生/停止ボタン */}
+          <button
+            onClick={playingTrack ? () => togglePreview(playingTrack) : undefined}
+            style={{
+              width: 30, height: 30, flexShrink: 0,
+              background: playingTrack ? C.acc : C.s2,
+              border: "none", borderRadius: "50%",
+              cursor: playingTrack ? "pointer" : "default",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              lineHeight: 1,
+            }}
+          >
+            {/* SVG の pause アイコン（ズレなし） */}
+            {playingTrack ? (
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="#fff">
+                <rect x="0" y="0" width="3.5" height="12" rx="1"/>
+                <rect x="6.5" y="0" width="3.5" height="12" rx="1"/>
               </svg>
-              <input
-                type="range"
-                min={0} max={1} step={0.02}
-                value={volume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                style={{ width: "72px", cursor: "pointer", accentColor: C.acc }}
-              />
-            </div>
+            ) : (
+              <svg width="10" height="12" viewBox="0 0 10 12" fill={C.t3}>
+                <polygon points="0,0 10,6 0,12"/>
+              </svg>
+            )}
+          </button>
+
+          {/* 音量 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={volume === 0 ? C.t3 : C.t2} strokeWidth="1.6" strokeLinecap="round">
+              <path d="M2 5.5h2.5l4-3v11l-4-3H2z"/>
+              {volume > 0 && <path d="M11 5.5a3 3 0 0 1 0 5"/>}
+              {volume > 0.33 && <path d="M12.5 3.5a5.5 5.5 0 0 1 0 9"/>}
+            </svg>
+            <input
+              type="range"
+              min={0} max={1} step={0.02}
+              value={volume}
+              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+              style={{ width: "72px", cursor: "pointer", accentColor: C.acc }}
+            />
           </div>
         </div>
-      )}
+      </div>
 
       {/* トラック詳細モーダル */}
       {selectedTrack && (
