@@ -120,6 +120,8 @@ export default function SearchPanel({
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [playingTrack, setPlayingTrack] = useState<Track | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  type YtData = { videoUrl?: string; viewCount?: string | null; searchUrl?: string; loading: boolean };
+  const [ytData, setYtData] = useState<YtData>({ loading: false });
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(0.6);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -585,7 +587,14 @@ export default function SearchPanel({
           return (
             <div
               key={track.id}
-              onClick={() => setSelectedTrack(track)}
+              onClick={() => {
+                setSelectedTrack(track);
+                setYtData({ loading: true });
+                fetch(`/api/youtube/track?title=${encodeURIComponent(track.name)}&artist=${encodeURIComponent(track.artists[0]?.name ?? "")}`)
+                  .then((r) => r.json())
+                  .then((d) => setYtData({ loading: false, videoUrl: d.videoUrl, viewCount: d.viewCount, searchUrl: d.searchUrl }))
+                  .catch(() => setYtData({ loading: false }));
+              }}
               style={{
                 display: "flex", alignItems: "center", gap: "12px",
                 padding: "10px 10px",
@@ -867,7 +876,7 @@ export default function SearchPanel({
       {/* トラック詳細モーダル */}
       {selectedTrack && (
         <div
-          onClick={() => setSelectedTrack(null)}
+          onClick={() => { setSelectedTrack(null); setYtData({ loading: false }); }}
           style={{
             position: "fixed", inset: 0, zIndex: 1000,
             background: "rgba(0,0,0,0.45)",
@@ -915,7 +924,7 @@ export default function SearchPanel({
                 )}
               </div>
               <button
-                onClick={() => setSelectedTrack(null)}
+                onClick={() => { setSelectedTrack(null); setYtData({ loading: false }); }}
                 style={{
                   background: C.s1, border: "none", borderRadius: "50%",
                   width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
@@ -1061,6 +1070,48 @@ export default function SearchPanel({
                   </button>
                 );
               })()}
+            </div>
+
+            {/* YouTube リンク + 再生数 */}
+            <div style={{ padding: "10px 20px 16px", borderTop: `1px solid ${C.sep}`, display: "flex", alignItems: "center", gap: "10px" }}>
+              {ytData.loading ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ animation: "ripple-spin 1s linear infinite", flexShrink: 0 }}>
+                    <circle cx="10" cy="10" r="2.2" fill={C.t3} opacity="0.9" />
+                    <circle cx="10" cy="10" r="5" stroke={C.t3} strokeWidth="1.6" strokeLinecap="round" strokeDasharray="23.6 7.8" opacity="0.6" fill="none" />
+                    <circle cx="10" cy="10" r="8" stroke={C.t3} strokeWidth="1.1" strokeLinecap="round" strokeDasharray="37.7 12.6" opacity="0.35" fill="none" />
+                  </svg>
+                  <span style={{ fontSize: "11px", color: C.t3 }}>YouTube 取得中...</span>
+                </div>
+              ) : (ytData.videoUrl || ytData.searchUrl) ? (
+                <>
+                  <a
+                    href={ytData.videoUrl ?? ytData.searchUrl}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: "6px",
+                      padding: "6px 12px", borderRadius: "8px",
+                      background: "rgba(255,0,0,0.07)",
+                      border: "1px solid rgba(255,0,0,0.18)",
+                      color: "#cc0000",
+                      fontSize: "12px", fontWeight: 600,
+                      textDecoration: "none",
+                    }}
+                  >
+                    {/* YouTube アイコン */}
+                    <svg width="14" height="10" viewBox="0 0 24 17" fill="#cc0000">
+                      <path d="M23.5 2.5S23.2.9 22.5.2C21.6-.8 20.6-.8 20.1-.8 16.8-1 12-1 12-1s-4.8 0-8.1.2C3.4-.8 2.4-.8 1.5.2.8.9.5 2.5.5 2.5S.2 4.4.2 6.3v1.8C.2 10 .5 11.9.5 11.9S.8 13.5 1.5 14.2c.9 1 2.1.9 2.6 1C5.8 15.4 12 15.4 12 15.4s4.8 0 8.1-.3c.5 0 1.7-.1 2.6-1 .7-.7 1-2.3 1-2.3s.3-1.9.3-3.8V6.3c0-1.9-.3-3.8-.3-3.8z"/>
+                      <path d="M9.5 11V4.5l6.5 3.3-6.5 3.2z" fill="#fff"/>
+                    </svg>
+                    {ytData.videoUrl ? "YouTube で見る" : "YouTube で検索"}
+                  </a>
+                  {ytData.viewCount && (
+                    <span style={{ fontSize: "11px", color: C.t3, fontWeight: 500 }}>
+                      {ytData.viewCount}
+                    </span>
+                  )}
+                </>
+              ) : null}
             </div>
           </div>
         </div>
