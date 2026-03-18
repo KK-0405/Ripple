@@ -193,25 +193,69 @@ export default function SearchPanel({
     setProgress(0);
   };
 
-  const togglePreview = (track: Track) => {
-    if (!track.preview) return;
-    if (playingId === track.id) {
-      stopPreview();
-    } else {
-      stopPreview();
+  const startAudio = (url: string, track: Track) => {
+    const audio = new Audio(url);
+    audio.volume = volume;
+    audio.onended = () => { setPlayingId(null); setPlayingTrack(null); setProgress(0); if (progressRef.current) clearInterval(progressRef.current); };
+    audio.play();
+    audioRef.current = audio;
+    setPlayingId(track.id);
+    setPlayingTrack(track);
+    setProgress(0);
+    progressRef.current = setInterval(() => {
+      if (!audioRef.current || audioRef.current.duration === 0) return;
+      setProgress(audioRef.current.currentTime / audioRef.current.duration);
+    }, 200);
+  };
+
+  const togglePreview = async (track: Track) => {
+    if (playingId === track.id) { stopPreview(); return; }
+    stopPreview();
+
+    // まず既存の preview URL を試す
+    if (track.preview) {
+      // audio load を試みて失敗したらフレッシュURLを取得し直す
       const audio = new Audio(track.preview);
       audio.volume = volume;
-      audio.onended = () => { setPlayingId(null); setPlayingTrack(null); setProgress(0); if (progressRef.current) clearInterval(progressRef.current); };
-      audio.play();
-      audioRef.current = audio;
-      setPlayingId(track.id);
-      setPlayingTrack(track);
-      setProgress(0);
-      progressRef.current = setInterval(() => {
-        if (!audioRef.current || audioRef.current.duration === 0) return;
-        setProgress(audioRef.current.currentTime / audioRef.current.duration);
-      }, 200);
+      let started = false;
+      audio.oncanplay = () => {
+        if (started) return;
+        started = true;
+        audio.oncanplay = null;
+        audio.onerror = null;
+        // 再生開始
+        audio.onended = () => { setPlayingId(null); setPlayingTrack(null); setProgress(0); if (progressRef.current) clearInterval(progressRef.current); };
+        audio.play();
+        audioRef.current = audio;
+        setPlayingId(track.id);
+        setPlayingTrack(track);
+        setProgress(0);
+        progressRef.current = setInterval(() => {
+          if (!audioRef.current || audioRef.current.duration === 0) return;
+          setProgress(audioRef.current.currentTime / audioRef.current.duration);
+        }, 200);
+      };
+      audio.onerror = async () => {
+        if (started) return;
+        started = true;
+        // URLが期限切れ → Deezerから再取得
+        try {
+          const res = await fetch(`/api/preview?id=${track.id}`);
+          const data = await res.json();
+          if (data.preview) startAudio(data.preview, track);
+        } catch { /* 取得失敗 → 無音のまま */ }
+      };
+      // load を開始（oncanplay / onerror を待つ）
+      audio.load();
+      return;
     }
+
+    // preview なし → Deezerからフレッシュ取得を試みる
+    try {
+      const res = await fetch(`/api/preview?id=${track.id}`);
+      const data = await res.json();
+      if (data.preview) startAudio(data.preview, track);
+    } catch { /* 取得失敗 */ }
   };
 
   const handleVolumeChange = (v: number) => {
@@ -544,24 +588,22 @@ export default function SearchPanel({
                   width={46} height={46}
                   style={{ borderRadius: "8px", display: "block", objectFit: "cover", boxShadow: "0 1px 4px rgba(0,0,0,0.12)" }}
                 />
-                {track.preview && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); togglePreview(track); }}
-                    style={{
-                      position: "absolute", inset: 0,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      background: playingId === track.id ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.45)",
-                      border: "none", borderRadius: "8px",
-                      cursor: "pointer", color: "#fff", fontSize: "16px",
-                      opacity: playingId === track.id ? 1 : 0,
-                      transition: "opacity 0.15s",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                    onMouseLeave={(e) => { if (playingId !== track.id) e.currentTarget.style.opacity = "0"; }}
-                  >
-                    {playingId === track.id ? "⏸" : "▶"}
-                  </button>
-                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); togglePreview(track); }}
+                  style={{
+                    position: "absolute", inset: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: playingId === track.id ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.45)",
+                    border: "none", borderRadius: "8px",
+                    cursor: "pointer", color: "#fff", fontSize: "16px",
+                    opacity: playingId === track.id ? 1 : 0,
+                    transition: "opacity 0.15s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                  onMouseLeave={(e) => { if (playingId !== track.id) e.currentTarget.style.opacity = "0"; }}
+                >
+                  {playingId === track.id ? "⏸" : "▶"}
+                </button>
                 {playingId === track.id && (
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "3px", borderRadius: "0 0 8px 8px", background: "rgba(255,255,255,0.3)", overflow: "hidden" }}>
                     <div style={{ height: "100%", width: `${progress * 100}%`, background: "#fff", transition: "width 0.2s linear" }} />
@@ -921,8 +963,7 @@ export default function SearchPanel({
 
             {/* アクションボタン */}
             <div style={{ padding: "12px 20px 18px", borderTop: `1px solid ${C.sep}`, display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {selectedTrack.preview && (
-                <button
+              <button
                   onClick={() => togglePreview(selectedTrack)}
                   style={{
                     padding: "7px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: 600,
@@ -934,7 +975,6 @@ export default function SearchPanel({
                 >
                   {playingId === selectedTrack.id ? "⏸ 停止" : "▶ プレビュー"}
                 </button>
-              )}
               {(mode === "search" || mode === "playlist") && (() => {
                 const isMain = mainSeed?.id === selectedTrack.id;
                 const inSub = !!subSeeds.find((t) => t.id === selectedTrack.id);
