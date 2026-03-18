@@ -206,7 +206,7 @@ Array length must be ${count}. Start with [ and end with ].
 
 Each element: {"title":"...","artist":"...","bpm":128,"key":"F# minor","camelot":"2A","energy":0.7,"danceability":0.8,"is_vocal":true,"genre_tags":["House"],"release_year":2005,"confidence":"high","reason":"..."}
 
-The "reason" field: 1 short sentence (max 40 chars) explaining WHY this track is similar to the seed, in a way anyone can understand — focus on mood, atmosphere, feel, genre vibe, or era. Avoid technical DJ terms like BPM, camelot, or key. ALWAYS write in Japanese. Examples: "同じ切なさを持つ夜向けのポップス" / "90年代のダンスフロアを彷彿とさせる" / "透明感のあるサウンドが共通" / "疾走感と高揚感が似ている"
+The "reason" field: 1 short sentence (max 50 chars) that combines (1) why the mood/vibe is similar to the seed AND (2) one memorable fact about the track if you know one. Avoid all technical DJ terms. ALWAYS write in Japanese. For the fact, use things like: チャート1位・○○万枚売上・○○がカバーして有名に・映画/ドラマ主題歌・グラミー受賞・○○のサンプリング元 etc. If no notable fact is known, just describe the vibe. Examples: "全米1位、切ない夜の雰囲気が共通" / "ビヨンセがカバー、同じ力強さ" / "80年代ディスコの代表曲、同じ高揚感" / "透明感あるボーカルが似ている"
 
 REMEMBER: ${count} songs total. Output all ${count} now.`;
 }
