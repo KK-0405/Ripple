@@ -116,7 +116,9 @@ export default function SearchPanel({
   const listRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [suggestions, setSuggestions] = useState<Track[]>([]);
   const [artistSuggestions, setArtistSuggestions] = useState<ArtistSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -180,19 +182,30 @@ export default function SearchPanel({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const stopPreview = () => {
+    audioRef.current?.pause();
+    if (progressRef.current) clearInterval(progressRef.current);
+    setPlayingId(null);
+    setProgress(0);
+  };
+
   const togglePreview = (track: Track) => {
     if (!track.preview) return;
     if (playingId === track.id) {
-      audioRef.current?.pause();
-      setPlayingId(null);
+      stopPreview();
     } else {
-      audioRef.current?.pause();
+      stopPreview();
       const audio = new Audio(track.preview);
       audio.volume = 0.6;
-      audio.onended = () => setPlayingId(null);
+      audio.onended = () => { setPlayingId(null); setProgress(0); if (progressRef.current) clearInterval(progressRef.current); };
       audio.play();
       audioRef.current = audio;
       setPlayingId(track.id);
+      setProgress(0);
+      progressRef.current = setInterval(() => {
+        if (!audioRef.current || audioRef.current.duration === 0) return;
+        setProgress(audioRef.current.currentTime / audioRef.current.duration);
+      }, 200);
     }
   };
 
@@ -513,29 +526,34 @@ export default function SearchPanel({
                 />
                 {track.preview && (
                   <button
-                    onClick={() => togglePreview(track)}
+                    onClick={(e) => { e.stopPropagation(); togglePreview(track); }}
                     style={{
                       position: "absolute", inset: 0,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      background: "rgba(0,0,0,0.45)",
+                      background: playingId === track.id ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.45)",
                       border: "none", borderRadius: "8px",
-                      cursor: "pointer", color: "#fff", fontSize: "14px",
+                      cursor: "pointer", color: "#fff", fontSize: "16px",
                       opacity: playingId === track.id ? 1 : 0,
                       transition: "opacity 0.15s",
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
                     onMouseLeave={(e) => { if (playingId !== track.id) e.currentTarget.style.opacity = "0"; }}
                   >
-                    {playingId === track.id ? "⏹" : "▶"}
+                    {playingId === track.id ? "⏸" : "▶"}
                   </button>
+                )}
+                {playingId === track.id && (
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "3px", borderRadius: "0 0 8px 8px", background: "rgba(255,255,255,0.3)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${progress * 100}%`, background: "#fff", transition: "width 0.2s linear" }} />
+                  </div>
                 )}
               </div>
 
               {/* トラック情報 */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  color: isMain ? C.acc : C.t1,
-                  fontSize: "14px", fontWeight: 500,
+                  color: playingId === track.id ? C.acc : isMain ? C.acc : C.t1,
+                  fontSize: "14px", fontWeight: playingId === track.id ? 600 : 500,
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   lineHeight: 1.3,
                 }}>
