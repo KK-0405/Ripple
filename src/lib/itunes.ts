@@ -38,7 +38,7 @@ async function fetchDeezerBpm(title: string, artist: string): Promise<number> {
 export async function searchTracks(query: string): Promise<Track[]> {
   const encoded = encodeURIComponent(query);
   const res = await fetch(
-    `https://itunes.apple.com/search?term=${encoded}&media=music&country=JP&limit=25&lang=ja_jp`
+    `https://itunes.apple.com/search?term=${encoded}&media=music&country=US&limit=25&lang=en_us`
   );
   const data = (await res.json()) as any;
   const tracks: Track[] = (data?.results ?? []).filter((t: any) => t.trackId).map(mapItunesTrack);
