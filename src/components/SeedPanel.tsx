@@ -249,42 +249,39 @@ export default function SeedPanel({
             <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${C.sep}` }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
                 <div style={{ fontSize: "11px", color: C.t3 }}>ジャンル</div>
-                {availableGenres.length > 0 && (
+                {hasGemini && (availableGenres.length > 0 || mainSeed?.genre_tags?.length) && (
                   <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => set({ selectedGenres: availableGenres })} style={{ fontSize: "10px", color: C.acc, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 }}>全選択</button>
+                    <button onClick={() => set({ selectedGenres: availableGenres.length > 0 ? availableGenres : (mainSeed?.genre_tags ?? []) })} style={{ fontSize: "10px", color: C.acc, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 }}>全選択</button>
                     <button onClick={() => set({ selectedGenres: [] })} style={{ fontSize: "10px", color: C.t3, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 }}>全解除</button>
                   </div>
                 )}
               </div>
-              {/* Seed のジャンルタグは常時表示 */}
-              {hasGemini && mainSeed?.genre_tags?.length ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "3px", marginBottom: availableGenres.length > 0 ? "8px" : "0" }}>
-                  {mainSeed.genre_tags.map((g) => (
-                    <span key={g} style={{ fontSize: "10px", color: "#b06c00", background: C.orangeDim, padding: "1px 6px", borderRadius: "4px" }}>{g}</span>
-                  ))}
-                </div>
-              ) : !hasGemini ? (
-                <div style={{ fontSize: "10px", color: C.t3, marginBottom: "2px" }}>※ Gemini 解析後に使用可</div>
-              ) : null}
-              {/* 類似曲取得後: フィルター用チェックボックス */}
-              {availableGenres.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                  {availableGenres.map((g) => {
-                    const checked = filters.selectedGenres.includes(g);
-                    return (
-                      <label key={g} style={{ display: "flex", alignItems: "center", gap: "7px", padding: "3px 0", cursor: "pointer" }}>
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => set({ selectedGenres: checked ? filters.selectedGenres.filter((x) => x !== g) : [...filters.selectedGenres, g] })}
-                          style={{ accentColor: C.acc, cursor: "pointer", width: 13, height: 13, flexShrink: 0 }}
-                        />
-                        <span style={{ fontSize: "12px", color: checked ? C.acc : C.t2, fontWeight: checked ? 600 : 400 }}>{g}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+              {!hasGemini && (
+                <div style={{ fontSize: "10px", color: C.t3 }}>※ Gemini 解析後に使用可</div>
               )}
+              {/* 類似曲取得後はresultジャンル、それ以前はSeedジャンルをチェックボックス表示 */}
+              {(() => {
+                const genres = availableGenres.length > 0 ? availableGenres : (mainSeed?.genre_tags ?? []);
+                if (!hasGemini || genres.length === 0) return null;
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    {genres.map((g) => {
+                      const checked = filters.selectedGenres.includes(g);
+                      return (
+                        <label key={g} style={{ display: "flex", alignItems: "center", gap: "7px", padding: "3px 0", cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => set({ selectedGenres: checked ? filters.selectedGenres.filter((x) => x !== g) : [...filters.selectedGenres, g] })}
+                            style={{ accentColor: C.acc, cursor: "pointer", width: 13, height: 13, flexShrink: 0 }}
+                          />
+                          <span style={{ fontSize: "12px", color: checked ? C.acc : C.t2, fontWeight: checked ? 600 : 400 }}>{g}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* エネルギー */}
