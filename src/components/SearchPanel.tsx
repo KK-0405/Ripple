@@ -35,7 +35,9 @@ type Props = {
   mainSeed: Track | null;
   subSeeds: Track[];
   setAsMainSeed: (track: Track) => void;
+  removeMainSeed: () => void;
   addToSubSeed: (track: Track) => void;
+  removeSubSeed: (id: string) => void;
   addToPlaylist: (track: Track) => void;
   removeFromPlaylist: (id: string) => void;
   isInPlaylist: (track: Track) => boolean;
@@ -106,6 +108,7 @@ function isCamelotAdjacent(a: string, b: string): boolean {
 export default function SearchPanel({
   query, setQuery, search, loading, mode, displayTracks,
   mainSeed, subSeeds, setAsMainSeed, addToSubSeed,
+  removeMainSeed, removeSubSeed,
   addToPlaylist, removeFromPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
   onResetSimilar, onSearchMore, viewingPlaylist, togglePublic,
 }: Props) {
@@ -588,7 +591,7 @@ export default function SearchPanel({
               {(mode === "search" || mode === "playlist") && (
                 <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
                   <button
-                    onClick={() => setAsMainSeed(track)}
+                    onClick={() => isMain ? removeMainSeed() : setAsMainSeed(track)}
                     style={{
                       padding: "5px 10px",
                       background: isMain ? C.acc : C.s1,
@@ -601,7 +604,7 @@ export default function SearchPanel({
                     {isMain ? "★ メイン" : "メイン"}
                   </button>
                   <button
-                    onClick={() => addToSubSeed(track)}
+                    onClick={() => inSubSeed ? removeSubSeed(track.id) : addToSubSeed(track)}
                     style={{
                       padding: "5px 10px",
                       background: inSubSeed ? C.greenDim : C.s1,
@@ -611,7 +614,7 @@ export default function SearchPanel({
                       fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
                     }}
                   >
-                    {inSubSeed ? "✓ サブ" : "+ サブ"}
+                    {inSubSeed ? "✓ サブ" : "サブ"}
                   </button>
                   <button
                     onClick={() => inPlaylist ? removeFromPlaylist(track.id) : addToPlaylist(track)}
@@ -624,7 +627,7 @@ export default function SearchPanel({
                       fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
                     }}
                   >
-                    {inPlaylist ? "✓ リスト" : "+ リスト"}
+                    {inPlaylist ? "✓ リスト" : "リスト"}
                   </button>
                 </div>
               )}
@@ -641,7 +644,7 @@ export default function SearchPanel({
                     flexShrink: 0,
                   }}
                 >
-                  {inPlaylist ? "✓ リスト" : "+ リスト"}
+                  {inPlaylist ? "✓ リスト" : "リスト"}
                 </button>
               )}
             </div>
