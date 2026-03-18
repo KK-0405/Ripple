@@ -7,8 +7,8 @@ const C = {
   bg: "#ffffff",
   s1: "#f5f5f7",
   s2: "#e8e8ed",
-  acc: "#7F77DD",
-  accDim: "rgba(127,119,221,0.1)",
+  acc: "#534AB7",
+  accDim: "rgba(83,74,183,0.1)",
   t1: "#1d1d1f",
   t2: "#6e6e73",
   t3: "#aeaeb2",
@@ -190,7 +190,7 @@ export default function AuthModal({ onClose }: Props) {
     fontSize: "14px",
     fontWeight: 700 as const,
     cursor: disabled ? "default" as const : "pointer" as const,
-    boxShadow: disabled ? "none" : "0 2px 8px rgba(127,119,221,0.28)",
+    boxShadow: disabled ? "none" : "0 2px 8px rgba(83,74,183,0.28)",
     transition: "background 0.15s",
   });
 
@@ -223,9 +223,10 @@ export default function AuthModal({ onClose }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ width: 30, height: 30, background: "linear-gradient(135deg, #3C3489, #26215C)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(63,52,137,0.45)" }}>
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10" cy="10" r="2.5" fill="#EEEDFE" opacity="0.95"/>
-                <circle cx="10" cy="10" r="5.5" stroke="#AFA9EC" strokeWidth="1.5" opacity="0.85"/>
-                <circle cx="10" cy="10" r="9" stroke="#7F77DD" strokeWidth="1" opacity="0.65"/>
+                <circle cx="4" cy="10" r="2" fill="white"/>
+                <path d="M 4 7.5 A 2.5 2.5 0 0 1 4 12.5" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M 4 4.5 A 5.5 5.5 0 0 1 4 15.5" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M 4 1.5 A 8.5 8.5 0 0 1 4 18.5" fill="none" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
             </div>
             <span style={{ fontSize: "16px", fontWeight: 700, color: C.t1 }}>Ripple</span>
