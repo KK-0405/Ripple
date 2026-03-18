@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSimilarTrackSuggestions, isJapanese } from "@/lib/gemini";
+import { getSimilarTrackSuggestions, isJapanese, isJapaneseContext } from "@/lib/gemini";
 
 // Deezerが返したトラックのアーティスト名で最終フィルター
 const BLOCKED_ARTISTS = [
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     const cap = Math.min(count, 30);
-    const japaneseSeed = isJapanese(seed.title) || isJapanese(seed.artist);
+    const japaneseSeed = isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
 
     // Step1: Geminiに類似曲の提案＋メタデータを1回で取得
     // gemini側でバッファ込みで多めに取得するため、capをそのまま渡す
@@ -91,10 +91,10 @@ export async function POST(request: NextRequest) {
         const s = suggestions[i];
         return {
           ...track,
-          // 日本語シードの場合: Deezerはローマジタイトルをもつことがあるため
-          // Geminiが返した日本語タイトル/アーティストを優先して上書きする
-          name: (japaneseSeed && s.title) ? s.title : track.name,
-          artists: (japaneseSeed && s.artist) ? [{ name: s.artist }] : track.artists,
+          // 日本語コンテキスト or Geminiの提案自体が日本語なら日本語タイトル/アーティストを優先
+          // (RADWIMPSのように英字アーティスト名でも日本語曲が提案される場合に対応)
+          name: (japaneseSeed || isJapanese(s.title ?? "")) && s.title ? s.title : track.name,
+          artists: (japaneseSeed || isJapanese(s.artist ?? "")) && s.artist ? [{ name: s.artist }] : track.artists,
           bpm: track.bpm || s.bpm || 0,
           key: s.key ?? "",
           camelot: s.camelot ?? "",

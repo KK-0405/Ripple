@@ -127,6 +127,13 @@ export function isJapanese(text: string): boolean {
   return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
 }
 
+const JAPANESE_GENRE_RE = /j-?pop|j-?rock|j-?indie|j-?r&b|japanese|anime|vocaloid|city.?pop|ボカロ|邦楽/i;
+
+export function isJapaneseContext(title: string, artist: string, genre_tags?: string[]): boolean {
+  if (isJapanese(title) || isJapanese(artist)) return true;
+  return (genre_tags ?? []).some((g) => JAPANESE_GENRE_RE.test(g));
+}
+
 // カラオケ・カバー・トリビュートを検出するキーワード
 const KARAOKE_KEYWORDS = [
   /karaoke/i, /カラオケ/, /kara ?oke/i,
@@ -175,7 +182,7 @@ function buildSimilarPrompt(
     ? `\n- Do NOT include these already-listed songs: ${excludeTitles.slice(0, 20).join(", ")}.`
     : "";
 
-  const japaneseSeed = isJapanese(seed.title) || isJapanese(seed.artist);
+  const japaneseSeed = isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
   const langRule = japaneseSeed
     ? `- ⚠️ LANGUAGE IS JAPANESE. You MUST write title and artist in Japanese script (漢字・ひらがな・カタカナ). Romaji is ABSOLUTELY FORBIDDEN. WRONG: "Yoru ni Kakeru" / CORRECT: "夜に駆ける". WRONG: "Ado" in romaji artist / CORRECT: "Ado" or "あど". Every single title must contain Japanese characters if the song is Japanese.`
     : "- Output title and artist fields in English (use Latin alphabet).";
