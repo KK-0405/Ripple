@@ -89,6 +89,7 @@ export default function Home() {
     if (!query) return;
     setLoading(true);
     setMode("search");
+    setTracks([]);
     setSimilarTracks([]);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
