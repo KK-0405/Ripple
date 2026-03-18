@@ -145,6 +145,43 @@ export default function Home() {
     setLoading(false);
   };
 
+  const exploreSimilarMore = async () => {
+    if (!mainSeed) return;
+    setLoading(true);
+    try {
+      const excludeTitles = similarTracks.map((t) => t.name);
+      const res = await fetch("/api/similar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seed: {
+            title: mainSeed.name,
+            artist: mainSeed.artists[0]?.name ?? "",
+            genre_tags: mainSeed.genre_tags,
+            bpm: mainSeed.bpm,
+            camelot: mainSeed.camelot,
+            energy: mainSeed.energy,
+            danceability: mainSeed.danceability,
+            is_vocal: mainSeed.is_vocal,
+            release_year: mainSeed.release_year,
+          },
+          subSeeds: subSeeds.map((t) => ({
+            title: t.name,
+            artist: t.artists[0]?.name ?? "",
+            genre_tags: t.genre_tags,
+          })),
+          count: similarCount,
+          excludeTitles,
+        }),
+      });
+      const data = await res.json();
+      setSimilarTracks((prev) => [...prev, ...(data.tracks ?? [])]);
+    } catch (e) {
+      setSeedError(String(e));
+    }
+    setLoading(false);
+  };
+
   const authHeaders = () => ({
     "Content-Type": "application/json",
     Authorization: `Bearer ${session?.access_token ?? ""}`,
@@ -543,6 +580,7 @@ export default function Home() {
         addToPlaylist={addToPlaylist} removeFromPlaylist={removeFromPlaylist} isInPlaylist={isInPlaylist}
         filteredSimilarCount={filteredSimilar.length} metadataLoading={metadataLoading}
         onResetSimilar={() => { setSimilarTracks([]); setMode("search"); setFilters(DEFAULT_FILTERS); setViewingPlaylist(null); }}
+        onSearchMore={exploreSimilarMore}
         viewingPlaylist={viewingPlaylist}
         togglePublic={togglePublic}
       />

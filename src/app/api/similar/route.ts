@@ -36,7 +36,7 @@ function mapDeezerTrack(t: any) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { seed, subSeeds = [], count = 20 } = (await request.json()) as {
+    const { seed, subSeeds = [], count = 20, excludeTitles = [] } = (await request.json()) as {
       seed: {
         title: string;
         artist: string;
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       };
       subSeeds?: { title: string; artist: string; genre_tags?: string[] }[];
       count?: number;
+      excludeTitles?: string[];
     };
 
     if (!seed?.title || !seed?.artist) {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // Step1: Geminiに類似曲の提案＋メタデータを1回で取得
     // gemini側でバッファ込みで多めに取得するため、capをそのまま渡す
-    const { suggestions, error: geminiError } = await getSimilarTrackSuggestions(seed, subSeeds, cap);
+    const { suggestions, error: geminiError } = await getSimilarTrackSuggestions(seed, subSeeds, cap, excludeTitles);
     if (suggestions.length === 0) {
       return NextResponse.json({ tracks: [], _debug: geminiError ?? "Gemini returned 0 suggestions" });
     }

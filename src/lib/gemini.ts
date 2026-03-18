@@ -254,7 +254,8 @@ export async function getSimilarTrackSuggestions(
     release_year?: number;
   },
   subSeeds: { title: string; artist: string; genre_tags?: string[] }[],
-  count: number
+  count: number,
+  excludeTitles: string[] = []
 ): Promise<SimilarResult> {
   if (process.env.GEMINI_MOCK === "true") {
     const mockSongs = [
@@ -279,7 +280,7 @@ export async function getSimilarTrackSuggestions(
     const buffered = Math.min(Math.ceil(count * 1.5), 50);
 
     // 1回目（バッファ込みで多めに取得）
-    const prompt1 = buildSimilarPrompt(seed, subSeeds, buffered);
+    const prompt1 = buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles);
     const first = await fetchSuggestions(apiKey, prompt1);
     if (first.error) return first;
 

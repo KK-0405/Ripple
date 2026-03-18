@@ -42,6 +42,7 @@ type Props = {
   filteredSimilarCount: number;
   metadataLoading: boolean;
   onResetSimilar: () => void;
+  onSearchMore: () => void;
   viewingPlaylist: SavedPlaylist | null;
   togglePublic: (id: string, isPublic: boolean) => Promise<void>;
 };
@@ -106,7 +107,7 @@ export default function SearchPanel({
   query, setQuery, search, loading, mode, displayTracks,
   mainSeed, subSeeds, setAsMainSeed, addToSubSeed,
   addToPlaylist, removeFromPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
-  onResetSimilar, viewingPlaylist, togglePublic,
+  onResetSimilar, onSearchMore, viewingPlaylist, togglePublic,
 }: Props) {
   const [togglingPublic, setTogglingPublic] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
@@ -633,6 +634,29 @@ export default function SearchPanel({
             </div>
           );
         })}
+
+        {mode === "similar" && displayTracks.length > 0 && (
+          <div style={{ padding: "12px 4px 8px", display: "flex", justifyContent: "center" }}>
+            <button
+              onClick={onSearchMore}
+              style={{
+                padding: "9px 24px",
+                background: C.accDim,
+                border: `1px solid rgba(83,74,183,0.2)`,
+                borderRadius: "20px",
+                color: C.acc,
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(83,74,183,0.18)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = C.accDim)}
+            >
+              + さらに検索
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
