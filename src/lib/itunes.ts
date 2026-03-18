@@ -35,10 +35,15 @@ async function fetchDeezerBpm(title: string, artist: string): Promise<number> {
   }
 }
 
+function isJapanese(text: string): boolean {
+  return /[\u3040-\u30FF\u4E00-\u9FFF]/.test(text);
+}
+
 export async function searchTracks(query: string): Promise<Track[]> {
   const encoded = encodeURIComponent(query);
+  const locale = isJapanese(query) ? "country=JP&lang=ja_jp" : "country=US&lang=en_us";
   const res = await fetch(
-    `https://itunes.apple.com/search?term=${encoded}&media=music&country=US&limit=25&lang=en_us`
+    `https://itunes.apple.com/search?term=${encoded}&media=music&${locale}&limit=25`
   );
   const data = (await res.json()) as any;
   const tracks: Track[] = (data?.results ?? []).filter((t: any) => t.trackId).map(mapItunesTrack);
