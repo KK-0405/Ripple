@@ -333,7 +333,14 @@ export default function SearchPanel({
         )}
         {mode === "search" && !loading && displayTracks.length === 0 && (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: "44px", marginBottom: "14px" }}>🎵</div>
+            <div style={{ marginBottom: "14px", display: "flex", justifyContent: "center" }}>
+              <svg width="44" height="44" viewBox="0 0 20 20" fill="none">
+                <circle cx="4" cy="10" r="2" fill={C.t3}/>
+                <path d="M 4 7.5 A 2.5 2.5 0 0 1 4 12.5" fill="none" stroke={C.t3} strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M 4 4.5 A 5.5 5.5 0 0 1 4 15.5" fill="none" stroke={C.t3} strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M 4 1.5 A 8.5 8.5 0 0 1 4 18.5" fill="none" stroke={C.t3} strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </div>
             <div style={{ fontSize: "17px", fontWeight: 600, color: C.t2, marginBottom: "6px" }}>曲を検索してみよう</div>
             <div style={{ fontSize: "13px", color: C.t3 }}>曲名またはアーティスト名を入力して Seed を選択</div>
           </div>

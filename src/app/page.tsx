@@ -293,10 +293,9 @@ export default function Home() {
               boxShadow: "0 2px 10px rgba(63,52,137,0.45)",
             }}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="4" cy="10" r="2" fill="white"/>
-                <path d="M 4 7.5 A 2.5 2.5 0 0 1 4 12.5" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-                <path d="M 4 4.5 A 5.5 5.5 0 0 1 4 15.5" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M 4 1.5 A 8.5 8.5 0 0 1 4 18.5" fill="none" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+                <circle cx="10" cy="10" r="2.2" fill="white" opacity="0.95"/>
+                <circle cx="10" cy="10" r="5" fill="none" stroke="white" strokeWidth="1.6" opacity="0.8"/>
+                <circle cx="10" cy="10" r="8" fill="none" stroke="white" strokeWidth="1.1" opacity="0.5"/>
               </svg>
             </div>
             <div>
@@ -328,7 +327,12 @@ export default function Home() {
             padding: "8px 10px", borderRadius: "8px",
             color: "#6e6e73",
           }}>
-            <span style={{ fontSize: "15px" }}>🎵</span>
+            <svg width="15" height="15" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
+                <circle cx="4" cy="10" r="2" fill="#6e6e73"/>
+                <path d="M 4 7.5 A 2.5 2.5 0 0 1 4 12.5" fill="none" stroke="#6e6e73" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M 4 4.5 A 5.5 5.5 0 0 1 4 15.5" fill="none" stroke="#6e6e73" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M 4 1.5 A 8.5 8.5 0 0 1 4 18.5" fill="none" stroke="#6e6e73" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
             <span style={{ fontSize: "13px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {playlistName.length > 12 ? playlistName.slice(0, 12) + "…" : playlistName}
             </span>
