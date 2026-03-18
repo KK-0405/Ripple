@@ -613,6 +613,19 @@ export default function SearchPanel({
                   >
                     {inSubSeed ? "✓ サブ" : "+ サブ"}
                   </button>
+                  <button
+                    onClick={() => inPlaylist ? removeFromPlaylist(track.id) : addToPlaylist(track)}
+                    style={{
+                      padding: "5px 10px",
+                      background: inPlaylist ? C.accDim : C.s1,
+                      border: `1px solid ${inPlaylist ? C.acc : C.s2}`,
+                      borderRadius: "8px",
+                      color: inPlaylist ? C.acc : C.t2,
+                      fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                    }}
+                  >
+                    {inPlaylist ? "✓ リスト" : "+ リスト"}
+                  </button>
                 </div>
               )}
               {mode === "similar" && (
