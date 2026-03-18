@@ -58,9 +58,9 @@ function getMatchBadges(track: Track, seed: Track | null): MatchBadge[] {
   if (track.bpm && seed.bpm) {
     const diff = Math.abs(track.bpm - seed.bpm);
     if (diff <= 5) {
-      badges.push({ label: `${track.bpm} BPM ≈`, color: "#1b7a34", bg: C.greenDim });
+      badges.push({ label: `${track.bpm} BPM`, color: "#1b7a34", bg: C.greenDim });
     } else if (diff <= 15) {
-      badges.push({ label: `${track.bpm} BPM ±${diff}`, color: C.green, bg: C.greenDim });
+      badges.push({ label: `${track.bpm} BPM`, color: C.green, bg: C.greenDim });
     } else {
       badges.push({ label: `${track.bpm} BPM`, color: C.t2, bg: C.s1 });
     }
@@ -558,19 +558,13 @@ export default function SearchPanel({
                     </span>
                   )}
                   {track.camelot && (
-                    <span style={{ fontSize: "10px", color: "#0055cc", background: C.blueDim, padding: "1px 6px", borderRadius: "4px", fontWeight: 600 }}>
+                    <span style={{ fontSize: "10px", color: C.blue, background: C.blueDim, padding: "1px 6px", borderRadius: "4px", fontWeight: 600 }}>
                       {track.camelot}
                     </span>
                   )}
                   {track.energy !== undefined && (
                     <span style={{ fontSize: "11px", color: C.t3 }}>E:{Math.round(track.energy * 10)}</span>
                   )}
-                  {track.is_vocal !== undefined && (
-                    <span style={{ fontSize: "11px", color: C.t3 }}>{track.is_vocal ? "🎤" : "🎸"}</span>
-                  )}
-                  {track.genre_tags?.slice(0, 2).map((g) => (
-                    <span key={g} style={{ fontSize: "10px", color: C.t2, background: C.s1, padding: "1px 5px", borderRadius: "4px", border: `1px solid ${C.sep}` }}>{g}</span>
-                  ))}
                 </div>
 
                 {/* 類似モード: マッチバッジ */}
