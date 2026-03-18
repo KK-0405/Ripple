@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     .select("user_id")
     .eq("id", user.id)
     .single();
-  const createdBy = profile?.user_id ?? user.email.split("@")[0];
+  const createdBy = profile?.user_id ?? (user.email ?? "user").split("@")[0];
 
   const { data, error } = await db
     .from("playlists")
