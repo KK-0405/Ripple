@@ -351,28 +351,43 @@ export default function Home() {
           </div>
 
           <div style={{ fontSize: "10px", color: "#aeaeb2", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", padding: "12px 8px 6px" }}>
-            Playlist
+            Playlists
           </div>
-          <div style={{
-            display: "flex", alignItems: "center", gap: "8px",
-            padding: "8px 10px", borderRadius: "8px",
-            color: "#6e6e73",
-          }}>
-            <svg width="15" height="15" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
-                <circle cx="4" cy="10" r="2" fill="#6e6e73"/>
-                <path d="M 4 7.5 A 2.5 2.5 0 0 1 4 12.5" fill="none" stroke="#6e6e73" strokeWidth="1.8" strokeLinecap="round"/>
-                <path d="M 4 4.5 A 5.5 5.5 0 0 1 4 15.5" fill="none" stroke="#6e6e73" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M 4 1.5 A 8.5 8.5 0 0 1 4 18.5" fill="none" stroke="#6e6e73" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-            <span style={{ fontSize: "13px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {playlistName.length > 12 ? playlistName.slice(0, 12) + "…" : playlistName}
-            </span>
-            {playlist.length > 0 && (
-              <span style={{ marginLeft: "auto", background: "#534AB7", color: "#fff", borderRadius: "8px", padding: "1px 6px", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>
-                {playlist.length}
-              </span>
-            )}
-          </div>
+
+          {/* 保存済みプレイリスト一覧 */}
+          {session && savedPlaylists.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+              {savedPlaylists.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => { setViewingPlaylist(p); setMode("playlist"); }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: "8px",
+                    padding: "7px 10px", borderRadius: "8px",
+                    background: viewingPlaylist?.id === p.id ? "rgba(83,74,183,0.1)" : "none",
+                    border: "none", cursor: "pointer", textAlign: "left",
+                  }}
+                  onMouseEnter={(e) => { if (viewingPlaylist?.id !== p.id) e.currentTarget.style.background = "rgba(0,0,0,0.04)"; }}
+                  onMouseLeave={(e) => { if (viewingPlaylist?.id !== p.id) e.currentTarget.style.background = "none"; }}
+                >
+                  {/* ミニサムネイル */}
+                  <div style={{ width: 22, height: 22, borderRadius: "4px", overflow: "hidden", flexShrink: 0, background: "rgba(83,74,183,0.12)", display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                    {p.tracks.slice(0, 4).map((t, i) => (
+                      <img key={i} src={t.album.images[0]?.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: "12px", fontWeight: viewingPlaylist?.id === p.id ? 600 : 500, color: viewingPlaylist?.id === p.id ? "#534AB7" : "#1d1d1f", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                    {p.name}
+                  </span>
+                  <span style={{ fontSize: "10px", color: "#aeaeb2", flexShrink: 0 }}>{p.tracks.length}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ padding: "6px 10px", fontSize: "11px", color: "#aeaeb2" }}>
+              {session ? "保存済みなし" : "ログインで表示"}
+            </div>
+          )}
         </nav>
 
         {/* フッター: 認証UI */}
