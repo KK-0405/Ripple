@@ -46,12 +46,10 @@ const DEFAULT_FILTERS: SimilarFilters = {
   bpmRange: null,
   sameKey: false,
   camelotAdjacent: false,
-  genreMatch: false,
+  selectedGenres: [],
   energyLevel: null,
-  danceabilityHigh: false,
   sameArtist: false,
   decade: null,
-  vocalType: null,
   excludePlaylist: false,
 };
 
@@ -260,25 +258,28 @@ export default function Home() {
   const removeFromPlaylist = (id: string) => setPlaylist(playlist.filter((t) => t.id !== id));
   const isInPlaylist = (track: Track) => !!playlist.find((t) => t.id === track.id);
 
+  const availableGenres = Array.from(
+    new Set(similarTracks.flatMap((t) => t.genre_tags ?? []).filter(Boolean))
+  ).sort();
+
+  useEffect(() => {
+    if (similarTracks.length > 0) setFilters((f) => ({ ...f, selectedGenres: [] }));
+  }, [similarTracks]);
+
   const filteredSimilar = similarTracks.filter((track) => {
     if (filters.bpmRange && mainSeed?.bpm && track.bpm && Math.abs(track.bpm - mainSeed.bpm) > filters.bpmRange) return false;
     if (filters.sameArtist && mainSeed && track.artists[0]?.name !== mainSeed.artists[0]?.name) return false;
     if (filters.sameKey && mainSeed?.key && track.key && track.key !== mainSeed.key) return false;
     if (filters.camelotAdjacent && mainSeed?.camelot && track.camelot && !isCamelotAdjacent(mainSeed.camelot, track.camelot)) return false;
-    if (filters.genreMatch && mainSeed?.genre_tags?.length && track.genre_tags?.length) {
-      const seedGenres = new Set(mainSeed.genre_tags.map((g) => g.toLowerCase()));
-      if (!track.genre_tags.some((g) => seedGenres.has(g.toLowerCase()))) return false;
+    if (filters.selectedGenres.length > 0 && track.genre_tags?.length) {
+      const selected = new Set(filters.selectedGenres.map((g) => g.toLowerCase()));
+      if (!track.genre_tags.some((g) => selected.has(g.toLowerCase()))) return false;
     }
     if (filters.energyLevel && track.energy !== undefined) {
       const e = track.energy;
       if (filters.energyLevel === "high" && e < 0.7) return false;
       if (filters.energyLevel === "medium" && (e < 0.4 || e >= 0.7)) return false;
       if (filters.energyLevel === "low" && e >= 0.4) return false;
-    }
-    if (filters.danceabilityHigh && track.danceability !== undefined && track.danceability < 0.6) return false;
-    if (filters.vocalType && track.is_vocal !== undefined) {
-      if (filters.vocalType === "vocal" && !track.is_vocal) return false;
-      if (filters.vocalType === "instrumental" && track.is_vocal) return false;
     }
     if (filters.decade && track.release_year) {
       if (`${Math.floor(track.release_year / 10) * 10}s` !== filters.decade) return false;
@@ -473,6 +474,7 @@ export default function Home() {
           similarCount={similarCount} setSimilarCount={setSimilarCount}
           seedAnalyzing={seedAnalyzing} seedError={seedError}
           playlistCount={playlist.length}
+          availableGenres={availableGenres}
         />
         <div style={{ height: "1px", background: "rgba(0,0,0,0.07)", margin: "0 16px" }} />
         <PlaylistPanel

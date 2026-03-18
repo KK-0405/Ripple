@@ -38,6 +38,7 @@ type Props = {
   seedAnalyzing: boolean;
   seedError: string | null;
   playlistCount: number;
+  availableGenres: string[];
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -86,15 +87,15 @@ const DECADES = ["1970s", "1980s", "1990s", "2000s", "2010s", "2020s"];
 
 export default function SeedPanel({
   mainSeed, setMainSeed, subSeeds, removeSubSeed, exploreSimilar,
-  filters, setFilters, similarCount, setSimilarCount, seedAnalyzing, seedError, playlistCount,
+  filters, setFilters, similarCount, setSimilarCount, seedAnalyzing, seedError, playlistCount, availableGenres,
 }: Props) {
   const [showFilters, setShowFilters] = useState(false);
   const set = (patch: Partial<SimilarFilters>) => setFilters({ ...filters, ...patch });
 
   const activeCount = [
     filters.bpmRange !== null, filters.sameKey, filters.camelotAdjacent,
-    filters.genreMatch, filters.energyLevel !== null, filters.danceabilityHigh,
-    filters.sameArtist, filters.decade !== null, filters.vocalType !== null,
+    filters.selectedGenres.length > 0, filters.energyLevel !== null,
+    filters.sameArtist, filters.decade !== null,
     filters.excludePlaylist,
   ].filter(Boolean).length;
 
@@ -246,16 +247,35 @@ export default function SeedPanel({
 
             {/* ジャンル */}
             <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${C.sep}` }}>
-              <div style={{ fontSize: "11px", color: C.t3, marginBottom: "4px" }}>ジャンル</div>
-              <CheckRow label="ジャンル一致" available={hasGemini} checked={filters.genreMatch} onChange={(v) => set({ genreMatch: v })} />
-              {hasGemini && mainSeed?.genre_tags?.length ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "3px", marginTop: "4px" }}>
-                  {mainSeed.genre_tags.map((g) => (
-                    <span key={g} style={{ fontSize: "10px", color: "#b06c00", background: C.orangeDim, padding: "1px 6px", borderRadius: "4px" }}>{g}</span>
-                  ))}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                <div style={{ fontSize: "11px", color: C.t3 }}>ジャンル</div>
+                {availableGenres.length > 0 && (
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button onClick={() => set({ selectedGenres: availableGenres })} style={{ fontSize: "10px", color: C.acc, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 }}>全選択</button>
+                    <button onClick={() => set({ selectedGenres: [] })} style={{ fontSize: "10px", color: C.t3, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 }}>全解除</button>
+                  </div>
+                )}
+              </div>
+              {availableGenres.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  {availableGenres.map((g) => {
+                    const checked = filters.selectedGenres.includes(g);
+                    return (
+                      <label key={g} style={{ display: "flex", alignItems: "center", gap: "7px", padding: "3px 0", cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => set({ selectedGenres: checked ? filters.selectedGenres.filter((x) => x !== g) : [...filters.selectedGenres, g] })}
+                          style={{ accentColor: C.acc, cursor: "pointer", width: 13, height: 13, flexShrink: 0 }}
+                        />
+                        <span style={{ fontSize: "12px", color: checked ? C.acc : C.t2, fontWeight: checked ? 600 : 400 }}>{g}</span>
+                      </label>
+                    );
+                  })}
                 </div>
-              ) : null}
-              {!hasGemini && <div style={{ fontSize: "10px", color: C.t3, marginTop: "2px" }}>※ Gemini 解析後に使用可</div>}
+              ) : (
+                <div style={{ fontSize: "10px", color: C.t3 }}>※ 類似曲取得後に表示されます</div>
+              )}
             </div>
 
             {/* エネルギー */}
@@ -267,9 +287,6 @@ export default function SeedPanel({
                 {([null, "high", "medium", "low"] as const).map((v) => (
                   <Chip key={String(v)} label={v === null ? "全て" : v === "high" ? "高" : v === "medium" ? "中" : "低"} active={filters.energyLevel === v} onClick={() => set({ energyLevel: filters.energyLevel === v ? null : v })} />
                 ))}
-              </div>
-              <div style={{ marginTop: "6px", opacity: hasGemini ? 1 : 0.4, pointerEvents: hasGemini ? "auto" : "none" }}>
-                <CheckRow label="ダンサビリティ高" value={mainSeed?.danceability !== undefined ? `${Math.round(mainSeed.danceability * 100)}%` : undefined} available={hasGemini} checked={filters.danceabilityHigh} onChange={(v) => set({ danceabilityHigh: v })} />
               </div>
               {!hasGemini && <div style={{ fontSize: "10px", color: C.t3, marginTop: "2px" }}>※ Gemini 解析後に使用可</div>}
             </div>
@@ -289,19 +306,6 @@ export default function SeedPanel({
                 </div>
                 {!hasDecade && <div style={{ fontSize: "10px", color: C.t3, marginTop: "2px" }}>※ Seed 選択後に使用可</div>}
               </div>
-            </div>
-
-            {/* ボーカル */}
-            <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${C.sep}` }}>
-              <div style={{ fontSize: "11px", color: C.t3, marginBottom: "6px" }}>
-                ボーカル{mainSeed?.is_vocal !== undefined && <span style={{ color: C.t2, marginLeft: "6px" }}>{mainSeed.is_vocal ? "あり" : "インスト"}</span>}
-              </div>
-              <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", opacity: hasGemini ? 1 : 0.4, pointerEvents: hasGemini ? "auto" : "none" }}>
-                {([null, "vocal", "instrumental"] as const).map((v) => (
-                  <Chip key={String(v)} label={v === null ? "全て" : v === "vocal" ? "🎤 ボーカル" : "🎸 インスト"} active={filters.vocalType === v} onClick={() => set({ vocalType: filters.vocalType === v ? null : v })} />
-                ))}
-              </div>
-              {!hasGemini && <div style={{ fontSize: "10px", color: C.t3, marginTop: "2px" }}>※ Gemini 解析後に使用可</div>}
             </div>
 
             {/* プレイリスト除外 */}

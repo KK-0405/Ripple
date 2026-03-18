@@ -10,16 +10,13 @@ export type SimilarFilters = {
   // キー・ハーモニー
   sameKey: boolean;
   camelotAdjacent: boolean;
-  // ジャンル
-  genreMatch: boolean;
+  // ジャンル（チェックボックス: 選択中のジャンルのみ表示）
+  selectedGenres: string[];
   // エネルギー・ムード
   energyLevel: null | "high" | "medium" | "low";
-  danceabilityHigh: boolean;
   // アーティスト・時代
   sameArtist: boolean;
-  decade: string | null; // e.g. "2010s"
-  // サウンド特性
-  vocalType: null | "vocal" | "instrumental";
+  decade: string | null;
   // プレイリスト除外
   excludePlaylist: boolean;
 };

@@ -159,14 +159,19 @@ export async function getSimilarTrackSuggestions(
   const subGenreStr = subSeeds.flatMap((s) => s.genre_tags ?? []).filter(Boolean);
   const subInfo = subGenreStr.length ? `Sub-influences: ${subGenreStr.join(", ")}` : "";
 
-  const prompt = `You are a DJ and music expert. List ${count} real songs to mix with "${seed.title}" by ${seed.artist}.
+  const prompt = `You are a DJ and music expert. List EXACTLY ${count} real songs to mix with "${seed.title}" by ${seed.artist}.
 Genre: ${genres}. BPM≈${seed.bpm || "?"}, Era: ${seed.release_year || "?"}.${subInfo ? " " + subInfo : ""}
-Rules: match genre closely, BPM within ±15, same era ±10 years, exclude the seed itself.
-Return ONLY a JSON array with full metadata for each song. No explanation.
+Rules:
+- Output EXACTLY ${count} songs — no more, no less. If you cannot find enough close matches, fill remaining slots with related genre/era songs.
+- Match genre closely, BPM within ±15, same era ±10 years.
+- Exclude the seed song itself.
+- EXCLUDE: karaoke versions, instrumental covers, tribute band recordings, cover albums, BGM collections, sound-alike recordings. Only original artist recordings.
+- Do NOT stop early. Always output all ${count} entries.
+Return ONLY a JSON array. No explanation, no markdown, no extra text.
 Each object must have: title, artist, bpm (integer), key (e.g. "F# minor"), camelot (e.g. "11A"), energy (float 0-1), danceability (float 0-1), is_vocal (boolean), genre_tags (string array max 4), release_year (integer), confidence ("high"/"medium"/"low").`;
 
   try {
-    const result = await geminiPost(apiKey, { contents: [{ parts: [{ text: prompt }] }] });
+    const result = await geminiPost(apiKey, { contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 4096 } });
     if (!result || !result.__ok || result.__data?.error) {
       const errMsg = `HTTP ${result?.__status}: ${JSON.stringify(result?.__data?.error ?? result?.__data)}`;
       return { suggestions: [], error: errMsg };
