@@ -102,6 +102,7 @@ export default function Home() {
   const [similarCount, setSimilarCount] = useState<10 | 20 | 30>(20);
   const [metadataLoading, setMetadataLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [scrollKey, setScrollKey] = useState(0);
   const [seedAnalyzing, setSeedAnalyzing] = useState(false);
   const [seedError, setSeedError] = useState<string | null>(null);
   const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>([]);
@@ -117,6 +118,7 @@ export default function Home() {
     setMode("search");
     setTracks([]);
     setSimilarTracks([]);
+    setScrollKey((k) => k + 1);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
@@ -131,6 +133,7 @@ export default function Home() {
     if (!mainSeed) return;
     setLoading(true);
     setMode("similar");
+    setScrollKey((k) => k + 1);
     try {
       const res = await fetch("/api/similar", {
         method: "POST",
@@ -523,6 +526,7 @@ export default function Home() {
                         setMode("similar");
                         setViewingPlaylist(null);
                         setFilters(DEFAULT_FILTERS);
+                        setScrollKey((k) => k + 1);
                       }}
                       style={{
                         width: "100%", display: "flex", alignItems: "center", gap: "8px",
@@ -563,7 +567,7 @@ export default function Home() {
               {savedPlaylists.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => { setViewingPlaylist(p); setMode("playlist"); }}
+                  onClick={() => { setViewingPlaylist(p); setMode("playlist"); setScrollKey((k) => k + 1); }}
                   style={{
                     width: "100%", display: "flex", alignItems: "center", gap: "8px",
                     padding: "7px 10px", borderRadius: "8px",
@@ -672,7 +676,7 @@ export default function Home() {
 
       {/* メインコンテンツ */}
       <SearchPanel
-        query={query} setQuery={setQuery} search={search} loading={loading}
+        query={query} setQuery={setQuery} search={search} loading={loading} scrollKey={scrollKey}
         mode={mode} displayTracks={displayTracks} mainSeed={mainSeed}
         subSeeds={subSeeds} setAsMainSeed={setAsMainSeed} removeMainSeed={() => setMainSeed(null)} addToSubSeed={addToSubSeed} removeSubSeed={removeSubSeed}
         addToPlaylist={addToPlaylist} removeFromPlaylist={removeFromPlaylist} isInPlaylist={isInPlaylist}

@@ -30,6 +30,7 @@ type Props = {
   setQuery: (q: string) => void;
   search: () => void;
   loading: boolean;
+  scrollKey: number;
   mode: Mode;
   displayTracks: Track[];
   mainSeed: Track | null;
@@ -107,7 +108,7 @@ function isCamelotAdjacent(a: string, b: string): boolean {
 }
 
 export default function SearchPanel({
-  query, setQuery, search, loading, mode, displayTracks,
+  query, setQuery, search, loading, scrollKey, mode, displayTracks,
   mainSeed, subSeeds, setAsMainSeed, addToSubSeed,
   removeMainSeed, removeSubSeed,
   addToPlaylist, removeFromPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
@@ -137,14 +138,9 @@ export default function SearchPanel({
     fetch("/api/public-playlists").then((r) => r.json()).then((d) => setPublicPlaylists(d.playlists ?? [])).catch(() => {});
   }, []);
 
-  const prevFirstIdRef = useRef<string | null>(null);
   useEffect(() => {
-    const firstId = displayTracks[0]?.id ?? null;
-    if (firstId !== prevFirstIdRef.current) {
-      listRef.current?.scrollTo({ top: 0 });
-      prevFirstIdRef.current = firstId;
-    }
-  }, [displayTracks]);
+    listRef.current?.scrollTo({ top: 0 });
+  }, [scrollKey]);
 
   const handleQueryChange = (value: string) => {
     isSearchExecuted.current = false;
