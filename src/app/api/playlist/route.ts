@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
-async function getAuthUser(request: NextRequest) {
+// ユーザーのJWTを使ってRLS対応のクライアントを生成
+function createUserClient(token: string) {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+}
+
+async function getAuthContext(request: NextRequest) {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "");
   if (!token) return null;
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const db = createUserClient(token);
+  const { data: { user }, error } = await db.auth.getUser();
   if (error || !user) return null;
-  return user;
+  return { user, db };
 }
 
 // 8文字の URL-safe スラッグを生成
@@ -16,10 +26,11 @@ function generateSlug(): string {
 }
 
 export async function GET(request: NextRequest) {
-  const user = await getAuthUser(request);
-  if (!user?.email) return NextResponse.json({ playlists: [] });
+  const ctx = await getAuthContext(request);
+  if (!ctx?.user?.email) return NextResponse.json({ playlists: [] });
+  const { user, db } = ctx;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("playlists")
     .select("*")
     .eq("user_email", user.email)
@@ -30,21 +41,22 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getAuthUser(request);
-  if (!user?.email) return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  const ctx = await getAuthContext(request);
+  if (!ctx?.user?.email) return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  const { user, db } = ctx;
 
   const { name, tracks, is_public } = await request.json();
   if (!name || !tracks) return NextResponse.json({ error: "name and tracks are required" }, { status: 400 });
 
   // 作成者の表示IDを取得
-  const { data: profile } = await supabase
+  const { data: profile } = await db
     .from("users")
     .select("user_id")
     .eq("id", user.id)
     .single();
   const createdBy = profile?.user_id ?? user.email.split("@")[0];
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("playlists")
     .insert({
       name,
@@ -63,8 +75,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const user = await getAuthUser(request);
-  if (!user?.email) return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  const ctx = await getAuthContext(request);
+  if (!ctx?.user?.email) return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  const { user, db } = ctx;
 
   const body = await request.json();
   const { id, tracks, is_public } = body;
@@ -73,7 +86,7 @@ export async function PATCH(request: NextRequest) {
   if (tracks !== undefined) updates.tracks = tracks;
   if (is_public !== undefined) updates.is_public = is_public;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("playlists")
     .update(updates)
     .eq("id", id)
@@ -86,12 +99,13 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const user = await getAuthUser(request);
-  if (!user?.email) return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  const ctx = await getAuthContext(request);
+  if (!ctx?.user?.email) return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  const { user, db } = ctx;
 
   const { id } = await request.json();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("playlists")
     .delete()
     .eq("id", id)
