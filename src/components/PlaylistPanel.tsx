@@ -14,6 +14,10 @@ const C = {
   t2: "#6e6e73",
   t3: "#aeaeb2",
   sep: "rgba(0,0,0,0.08)",
+  green: "#34c759",
+  greenDim: "rgba(52,199,89,0.1)",
+  red: "#ff3b30",
+  redDim: "rgba(255,59,48,0.08)",
 } as const;
 
 type Props = {
@@ -34,11 +38,13 @@ export default function PlaylistPanel({
   playlistName, setPlaylistName, savePlaylist, deletePlaylist,
   setPlaylist, exportToYouTube,
 }: Props) {
-  const [showSaved, setShowSaved] = useState(false);
+  const [showSaved, setShowSaved] = useState(true);
   const [showYoutubeSelect, setShowYoutubeSelect] = useState(false);
   const [youtubePlaylists, setYoutubePlaylists] = useState<YoutubePlaylist[]>([]);
   const [selectedYoutubePlaylist, setSelectedYoutubePlaylist] = useState("new");
   const [exporting, setExporting] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [expandedPlaylist, setExpandedPlaylist] = useState<string | null>(null);
   const dragIndexRef = useRef<number | null>(null);
 
   const handleDragStart = (index: number) => { dragIndexRef.current = index; };
@@ -50,6 +56,19 @@ export default function PlaylistPanel({
     updated.splice(index, 0, item);
     setPlaylist(updated);
     dragIndexRef.current = null;
+  };
+
+  const handleSave = async () => {
+    if (playlist.length === 0) return;
+    setSaveStatus("saving");
+    try {
+      await savePlaylist();
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2500);
+    } catch {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus("idle"), 2500);
+    }
   };
 
   const handleYoutubeExportClick = async () => {
@@ -82,98 +101,89 @@ export default function PlaylistPanel({
         )}
       </div>
 
-      {/* トラックリスト */}
+      {/* 現在のプレイリスト */}
       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-        {playlist.length === 0 && (
+        {playlist.length === 0 ? (
           <div style={{ padding: "16px 12px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "10px", color: C.t3, fontSize: "12px", textAlign: "center" }}>
             類似曲から追加してください
           </div>
-        )}
-        {playlist.map((track, index) => (
-          <div
-            key={track.id}
-            draggable
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => handleDrop(index)}
-            style={{
-              display: "flex", alignItems: "center", gap: "8px",
-              background: C.s1, border: `1px solid ${C.sep}`,
-              borderRadius: "8px", padding: "8px 10px", cursor: "grab",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = C.s2)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = C.s1)}
-          >
-            <span style={{ fontSize: "10px", color: C.t3, width: "14px", textAlign: "center", flexShrink: 0 }}>{index + 1}</span>
-            <img src={track.album.images[0]?.url} alt={track.album.name} width={28} height={28} style={{ borderRadius: "5px", flexShrink: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ color: C.t1, fontSize: "12px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.name}</div>
-              <div style={{ color: C.t2, fontSize: "10px" }}>{track.artists[0]?.name}</div>
+        ) : (
+          playlist.map((track, index) => (
+            <div
+              key={track.id}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => handleDrop(index)}
+              style={{ display: "flex", alignItems: "center", gap: "8px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "8px", padding: "8px 10px", cursor: "grab" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = C.s2)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = C.s1)}
+            >
+              <span style={{ fontSize: "10px", color: C.t3, width: "14px", textAlign: "center", flexShrink: 0 }}>{index + 1}</span>
+              <img src={track.album.images[0]?.url} alt={track.album.name} width={28} height={28} style={{ borderRadius: "5px", flexShrink: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ color: C.t1, fontSize: "12px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.name}</div>
+                <div style={{ color: C.t2, fontSize: "10px" }}>{track.artists[0]?.name}</div>
+              </div>
+              <button onClick={() => removeFromPlaylist(track.id)} style={{ background: "none", border: "none", color: C.t3, fontSize: "16px", cursor: "pointer", flexShrink: 0 }}>×</button>
             </div>
-            <button onClick={() => removeFromPlaylist(track.id)} style={{ background: "none", border: "none", color: C.t3, fontSize: "16px", cursor: "pointer", flexShrink: 0 }}>×</button>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
-      {/* ログイン / アクション */}
+      {/* ログインしていない場合 */}
       {!session ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ padding: "10px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "10px", color: C.t3, fontSize: "11px", textAlign: "center", lineHeight: 1.5 }}>
-            ログインすると保存・書き出しができます
+          <div style={{ padding: "12px", background: C.accDim, border: `1px solid rgba(88,86,214,0.2)`, borderRadius: "10px", color: C.t2, fontSize: "12px", textAlign: "center", lineHeight: 1.6 }}>
+            ログインするとプレイリストを<br />保存・管理できます
           </div>
           <button
             onClick={() => signIn("google")}
-            style={{ width: "100%", padding: "11px", background: "#4285f4", border: "none", borderRadius: "10px", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}
+            style={{ width: "100%", padding: "11px", background: "#4285f4", border: "none", borderRadius: "10px", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
           >
-            Google でログイン
+            <span>G</span> Google でログイン
           </button>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ fontSize: "11px", color: C.t3, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {session.user?.email}
-          </div>
 
+          {/* プレイリスト名 */}
           <input
             type="text"
             value={playlistName}
             onChange={(e) => setPlaylistName(e.target.value)}
-            style={{ width: "100%", padding: "8px 10px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none" }}
+            placeholder="プレイリスト名"
+            style={{ width: "100%", padding: "8px 10px", background: "#fff", border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none", boxSizing: "border-box" }}
           />
 
+          {/* 保存ボタン */}
           <button
-            onClick={savePlaylist}
-            disabled={playlist.length === 0}
+            onClick={handleSave}
+            disabled={playlist.length === 0 || saveStatus === "saving"}
             style={{
               width: "100%", padding: "10px",
-              background: playlist.length > 0 ? C.acc : C.s1,
-              border: `1px solid ${playlist.length > 0 ? C.acc : C.sep}`,
-              borderRadius: "10px",
-              color: playlist.length > 0 ? "#fff" : C.t3,
+              background: saveStatus === "saved" ? C.green : saveStatus === "error" ? C.red : playlist.length > 0 ? C.acc : C.s1,
+              border: "none", borderRadius: "10px",
+              color: playlist.length > 0 || saveStatus !== "idle" ? "#fff" : C.t3,
               fontSize: "13px", fontWeight: 700,
               cursor: playlist.length > 0 ? "pointer" : "default",
-              boxShadow: playlist.length > 0 ? "0 2px 8px rgba(88,86,214,0.25)" : "none",
+              boxShadow: playlist.length > 0 && saveStatus === "idle" ? "0 2px 8px rgba(88,86,214,0.25)" : "none",
+              transition: "background 0.2s",
             }}
           >
-            保存する
+            {saveStatus === "saving" ? "保存中..." : saveStatus === "saved" ? "✓ 保存しました" : saveStatus === "error" ? "保存に失敗しました" : "プレイリストを保存"}
           </button>
 
+          {/* YouTube 書き出し */}
           <button
             onClick={handleYoutubeExportClick}
             disabled={playlist.length === 0}
-            style={{
-              width: "100%", padding: "10px",
-              background: playlist.length > 0 ? "#ff0000" : C.s1,
-              border: `1px solid ${playlist.length > 0 ? "#ff0000" : C.sep}`,
-              borderRadius: "10px",
-              color: playlist.length > 0 ? "#fff" : C.t3,
-              fontSize: "13px", fontWeight: 700,
-              cursor: playlist.length > 0 ? "pointer" : "default",
-            }}
+            style={{ width: "100%", padding: "10px", background: playlist.length > 0 ? "#ff0000" : C.s1, border: `1px solid ${playlist.length > 0 ? "#ff0000" : C.sep}`, borderRadius: "10px", color: playlist.length > 0 ? "#fff" : C.t3, fontSize: "13px", fontWeight: 700, cursor: playlist.length > 0 ? "pointer" : "default" }}
           >
             YouTube に書き出し
           </button>
 
+          {/* YouTube 書き出し先選択 */}
           {showYoutubeSelect && (
             <div style={{ background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "10px", padding: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
               <div style={{ fontSize: "11px", color: C.t2, fontWeight: 600 }}>書き出し先</div>
@@ -198,29 +208,96 @@ export default function PlaylistPanel({
             </div>
           )}
 
-          <button
-            onClick={() => setShowSaved(!showSaved)}
-            style={{ width: "100%", padding: "8px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t2, fontSize: "12px", fontWeight: 500, cursor: "pointer" }}
-          >
-            {showSaved ? "保存済みを隠す" : `保存済み（${savedPlaylists.length}）`}
-          </button>
+          {/* 保存済みプレイリスト */}
+          <div style={{ borderTop: `1px solid ${C.sep}`, paddingTop: "10px" }}>
+            <button
+              onClick={() => setShowSaved(!showSaved)}
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", cursor: "pointer", padding: "0 0 8px" }}
+            >
+              <span style={{ fontSize: "11px", fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                保存済み
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                {savedPlaylists.length > 0 && (
+                  <span style={{ background: C.s2, color: C.t2, borderRadius: "8px", padding: "0 6px", fontSize: "10px", fontWeight: 600 }}>
+                    {savedPlaylists.length}
+                  </span>
+                )}
+                <span style={{ fontSize: "10px", color: C.t3 }}>{showSaved ? "▲" : "▼"}</span>
+              </span>
+            </button>
 
-          {showSaved && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              {savedPlaylists.map((p) => (
-                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "8px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "8px", padding: "8px 10px" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: C.t1, fontSize: "12px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
-                    <div style={{ color: C.t3, fontSize: "10px" }}>{p.tracks.length}曲</div>
+            {showSaved && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {savedPlaylists.length === 0 ? (
+                  <div style={{ padding: "12px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t3, fontSize: "11px", textAlign: "center" }}>
+                    保存済みのプレイリストはありません
                   </div>
-                  <button onClick={() => setPlaylist(p.tracks)} style={{ padding: "4px 8px", background: C.acc, border: "none", borderRadius: "6px", color: "#fff", fontSize: "11px", fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
-                    読込
-                  </button>
-                  <button onClick={() => deletePlaylist(p.id)} style={{ background: "none", border: "none", color: C.t3, fontSize: "16px", cursor: "pointer", flexShrink: 0 }}>×</button>
-                </div>
-              ))}
-            </div>
-          )}
+                ) : (
+                  savedPlaylists.map((p) => (
+                    <div key={p.id} style={{ background: "#fff", border: `1px solid ${C.sep}`, borderRadius: "10px", overflow: "hidden" }}>
+                      {/* プレイリストヘッダー */}
+                      <div
+                        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", cursor: "pointer" }}
+                        onClick={() => setExpandedPlaylist(expandedPlaylist === p.id ? null : p.id)}
+                      >
+                        {/* サムネイル（先頭4曲のアルバムアート） */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1px", width: 32, height: 32, borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
+                          {p.tracks.slice(0, 4).map((t, i) => (
+                            <img key={i} src={t.album.images[0]?.url} alt="" width={16} height={16} style={{ display: "block", objectFit: "cover", width: "100%", height: "100%" }} />
+                          ))}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: C.t1, fontSize: "12px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+                          <div style={{ color: C.t3, fontSize: "10px", marginTop: "1px" }}>{p.tracks.length}曲</div>
+                        </div>
+                        <span style={{ fontSize: "10px", color: C.t3 }}>{expandedPlaylist === p.id ? "▲" : "▼"}</span>
+                      </div>
+
+                      {/* 展開時: トラックリスト */}
+                      {expandedPlaylist === p.id && (
+                        <div style={{ borderTop: `1px solid ${C.sep}` }}>
+                          <div style={{ maxHeight: "160px", overflowY: "auto" }}>
+                            {p.tracks.map((t, i) => (
+                              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 12px", borderBottom: i < p.tracks.length - 1 ? `1px solid ${C.sep}` : "none" }}>
+                                <span style={{ fontSize: "9px", color: C.t3, width: "12px", textAlign: "center", flexShrink: 0 }}>{i + 1}</span>
+                                <img src={t.album.images[0]?.url} alt="" width={24} height={24} style={{ borderRadius: "4px", flexShrink: 0 }} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ color: C.t1, fontSize: "11px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</div>
+                                  <div style={{ color: C.t3, fontSize: "10px" }}>{t.artists[0]?.name}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* アクションボタン */}
+                          <div style={{ display: "flex", gap: "6px", padding: "8px 12px", borderTop: `1px solid ${C.sep}`, background: C.s1 }}>
+                            <button
+                              onClick={() => { setPlaylist(p.tracks); setExpandedPlaylist(null); }}
+                              style={{ flex: 1, padding: "6px", background: C.acc, border: "none", borderRadius: "7px", color: "#fff", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}
+                            >
+                              読み込む
+                            </button>
+                            <button
+                              onClick={() => deletePlaylist(p.id)}
+                              style={{ padding: "6px 10px", background: C.redDim, border: `1px solid rgba(255,59,48,0.2)`, borderRadius: "7px", color: C.red, fontSize: "11px", fontWeight: 600, cursor: "pointer" }}
+                            >
+                              削除
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ユーザー情報 */}
+          <div style={{ fontSize: "11px", color: C.t3, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingTop: "4px" }}>
+            {session.user?.email}
+          </div>
         </div>
       )}
     </div>

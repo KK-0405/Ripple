@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   const userEmail = session?.user?.email;
 
-  const query = supabase
-    .from("playlists")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (userEmail) {
-    query.eq("user_email", userEmail);
+  if (!userEmail) {
+    return NextResponse.json({ playlists: [] });
   }
 
-  const { data, error } = await query;
+  const { data, error } = await supabase
+    .from("playlists")
+    .select("*")
+    .eq("user_email", userEmail)
+    .order("created_at", { ascending: false });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -25,8 +25,13 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession();
-  const userEmail = session?.user?.email || null;
+  const session = await getServerSession(authOptions);
+  const userEmail = session?.user?.email;
+
+  if (!userEmail) {
+    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
   const { name, tracks } = await request.json();
 
   if (!name || !tracks) {
@@ -47,12 +52,20 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const userEmail = session?.user?.email;
+
+  if (!userEmail) {
+    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
   const { id } = await request.json();
 
   const { error } = await supabase
     .from("playlists")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .eq("user_email", userEmail); // 自分のプレイリストのみ削除可
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

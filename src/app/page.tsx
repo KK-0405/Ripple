@@ -142,7 +142,8 @@ export default function Home() {
       body: JSON.stringify({ name: playlistName, tracks: playlist }),
     });
     const data = await res.json();
-    if (data.playlist) { alert("保存しました！"); loadPlaylists(); }
+    if (data.error) throw new Error(data.error);
+    if (data.playlist) loadPlaylists();
   };
 
   const loadPlaylists = async () => {
