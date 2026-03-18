@@ -453,7 +453,7 @@ export default function SearchPanel({
                         {pl.name}
                       </div>
                       <div style={{ fontSize: "11px", color: C.t3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        @{pl.created_by} · {pl.track_count}曲
+                        {pl.created_by} · {pl.track_count}曲
                       </div>
                     </a>
                   ))}
