@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/lib/supabase";
 import { type Track, type Mode, type SavedPlaylist, type SimilarFilters } from "@/types";
 import AuthModal from "@/components/AuthModal";
 import SearchPanel from "@/components/SearchPanel";
@@ -54,11 +55,15 @@ const DEFAULT_FILTERS: SimilarFilters = {
 };
 
 export default function Home() {
-  const { session, userProfile, signOut } = useAuth();
+  const { session, userProfile, signOut, refreshProfile } = useAuth();
   const [query, setQuery] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const [showUserSettings, setShowUserSettings] = useState(false);
+  const [newUserId, setNewUserId] = useState("");
+  const [userIdSaving, setUserIdSaving] = useState(false);
+  const [userIdError, setUserIdError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!showUserMenu) return;
@@ -305,6 +310,62 @@ export default function Home() {
     <div style={{ display: "flex", height: "100vh", background: "#fff", overflow: "hidden" }}>
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
+      {showUserSettings && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowUserSettings(false); }}
+        >
+          <div style={{ background: "#fff", borderRadius: "14px", padding: "24px", width: "340px", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+            <div style={{ fontSize: "16px", fontWeight: 700, color: "#1d1d1f", marginBottom: "20px" }}>ユーザー設定</div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: "#6e6e73", display: "block", marginBottom: "6px" }}>ID</label>
+              <input
+                value={newUserId}
+                onChange={(e) => { setNewUserId(e.target.value); setUserIdError(null); }}
+                placeholder="新しいID"
+                style={{ width: "100%", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.15)", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" as const, color: "#1d1d1f" }}
+              />
+              {userIdError && <div style={{ fontSize: "12px", color: "#ff3b30", marginTop: "6px" }}>{userIdError}</div>}
+            </div>
+
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setShowUserSettings(false)}
+                style={{ padding: "8px 16px", border: "1px solid rgba(0,0,0,0.15)", borderRadius: "8px", background: "none", fontSize: "13px", fontWeight: 500, cursor: "pointer", color: "#1d1d1f" }}
+              >
+                キャンセル
+              </button>
+              <button
+                disabled={userIdSaving || !newUserId.trim()}
+                onClick={async () => {
+                  const trimmed = newUserId.trim();
+                  if (!trimmed) return;
+                  setUserIdSaving(true);
+                  setUserIdError(null);
+                  const { data: conflict } = await supabase.from("users").select("id").eq("user_id", trimmed).single();
+                  if (conflict && conflict.id !== session?.user?.id) {
+                    setUserIdError("このIDはすでに使われています");
+                    setUserIdSaving(false);
+                    return;
+                  }
+                  const { error } = await supabase.from("users").update({ user_id: trimmed }).eq("id", session?.user?.id);
+                  if (error) {
+                    setUserIdError("保存に失敗しました");
+                  } else {
+                    await refreshProfile();
+                    setShowUserSettings(false);
+                  }
+                  setUserIdSaving(false);
+                }}
+                style={{ padding: "8px 16px", border: "none", borderRadius: "8px", background: "#534AB7", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: userIdSaving ? "not-allowed" : "pointer", opacity: userIdSaving || !newUserId.trim() ? 0.6 : 1 }}
+              >
+                {userIdSaving ? "保存中…" : "保存"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* サイドバー */}
       <div style={{
         width: "200px",
@@ -423,7 +484,7 @@ export default function Home() {
                   {(userProfile?.user_id ?? "?")[0].toUpperCase()}
                 </div>
                 <span style={{ fontSize: "12px", fontWeight: 500, color: "#1d1d1f", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textAlign: "left" as const }}>
-                  {userProfile?.user_id ?? "…"}
+                  {userProfile?.user_id ?? "No ID"}
                 </span>
                 <span style={{ fontSize: "10px", color: "#aeaeb2" }}>⋯</span>
               </button>
@@ -432,8 +493,16 @@ export default function Home() {
                 <div ref={userMenuRef} style={{ position: "absolute", bottom: "calc(100% + 6px)", left: 0, right: 0, background: "#fff", borderRadius: "10px", boxShadow: "0 4px 20px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)", zIndex: 51, overflow: "hidden" }}>
                   <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
                     <div style={{ fontSize: "12px", fontWeight: 600, color: "#1d1d1f" }}>{userProfile?.user_id}</div>
-                    <div style={{ fontSize: "11px", color: "#aeaeb2", marginTop: "1px" }}>{session.user?.email}</div>
+                    <div style={{ fontSize: "11px", color: "#aeaeb2", marginTop: "1px" }}>{userProfile?.user_id ?? "No ID"}</div>
                   </div>
+                  <button
+                    onClick={() => { setShowUserMenu(false); setNewUserId(userProfile?.user_id ?? ""); setUserIdError(null); setShowUserSettings(true); }}
+                    style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#1d1d1f", fontSize: "13px", fontWeight: 500, cursor: "pointer", textAlign: "left" as const, borderBottom: "1px solid rgba(0,0,0,0.07)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                  >
+                    ユーザー設定
+                  </button>
                   <button
                     onClick={() => signOut()}
                     style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#ff3b30", fontSize: "13px", fontWeight: 500, cursor: "pointer", textAlign: "left" as const }}
