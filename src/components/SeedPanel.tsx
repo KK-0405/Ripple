@@ -256,7 +256,18 @@ export default function SeedPanel({
                   </div>
                 )}
               </div>
-              {availableGenres.length > 0 ? (
+              {/* Seed のジャンルタグは常時表示 */}
+              {hasGemini && mainSeed?.genre_tags?.length ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "3px", marginBottom: availableGenres.length > 0 ? "8px" : "0" }}>
+                  {mainSeed.genre_tags.map((g) => (
+                    <span key={g} style={{ fontSize: "10px", color: "#b06c00", background: C.orangeDim, padding: "1px 6px", borderRadius: "4px" }}>{g}</span>
+                  ))}
+                </div>
+              ) : !hasGemini ? (
+                <div style={{ fontSize: "10px", color: C.t3, marginBottom: "2px" }}>※ Gemini 解析後に使用可</div>
+              ) : null}
+              {/* 類似曲取得後: フィルター用チェックボックス */}
+              {availableGenres.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                   {availableGenres.map((g) => {
                     const checked = filters.selectedGenres.includes(g);
@@ -273,8 +284,6 @@ export default function SeedPanel({
                     );
                   })}
                 </div>
-              ) : (
-                <div style={{ fontSize: "10px", color: C.t3 }}>※ 類似曲取得後に表示されます</div>
               )}
             </div>
 
