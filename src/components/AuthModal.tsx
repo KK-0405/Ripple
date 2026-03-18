@@ -94,7 +94,7 @@ export default function AuthModal({ onClose }: Props) {
       options: {
         // Supabaseダッシュボードで youtube スコープを追加設定してください
         scopes: "email profile https://www.googleapis.com/auth/youtube",
-        redirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
+        redirectTo: "https://dj-discovery-ihhs.vercel.app",
       },
     });
     // ページ遷移するので onClose 不要
