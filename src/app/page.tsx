@@ -105,6 +105,9 @@ export default function Home() {
   const [scrollKey, setScrollKey] = useState(0);
   const [seedAnalyzing, setSeedAnalyzing] = useState(false);
   const [seedError, setSeedError] = useState<string | null>(null);
+  const [chatFilterIds, setChatFilterIds] = useState<string[] | null>(null);
+  const [chatFilterMessage, setChatFilterMessage] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>([]);
   const [playlistName, setPlaylistName] = useState("Playlist");
   const [viewingPlaylist, setViewingPlaylist] = useState<SavedPlaylist | null>(null);
@@ -346,8 +349,34 @@ export default function Home() {
   ).sort();
 
   useEffect(() => {
-    if (similarTracks.length > 0) setFilters((f) => ({ ...f, selectedGenres: [] }));
+    if (similarTracks.length > 0) {
+      setFilters((f) => ({ ...f, selectedGenres: [] }));
+      setChatFilterIds(null);
+      setChatFilterMessage("");
+    }
   }, [similarTracks]);
+
+  const onChatFilter = async (instruction: string) => {
+    if (!instruction.trim() || similarTracks.length === 0) return;
+    setChatLoading(true);
+    try {
+      const res = await fetch("/api/chat-filter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instruction, tracks: similarTracks, mainSeed }),
+      });
+      const data = await res.json();
+      if (data.ids) {
+        setChatFilterIds(data.ids);
+        setChatFilterMessage(data.message ?? "");
+      } else {
+        setChatFilterMessage("絞り込みに失敗しました");
+      }
+    } catch {
+      setChatFilterMessage("エラーが発生しました");
+    }
+    setChatLoading(false);
+  };
 
   const filteredSimilar = similarTracks.filter((track) => {
     if (filters.bpmRange && mainSeed?.bpm && track.bpm && Math.abs(track.bpm - mainSeed.bpm) > filters.bpmRange) return false;
@@ -368,6 +397,7 @@ export default function Home() {
       if (`${Math.floor(track.release_year / 10) * 10}s` !== filters.decade) return false;
     }
     if (filters.excludePlaylist && playlist.find((t) => t.id === track.id)) return false;
+    if (chatFilterIds !== null && !chatFilterIds.includes(track.id)) return false;
     return true;
   });
 
@@ -707,6 +737,12 @@ export default function Home() {
           seedAnalyzing={seedAnalyzing} seedError={seedError}
           playlistCount={playlist.length}
           availableGenres={availableGenres}
+          hasSimilar={similarTracks.length > 0}
+          chatFilterIds={chatFilterIds}
+          chatFilterMessage={chatFilterMessage}
+          chatLoading={chatLoading}
+          onChatFilter={onChatFilter}
+          onClearChatFilter={() => { setChatFilterIds(null); setChatFilterMessage(""); }}
         />
         <div style={{ height: "1px", background: "rgba(0,0,0,0.07)", margin: "0 16px" }} />
         <PlaylistPanel
