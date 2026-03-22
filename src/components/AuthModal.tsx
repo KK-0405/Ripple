@@ -178,7 +178,7 @@ export default function AuthModal({ onClose }: Props) {
     fontSize: "14px",
     fontWeight: 700 as const,
     cursor: disabled ? "default" as const : "pointer" as const,
-    boxShadow: disabled ? "none" : "0 2px 8px rgba(83,74,183,0.28)",
+    boxShadow: "none",
     transition: "background 0.15s",
   });
 
@@ -271,7 +271,7 @@ export default function AuthModal({ onClose }: Props) {
                     onClick={() => { setLoginTab(t); resetError(); }}
                     style={{
                       flex: 1, padding: "7px",
-                      background: loginTab === t ? "#fff" : "transparent",
+                      background: loginTab === t ? C.bg : "transparent",
                       border: "none",
                       borderRadius: "7px",
                       color: loginTab === t ? C.t1 : C.t2,
@@ -357,7 +357,7 @@ export default function AuthModal({ onClose }: Props) {
                     onClick={() => { setRegTab(t); resetError(); }}
                     style={{
                       flex: 1, padding: "7px",
-                      background: regTab === t ? "#fff" : "transparent",
+                      background: regTab === t ? C.bg : "transparent",
                       border: "none", borderRadius: "7px",
                       color: regTab === t ? C.t1 : C.t2,
                       fontSize: "13px", fontWeight: regTab === t ? 600 : 400,

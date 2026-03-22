@@ -201,7 +201,7 @@ export default function SeedPanel({
           <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             絞り込み条件
             {activeCount > 0 && (
-              <span style={{ background: C.acc, color: "#fff", borderRadius: "10px", padding: "0 6px", fontSize: "10px", fontWeight: 700, lineHeight: "16px" }}>
+              <span style={{ background: C.acc, color: C.bg, borderRadius: "10px", padding: "0 6px", fontSize: "10px", fontWeight: 700, lineHeight: "16px" }}>
                 {activeCount}
               </span>
             )}

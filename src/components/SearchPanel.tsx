@@ -30,6 +30,7 @@ type Props = {
   loadingMore: boolean;
   viewingPlaylist: SavedPlaylist | null;
   togglePublic: (id: string, isPublic: boolean) => Promise<void>;
+  onOpenMenu?: () => void;
 };
 
 type MatchBadge = { label: string; color: string; bg: string };
@@ -93,7 +94,7 @@ export default function SearchPanel({
   mainSeed, subSeeds, setAsMainSeed, addToSubSeed,
   removeMainSeed, removeSubSeed,
   addToPlaylist, removeFromPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
-  onResetSimilar, onSearchMore, loadingMore, viewingPlaylist, togglePublic,
+  onResetSimilar, onSearchMore, loadingMore, viewingPlaylist, togglePublic, onOpenMenu,
 }: Props) {
   const { C } = useTheme();
   const isMobile = useMobile();
@@ -264,8 +265,18 @@ export default function SearchPanel({
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: C.bg }}>
 
       {/* 検索バー */}
-      <div style={{ padding: isMobile ? "10px 12px 10px" : "16px 20px 14px", borderBottom: `1px solid ${C.sep}`, background: C.bg, paddingTop: isMobile ? "calc(10px + env(safe-area-inset-top))" : undefined }}>
-        <div style={{ display: "flex", gap: "8px" }}>
+      <div style={{ padding: isMobile ? "12px 12px 10px" : "20px 20px 14px", paddingTop: isMobile ? "calc(env(safe-area-inset-top) + 16px)" : "20px", borderBottom: `1px solid ${C.sep}`, background: C.bg }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {onOpenMenu && (
+            <button
+              onClick={onOpenMenu}
+              style={{ width: 34, height: 34, flexShrink: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.t2, borderRadius: "8px" }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+          )}
           <div ref={inputWrapRef} style={{ flex: 1, position: "relative" }}>
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke={C.t3} strokeWidth="1.6" strokeLinecap="round" style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
               <circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/>
@@ -335,8 +346,8 @@ export default function SearchPanel({
                           width: 32, height: 32, borderRadius: "50%",
                           background: C.accDim,
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: "14px", flexShrink: 0,
-                        }}>👤</div>
+                          fontSize: "13px", fontWeight: 700, color: C.acc, flexShrink: 0,
+                        }}>{a.name?.[0]?.toUpperCase() ?? "?"}</div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ color: C.t1, fontSize: "13px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</div>
                           {a.genre && <div style={{ color: C.t3, fontSize: "11px", marginTop: "1px" }}>{a.genre}</div>}
@@ -392,7 +403,7 @@ export default function SearchPanel({
               padding: "11px 20px",
               background: C.acc,
               border: "none", borderRadius: "10px",
-              color: "#fff", fontSize: "14px", fontWeight: 600,
+              color: C.bg, fontSize: "14px", fontWeight: 600,
               cursor: "pointer", flexShrink: 0,
               boxShadow: "0 2px 8px rgba(88,86,214,0.3)",
             }}
@@ -411,7 +422,7 @@ export default function SearchPanel({
       }}>
         <span style={{ fontSize: "11px", color: C.t3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
           {mode === "search" ? "検索結果"
-            : mode === "playlist" ? `📋 ${viewingPlaylist?.name ?? "プレイリスト"} — ${displayTracks.length}曲`
+            : mode === "playlist" ? `${viewingPlaylist?.name ?? "プレイリスト"} — ${displayTracks.length}曲`
             : `類似曲 — ${filteredSimilarCount}曲`}
         </span>
         {metadataLoading && (
@@ -431,8 +442,8 @@ export default function SearchPanel({
             style={{
               marginLeft: "auto",
               padding: "3px 10px",
-              background: viewingPlaylist.is_public ? "rgba(83,74,183,0.08)" : C.s1,
-              border: `1px solid ${viewingPlaylist.is_public ? "rgba(83,74,183,0.3)" : C.s3}`,
+              background: viewingPlaylist.is_public ? C.accDim : C.s1,
+              border: `1px solid ${viewingPlaylist.is_public ? C.accBorder : C.s3}`,
               borderRadius: "6px",
               color: viewingPlaylist.is_public ? C.acc : C.t2,
               fontSize: "11px", fontWeight: 600,
@@ -441,7 +452,7 @@ export default function SearchPanel({
               flexShrink: 0,
             }}
           >
-            {togglingPublic ? "..." : viewingPlaylist.is_public ? "🌐 公開中" : "🔒 非公開"}
+            {togglingPublic ? "..." : viewingPlaylist.is_public ? "公開中" : "非公開"}
           </button>
         )}
 
@@ -753,7 +764,7 @@ export default function SearchPanel({
               style={{
                 padding: "9px 24px",
                 background: C.accDim,
-                border: `1px solid rgba(83,74,183,0.2)`,
+                border: `1px solid ${C.sep}`,
                 borderRadius: "20px",
                 color: C.acc,
                 fontSize: "13px",
@@ -763,7 +774,7 @@ export default function SearchPanel({
                 display: "flex", alignItems: "center", gap: "8px",
                 opacity: loadingMore ? 0.85 : 1,
               }}
-              onMouseEnter={(e) => { if (!loadingMore) e.currentTarget.style.background = "rgba(83,74,183,0.18)"; }}
+              onMouseEnter={(e) => { if (!loadingMore) e.currentTarget.style.background = C.s2; }}
               onMouseLeave={(e) => { if (!loadingMore) e.currentTarget.style.background = C.accDim; }}
             >
               {loadingMore ? (

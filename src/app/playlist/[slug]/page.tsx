@@ -69,10 +69,10 @@ export default async function PublicPlaylistPage({ params }: { params: Promise<{
             href={BASE_URL}
             style={{
               padding: "7px 16px",
-              background: "rgba(83,74,183,0.15)",
-              border: "1px solid rgba(83,74,183,0.35)",
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.2)",
               borderRadius: "8px",
-              color: "#a99ef0",
+              color: "#F1F1F1",
               fontSize: "13px", fontWeight: 600,
               textDecoration: "none",
             }}
@@ -87,7 +87,7 @@ export default async function PublicPlaylistPage({ params }: { params: Promise<{
 
         {/* プレイリスト情報 */}
         <div style={{ marginBottom: "40px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 600, color: "#534AB7", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>
             Public Playlist
           </div>
           <h1 style={{ fontSize: "32px", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", margin: "0 0 12px" }}>

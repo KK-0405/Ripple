@@ -14,6 +14,7 @@ export default async function ExplorePage() {
     .from("playlists")
     .select("id, name, slug, tracks, created_by, created_at")
     .eq("is_public", true)
+    .not("slug", "is", null)
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -45,10 +46,10 @@ export default async function ExplorePage() {
             href={BASE_URL}
             style={{
               padding: "7px 16px",
-              background: "rgba(83,74,183,0.15)",
-              border: "1px solid rgba(83,74,183,0.35)",
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.2)",
               borderRadius: "8px",
-              color: "#a99ef0",
+              color: "#F1F1F1",
               fontSize: "13px", fontWeight: 600,
               textDecoration: "none",
             }}
@@ -60,7 +61,7 @@ export default async function ExplorePage() {
 
       {/* ページタイトル */}
       <div style={{ maxWidth: "960px", margin: "0 auto", padding: "48px 32px 32px" }}>
-        <div style={{ fontSize: "11px", fontWeight: 600, color: "#534AB7", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>
+        <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>
           Community
         </div>
         <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", margin: "0 0 8px" }}>
@@ -101,8 +102,8 @@ export default async function ExplorePage() {
                       cursor: "pointer",
                     }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(83,74,183,0.5)";
-                      (e.currentTarget as HTMLDivElement).style.background = "rgba(83,74,183,0.08)";
+                      (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.2)";
+                      (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.08)";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.08)";
@@ -121,7 +122,7 @@ export default async function ExplorePage() {
                             style={{ width: "100%", height: "60px", objectFit: "cover", display: "block" }}
                           />
                         ) : (
-                          <div key={i} style={{ background: "rgba(83,74,183,0.15)", height: "60px" }} />
+                          <div key={i} style={{ background: "rgba(255,255,255,0.08)", height: "60px" }} />
                         );
                       })}
                     </div>

@@ -98,7 +98,7 @@ export default function PlaylistPanel({
           プレイリスト
         </div>
         {playlist.length > 0 && (
-          <span style={{ background: C.acc, color: "#fff", borderRadius: "10px", padding: "0 7px", fontSize: "11px", fontWeight: 700, lineHeight: "18px" }}>
+          <span style={{ background: C.acc, color: C.bg, borderRadius: "10px", padding: "0 7px", fontSize: "11px", fontWeight: 700, lineHeight: "18px" }}>
             {playlist.length}曲
           </span>
         )}
@@ -154,7 +154,7 @@ export default function PlaylistPanel({
           <select
             value={targetPlaylistId}
             onChange={(e) => setTargetPlaylistId(e.target.value)}
-            style={{ width: "100%", padding: "8px 10px", background: "#fff", border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none", boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "8px 10px", background: C.bg, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none", boxSizing: "border-box" }}
           >
             <option value="new">── 新規作成 ──</option>
             {savedPlaylists.map((p) => (
@@ -169,7 +169,7 @@ export default function PlaylistPanel({
               value={playlistName}
               onChange={(e) => setPlaylistName(e.target.value)}
               placeholder="プレイリスト名"
-              style={{ width: "100%", padding: "8px 10px", background: "#fff", border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "8px 10px", background: C.bg, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none", boxSizing: "border-box" }}
             />
           )}
 
@@ -184,7 +184,7 @@ export default function PlaylistPanel({
               color: playlist.length > 0 || saveStatus !== "idle" ? "#fff" : C.t3,
               fontSize: "13px", fontWeight: 700,
               cursor: playlist.length > 0 ? "pointer" : "default",
-              boxShadow: playlist.length > 0 && saveStatus === "idle" ? "0 2px 8px rgba(83,74,183,0.28)" : "none",
+              boxShadow: "none",
               transition: "background 0.2s",
             }}
           >
@@ -233,7 +233,7 @@ export default function PlaylistPanel({
               <select
                 value={selectedYoutubePlaylist}
                 onChange={(e) => setSelectedYoutubePlaylist(e.target.value)}
-                style={{ width: "100%", padding: "7px 10px", background: "#fff", border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none" }}
+                style={{ width: "100%", padding: "7px 10px", background: C.bg, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none" }}
               >
                 <option value="new">新規プレイリストを作成</option>
                 {youtubePlaylists.map((p) => (
