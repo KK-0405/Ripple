@@ -576,7 +576,7 @@ export default function Home() {
           </button>
           <div
             onClick={() => { setQuery(""); setTracks([]); setSimilarTracks([]); setMode("search"); setMainSeed(null); setSubSeeds([]); setFilters(DEFAULT_FILTERS); setViewingPlaylist(null); setSeedError(null); }}
-            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", flex: 1, minWidth: 0, opacity: sidebarOpen ? 1 : 0, transition: "opacity 150ms ease", pointerEvents: sidebarOpen ? "auto" : "none", whiteSpace: "nowrap" }}
+            style={{ display: sidebarOpen ? "flex" : "none", alignItems: "center", gap: "8px", cursor: "pointer", flex: 1, minWidth: 0, whiteSpace: "nowrap" }}
           >
             <div style={{ width: 28, height: 28, background: "linear-gradient(135deg, #3C3489, #26215C)", borderRadius: "7px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(63,52,137,0.4)" }}>
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.2" fill="white" opacity="0.95"/><circle cx="10" cy="10" r="5" fill="none" stroke="white" strokeWidth="1.6" opacity="0.8"/><circle cx="10" cy="10" r="8" fill="none" stroke="white" strokeWidth="1.1" opacity="0.5"/></svg>
@@ -839,6 +839,7 @@ export default function Home() {
         hasSession={!!session}
         onLoadSavedPlaylist={(p) => { setViewingPlaylist(p); navigateTo("playlist"); setScrollKey((k) => k + 1); }}
         onNavigate={navigateTo}
+        showLogo={!isMobile && !sidebarOpen}
       />
 
       {/* 右パネル (768px以上で常時表示) */}
