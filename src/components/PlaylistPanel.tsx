@@ -21,7 +21,7 @@ export default function PlaylistPanel({
   playlistName, setPlaylistName, savePlaylist, setPlaylist,
   savedPlaylists, addTracksToExistingPlaylist,
 }: Props) {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { C } = useTheme();
   const [targetPlaylistId, setTargetPlaylistId] = useState<"new" | string>("new");
   const [showYoutubeSelect, setShowYoutubeSelect] = useState(false);
@@ -135,7 +135,7 @@ export default function PlaylistPanel({
       </div>
 
       {/* 未ログイン: Googleログインの案内 */}
-      {!session ? (
+      {authLoading ? null : !session ? (
         <div style={{ padding: "12px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "10px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
           <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, marginTop: "1px" }}>
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>

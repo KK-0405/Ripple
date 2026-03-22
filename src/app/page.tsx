@@ -90,11 +90,11 @@ export default function Home() {
     if (dx > 0) setMobileSheet("menu");   // 右スワイプ → 左パネル
     else setMobileSheet("panel");          // 左スワイプ → 右パネル
   }, [mobileSheet]);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  useEffect(() => {
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
     const saved = localStorage.getItem("dj_sidebar_v1");
-    if (saved !== null) setSidebarOpen(saved === "1");
-  }, []);
+    return saved !== null ? saved === "1" : true;
+  });
   const toggleSidebar = () => setSidebarOpen((v) => {
     const next = !v;
     localStorage.setItem("dj_sidebar_v1", next ? "1" : "0");
