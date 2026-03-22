@@ -833,27 +833,24 @@ export default function Home() {
         </div>
       )}
 
-      {/* モバイル: 右パネルボトムシート (グリッドボタンから開く) */}
+      {/* モバイル: 右パネルドロワー (グリッドボタンから開く) */}
       {isMobile && mobileSheet === "panel" && (
         <div
           onClick={() => setMobileSheet("none")}
           style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)" }}
         >
           <div
-            className="sheet-enter"
             onClick={(e) => e.stopPropagation()}
             style={{
-              position: "absolute", bottom: 0, left: 0, right: 0,
+              position: "absolute", top: 0, right: 0, bottom: 0,
+              width: "min(300px, 88vw)",
               background: C.bg2,
-              borderRadius: "20px 20px 0 0",
-              maxHeight: "87vh",
+              borderLeft: `1px solid ${C.sep}`,
               display: "flex", flexDirection: "column",
-              boxShadow: "0 -4px 24px rgba(0,0,0,0.2)",
+              boxShadow: "-4px 0 24px rgba(0,0,0,0.2)",
+              animation: "slide-in-right 0.25s cubic-bezier(0.32,0.72,0,1)",
             }}
           >
-            <div style={{ flexShrink: 0, display: "flex", justifyContent: "center", paddingTop: "12px", paddingBottom: "4px" }}>
-              <div style={{ width: 36, height: 4, background: C.s3, borderRadius: 2 }} />
-            </div>
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: "env(safe-area-inset-bottom)" }}>
               <SeedPanel
                 mainSeed={mainSeed} setMainSeed={setMainSeed}
