@@ -2,7 +2,7 @@ import { type Track } from "@/lib/deezer";
 
 export type { Track };
 
-export type Mode = "search" | "similar" | "playlist";
+export type Mode = "search" | "similar" | "playlist" | "history" | "playlists";
 
 export type SimilarFilters = {
   // リズム・テンポ
