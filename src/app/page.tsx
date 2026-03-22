@@ -545,88 +545,43 @@ export default function Home() {
 
       {/* サイドバー開時のバックドロップ — 削除: デスクトップでは backdrop がメインコンテンツの全クリックをブロックするため */}
 
-      {/* サイドバー (デスクトップのみ) — YouTube オーバーレイスタイル */}
-      {!isMobile && sidebarMounted && <div style={{
-        position: "fixed",
-        left: 0,
-        top: 0,
-        bottom: 0,
-        zIndex: 40,
-        width: sidebarOpen ? "180px" : "44px",
-        background: C.s1,
-        borderRight: `1px solid ${C.sep}`,
-        display: "flex",
-        flexDirection: "column",
-        transition: "width 200ms ease-in-out",
-        overflow: "hidden",
-      }}>
-
-        {/* ヘッダー行: ハンバーガー + アプリ名 */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: sidebarOpen ? "20px 20px 14px" : "8px 2px", height: sidebarOpen ? "auto" : "56px", flexShrink: 0, justifyContent: sidebarOpen ? "flex-start" : "center" }}>
-          <button
-            onClick={toggleSidebar}
-            title={sidebarOpen ? "閉じる" : "開く"}
-            style={{ width: 36, height: 36, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.t2, flexShrink: 0 }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = C.hover; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
-            </svg>
-          </button>
+      {/* 固定トップ左ヘッダー（常時表示・180px） */}
+      {!isMobile && sidebarMounted && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: 180, height: 73,
+          zIndex: 50, background: C.s1,
+          borderRight: `1px solid ${C.sep}`, borderBottom: `1px solid ${C.sep}`,
+          display: "flex", alignItems: "center", padding: "0 20px", gap: 8,
+        }}>
           <div
             onClick={() => { setQuery(""); setTracks([]); setSimilarTracks([]); setMode("search"); setMainSeed(null); setSubSeeds([]); setFilters(DEFAULT_FILTERS); setViewingPlaylist(null); setSeedError(null); }}
-            style={{ display: sidebarOpen ? "flex" : "none", alignItems: "center", gap: "8px", cursor: "pointer", flex: 1, minWidth: 0, whiteSpace: "nowrap" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, cursor: "pointer", minWidth: 0 }}
           >
             <div style={{ width: 28, height: 28, background: "linear-gradient(135deg, #3C3489, #26215C)", borderRadius: "7px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(63,52,137,0.4)" }}>
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.2" fill="white" opacity="0.95"/><circle cx="10" cy="10" r="5" fill="none" stroke="white" strokeWidth="1.6" opacity="0.8"/><circle cx="10" cy="10" r="8" fill="none" stroke="white" strokeWidth="1.1" opacity="0.5"/></svg>
             </div>
-            <span style={{ fontSize: "18px", fontWeight: 700, color: C.t1, letterSpacing: "-0.02em" }}>Ripple</span>
+            <span style={{ fontSize: "18px", fontWeight: 700, color: C.t1, letterSpacing: "-0.02em", whiteSpace: "nowrap" }}>Ripple</span>
           </div>
+          <button
+            onClick={toggleSidebar}
+            title={sidebarOpen ? "閉じる" : "開く"}
+            style={{ width: 32, height: 32, borderRadius: 7, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.t3, flexShrink: 0 }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = C.hover; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+            </svg>
+          </button>
         </div>
+      )}
 
-        {/* ミニナビ (collapsed 時) */}
-        {!sidebarOpen && (
-          <nav style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", padding: "4px 0" }}>
-            {/* Search */}
-            <div
-              title="Search"
-              onClick={() => { setQuery(""); setTracks([]); setSimilarTracks([]); setMode("search"); setMainSeed(null); setSubSeeds([]); setFilters(DEFAULT_FILTERS); setViewingPlaylist(null); setSeedError(null); }}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "search" && !viewingPlaylist ? C.accDim : "transparent", color: mode === "search" && !viewingPlaylist ? C.acc : C.t2 }}
-              onMouseEnter={(e) => { if (!(mode === "search" && !viewingPlaylist)) (e.currentTarget as HTMLDivElement).style.background = C.hover; }}
-              onMouseLeave={(e) => { if (!(mode === "search" && !viewingPlaylist)) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-            </div>
-            {/* History */}
-            <div
-              title="History"
-              onClick={() => history.length > 0 ? navigateTo("history") : toggleSidebar()}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "history" ? C.accDim : "transparent", color: mode === "history" ? C.acc : C.t2 }}
-              onMouseEnter={(e) => { if (mode !== "history") (e.currentTarget as HTMLDivElement).style.background = C.hover; }}
-              onMouseLeave={(e) => { if (mode !== "history") (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4"/><polyline points="3 3 3 7 7 7"/>
-              </svg>
-            </div>
-            {/* Playlists */}
-            <div
-              title="Playlists"
-              onClick={() => navigateTo("playlists")}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "playlists" ? C.accDim : "transparent", color: mode === "playlists" ? C.acc : C.t2 }}
-              onMouseEnter={(e) => { if (mode !== "playlists") (e.currentTarget as HTMLDivElement).style.background = C.hover; }}
-              onMouseLeave={(e) => { if (mode !== "playlists") (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-                <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-              </svg>
-            </div>
-          </nav>
-        )}
+      {/* サイドバーボディ（Libraryナビ・top:73pxから開閉） */}
+      {!isMobile && sidebarMounted && sidebarOpen && <div style={{
+        position: "fixed", left: 0, top: 73, bottom: 0, width: 180,
+        zIndex: 40, background: C.s1, borderRight: `1px solid ${C.sep}`,
+        display: "flex", flexDirection: "column", overflow: "hidden",
+      }}>
 
         {/* フルナビ (expanded 時) */}
         {sidebarOpen && <nav style={{ padding: "10px 8px", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
@@ -815,8 +770,8 @@ export default function Home() {
         </div>
       </div>}
 
-      {/* サイドバーのフットプリント */}
-      {!isMobile && <div style={{ width: sidebarOpen ? "180px" : "44px", flexShrink: 0, transition: "width 200ms ease-in-out" }} />}
+      {/* サイドバーのフットプリント（常時180px） */}
+      {!isMobile && <div style={{ width: "180px", flexShrink: 0 }} />}
 
       {/* メインコンテンツ */}
       <SearchPanel
@@ -839,8 +794,8 @@ export default function Home() {
         hasSession={!!session}
         onLoadSavedPlaylist={(p) => { setViewingPlaylist(p); navigateTo("playlist"); setScrollKey((k) => k + 1); }}
         onNavigate={navigateTo}
-        showLogo={!isMobile && !sidebarOpen}
-        topBarLeft={!isMobile && sidebarMounted ? (sidebarOpen ? 180 : 44) : undefined}
+        showLogo={false}
+        topBarLeft={!isMobile && sidebarMounted ? 180 : undefined}
         topBarRight={!isMobile ? 260 : undefined}
       />
 
