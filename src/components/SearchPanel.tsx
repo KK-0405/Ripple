@@ -417,7 +417,7 @@ export default function SearchPanel({
               padding: "11px 20px",
               background: C.acc,
               border: "none", borderRadius: "10px",
-              color: C.bg, fontSize: "14px", fontWeight: 600,
+              color: C.bg, fontSize: "13px", fontWeight: 600,
               cursor: "pointer", flexShrink: 0,
               boxShadow: "0 2px 8px rgba(88,86,214,0.3)",
             }}
@@ -434,7 +434,7 @@ export default function SearchPanel({
         borderBottom: `1px solid ${C.sep}`,
         background: C.s1,
       }}>
-        <span style={{ fontSize: "11px", color: C.t3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        <span style={{ fontSize: "10px", color: C.t3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
           {mode === "search" ? "検索結果"
             : mode === "playlist" ? `${viewingPlaylist?.name ?? "プレイリスト"} — ${displayTracks.length}曲`
             : `類似曲 — ${filteredSimilarCount}曲`}
@@ -524,14 +524,14 @@ export default function SearchPanel({
                   <path d="M 4 1.5 A 8.5 8.5 0 0 1 4 18.5" fill="none" stroke={C.t3} strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
               </div>
-              <div style={{ fontSize: "17px", fontWeight: 600, color: C.t2, marginBottom: "5px" }}>曲を検索してみよう</div>
-              <div style={{ fontSize: "13px", color: C.t3 }}>曲名またはアーティスト名を入力して Seed を選択</div>
+              <div style={{ fontSize: "15px", fontWeight: 600, color: C.t2, marginBottom: "5px" }}>曲を検索してみよう</div>
+              <div style={{ fontSize: "12px", color: C.t3 }}>曲名またはアーティスト名を入力して Seed を選択</div>
             </div>
 
             {/* 公開プレイリスト */}
             {publicPlaylists.length > 0 && (
               <div>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "14px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "14px" }}>
                   みんなのプレイリスト
                 </div>
                 <div style={{
@@ -572,10 +572,10 @@ export default function SearchPanel({
                         )}
                       </div>
                       {/* テキスト */}
-                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", fontWeight: 600, color: C.t1, marginBottom: "2px" }}>
+                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px", fontWeight: 600, color: C.t1, marginBottom: "2px" }}>
                         {pl.name}
                       </div>
-                      <div style={{ fontSize: "11px", color: C.t3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: "10px", color: C.t3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {pl.created_by} · {pl.track_count}曲
                       </div>
                     </a>
@@ -616,11 +616,11 @@ export default function SearchPanel({
               onMouseLeave={(e) => { if (!isMain) e.currentTarget.style.background = "transparent"; }}
             >
               {/* アルバムアート */}
-              <div style={{ position: "relative", flexShrink: 0, width: isMobile ? 40 : 46, height: isMobile ? 40 : 46 }}>
+              <div style={{ position: "relative", flexShrink: 0, width: isMobile ? 44 : 52, height: isMobile ? 44 : 52 }}>
                 <img
                   src={track.album.images[0]?.url}
                   alt={track.album.name}
-                  width={isMobile ? 40 : 46} height={isMobile ? 40 : 46}
+                  width={isMobile ? 44 : 52} height={isMobile ? 44 : 52}
                   style={{ borderRadius: "8px", display: "block", objectFit: "cover", boxShadow: "0 1px 4px rgba(0,0,0,0.12)" }}
                 />
                 <button
@@ -650,14 +650,14 @@ export default function SearchPanel({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   color: playingId === track.id ? C.acc : isMain ? C.acc : C.t1,
-                  fontSize: "14px", fontWeight: playingId === track.id ? 600 : 500,
+                  fontSize: "13px", fontWeight: playingId === track.id ? 600 : 500,
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   lineHeight: 1.3,
                 }}>
                   {track.name}
                 </div>
                 <div style={{
-                  color: C.t2, fontSize: "12px", marginTop: "1px",
+                  color: C.t2, fontSize: "11px", marginTop: "1px",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
                   {track.artists.map((a) => a.name).join(", ")}
@@ -668,7 +668,7 @@ export default function SearchPanel({
                 <div style={{ display: "flex", gap: "5px", alignItems: "center", marginTop: "4px", flexWrap: "wrap" }}>
                   {/* 類似モードではBPMをマッチバッジ側に表示するためここでは非表示 */}
                   {mode !== "similar" && (
-                    <span style={{ fontSize: "11px", color: track.bpm ? "#1b7a34" : C.t3, fontWeight: 500 }}>
+                    <span style={{ fontSize: "10px", color: track.bpm ? "#1b7a34" : C.t3, fontWeight: 500 }}>
                       {track.bpm ? `${track.bpm} BPM` : "— BPM"}
                     </span>
                   )}
@@ -678,7 +678,7 @@ export default function SearchPanel({
                     </span>
                   )}
                   {track.energy !== undefined && (
-                    <span style={{ fontSize: "11px", color: C.t3 }}>E:{Math.round(track.energy * 10)}</span>
+                    <span style={{ fontSize: "10px", color: C.t3 }}>E:{Math.round(track.energy * 10)}</span>
                   )}
                 </div>
 
@@ -691,7 +691,7 @@ export default function SearchPanel({
                           {b.label}
                         </span>
                       )) : (
-                        <span style={{ fontSize: "11px", color: C.t3 }}>一致なし</span>
+                        <span style={{ fontSize: "10px", color: C.t3 }}>一致なし</span>
                       )}
                     </div>
                     {track.reason && (
@@ -714,7 +714,7 @@ export default function SearchPanel({
                       border: `1px solid ${isMain ? C.acc : C.s2}`,
                       borderRadius: "8px",
                       color: isMain ? "#fff" : C.t2,
-                      fontSize: isMobile ? "10px" : "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                      fontSize: isMobile ? "9px" : "10px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
                     }}
                   >
                     {isMain ? "★" : "Seed"}
@@ -742,7 +742,7 @@ export default function SearchPanel({
                       border: `1px solid ${inPlaylist ? C.acc : C.s2}`,
                       borderRadius: "8px",
                       color: inPlaylist ? C.acc : C.t2,
-                      fontSize: isMobile ? "10px" : "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                      fontSize: isMobile ? "9px" : "10px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
                     }}
                   >
                     {inPlaylist ? "✓" : "+"}

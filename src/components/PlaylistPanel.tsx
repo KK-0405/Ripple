@@ -123,10 +123,10 @@ export default function PlaylistPanel({
               onMouseLeave={(e) => (e.currentTarget.style.background = C.s1)}
             >
               <span style={{ fontSize: "10px", color: C.t3, width: "14px", textAlign: "center", flexShrink: 0 }}>{index + 1}</span>
-              <img src={track.album.images[0]?.url} alt={track.album.name} width={28} height={28} style={{ borderRadius: "5px", flexShrink: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }} />
+              <img src={track.album.images[0]?.url} alt={track.album.name} width={22} height={22} style={{ borderRadius: "4px", flexShrink: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: C.t1, fontSize: "12px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.name}</div>
-                <div style={{ color: C.t2, fontSize: "10px" }}>{track.artists[0]?.name}</div>
+                <div style={{ color: C.t1, fontSize: "11px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.name}</div>
+                <div style={{ color: C.t2, fontSize: "9px" }}>{track.artists[0]?.name}</div>
               </div>
               <button onClick={() => removeFromPlaylist(track.id)} style={{ background: "none", border: "none", color: C.t3, fontSize: "16px", cursor: "pointer", flexShrink: 0 }}>×</button>
             </div>
@@ -154,7 +154,7 @@ export default function PlaylistPanel({
           <select
             value={targetPlaylistId}
             onChange={(e) => setTargetPlaylistId(e.target.value)}
-            style={{ width: "100%", padding: "8px 10px", background: C.bg, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none", boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "8px 10px", background: C.bg, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "11px", outline: "none", boxSizing: "border-box" }}
           >
             <option value="new">── 新規作成 ──</option>
             {savedPlaylists.map((p) => (
@@ -169,7 +169,7 @@ export default function PlaylistPanel({
               value={playlistName}
               onChange={(e) => setPlaylistName(e.target.value)}
               placeholder="プレイリスト名"
-              style={{ width: "100%", padding: "8px 10px", background: C.bg, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "12px", outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "8px 10px", background: C.bg, border: `1px solid ${C.sep}`, borderRadius: "8px", color: C.t1, fontSize: "11px", outline: "none", boxSizing: "border-box" }}
             />
           )}
 
@@ -182,7 +182,7 @@ export default function PlaylistPanel({
               background: saveStatus === "saved" ? C.green : saveStatus === "error" ? C.red : playlist.length > 0 ? C.acc : C.s1,
               border: "none", borderRadius: "10px",
               color: playlist.length > 0 || saveStatus !== "idle" ? "#fff" : C.t3,
-              fontSize: "13px", fontWeight: 700,
+              fontSize: "12px", fontWeight: 700,
               cursor: playlist.length > 0 ? "pointer" : "default",
               boxShadow: "none",
               transition: "background 0.2s",
@@ -213,7 +213,7 @@ export default function PlaylistPanel({
               border: `1px solid ${googleToken && playlist.length > 0 ? "#cc0000" : C.sep}`,
               borderRadius: "10px",
               color: googleToken && playlist.length > 0 ? "#fff" : C.t3,
-              fontSize: "13px", fontWeight: 700,
+              fontSize: "12px", fontWeight: 700,
               cursor: googleToken && playlist.length > 0 ? "pointer" : "not-allowed",
               opacity: googleToken ? 1 : 0.55,
               transition: "background 0.15s",
