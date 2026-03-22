@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
           if (!hit) return null;
           // Deezer側でカラオケアーティストが返ってきた場合も排除
           if (isDeezerKaraoke(hit.artist?.name ?? "", hit.title ?? "")) return null;
+          // 非日本語シードの場合、Deezer結果に日本語文字が含まれていたら排除
+          if (!japaneseSeed && (isJapanese(hit.title ?? "") || isJapanese(hit.artist?.name ?? ""))) return null;
           return mapDeezerTrack(hit);
         } catch {
           return null;

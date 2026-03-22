@@ -186,11 +186,11 @@ function buildSimilarPrompt(
 
   const langRule = japaneseSeed
     ? `- ⚠️ LANGUAGE IS JAPANESE. You MUST write title and artist in Japanese script (漢字・ひらがな・カタカナ). Romaji is ABSOLUTELY FORBIDDEN. WRONG: "Yoru ni Kakeru" / CORRECT: "夜に駆ける". Every single title must contain Japanese characters if the song is Japanese.`
-    : `- Output title and artist fields in English (use Latin alphabet only). Do NOT include Japanese-only releases, J-pop, K-pop, C-pop, or other regional Asian music UNLESS the artist/song has genuine major international crossover (e.g., appeared on US/UK Billboard charts). This is a Western/international artist — stay within the Western/international music sphere.`;
+    : `- ⚠️ WESTERN ARTISTS ONLY. The seed is a NON-Japanese, NON-Asian artist. You MUST NOT include any Japanese, Korean, Chinese, or other Asian artists. ZERO Japanese songs allowed — not even famous ones. Artists like YOASOBI, Ado, Kenshi Yonezu, Official HIGE DANdism, BTS, Twice, etc. are STRICTLY FORBIDDEN. Only recommend artists from US, UK, Europe, Latin America, Africa, or Australia.`;
 
   const territoryRule = japaneseSeed
     ? `- TERRITORY: Japanese music ecosystem. Prioritise Japanese domestic releases. International tracks only if extremely well-known in Japan.`
-    : `- TERRITORY: Western/International (US, UK, Europe, Australia, etc.). The seed artist is NOT Japanese. Do NOT recommend songs whose primary audience is Japan or Asia. Recommend music that listeners of this Western artist would recognise.`;
+    : `- TERRITORY: Western/International ONLY (US, UK, Europe, Latin America, Australia, etc.). Zero tolerance for Asian music. If you are tempted to recommend a Japanese or Korean artist — stop and pick a Western alternative instead.`;
 
   return `You are a DJ and music expert.
 
