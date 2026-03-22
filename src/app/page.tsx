@@ -75,6 +75,8 @@ const DEFAULT_FILTERS: SimilarFilters = {
 export default function Home() {
   const { C, isDark, setIsDark } = useTheme();
   const isMobile = useMobile();
+  // 1100px 未満では右パネルを非表示（モバイルではなく狭いデスクトップ）
+  const isNarrow = useMobile(1100);
   const [mobileSheet, setMobileSheet] = useState<"none" | "seed" | "playlist" | "menu">("none");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   useEffect(() => {
@@ -794,8 +796,8 @@ export default function Home() {
         onOpenMenu={isMobile ? () => setMobileSheet("menu") : undefined}
       />
 
-      {/* 右パネル (デスクトップのみ) */}
-      {!isMobile && (
+      {/* 右パネル (デスクトップのみ・1100px以上) */}
+      {!isMobile && !isNarrow && (
         <div style={{
           width: "260px",
           background: C.bg2,
