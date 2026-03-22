@@ -90,11 +90,13 @@ export default function Home() {
     if (dx > 0) setMobileSheet("menu");   // 右スワイプ → 左パネル
     else setMobileSheet("panel");          // 左スワイプ → 右パネル
   }, [mobileSheet]);
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarMounted, setSidebarMounted] = useState(false);
+  useEffect(() => {
     const saved = localStorage.getItem("dj_sidebar_v1");
-    return saved !== null ? saved === "1" : true;
-  });
+    if (saved !== null) setSidebarOpen(saved === "1");
+    setSidebarMounted(true);
+  }, []);
   const toggleSidebar = () => setSidebarOpen((v) => {
     const next = !v;
     localStorage.setItem("dj_sidebar_v1", next ? "1" : "0");
@@ -544,7 +546,7 @@ export default function Home() {
       {/* サイドバー開時のバックドロップ — 削除: デスクトップでは backdrop がメインコンテンツの全クリックをブロックするため */}
 
       {/* サイドバー (デスクトップのみ) — YouTube オーバーレイスタイル */}
-      {!isMobile && <div style={{
+      {!isMobile && sidebarMounted && <div style={{
         position: "fixed",
         left: 0,
         top: 0,

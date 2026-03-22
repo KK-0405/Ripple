@@ -59,6 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // 遷移開始時に loading=true にして、未確定状態のUIが表示されないようにする
+      setLoading(true);
       // 同期的に先に state を更新してから非同期処理へ
       setSession(session);
       setUser(session?.user ?? null);
