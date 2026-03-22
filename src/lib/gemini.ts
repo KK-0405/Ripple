@@ -219,7 +219,8 @@ REMEMBER: ${count} songs total. Output all ${count} now.`;
 
 async function fetchSuggestions(
   apiKey: string,
-  prompt: string
+  prompt: string,
+  japaneseSeed: boolean = false
 ): Promise<{ suggestions: TrackSuggestion[]; error?: string }> {
   const result = await geminiPost(apiKey, {
     contents: [{ parts: [{ text: prompt }] }],
@@ -242,6 +243,11 @@ async function fetchSuggestions(
       if (!m.title || !m.artist) return null;
       // カラオケ・カバーをコード側でも除外
       if (isKaraokeOrCover(String(m.title), String(m.artist))) return null;
+      // 非日本語シードの場合、日本語文字・日本語ジャンルを含む曲を除外
+      if (!japaneseSeed) {
+        if (isJapanese(String(m.title)) || isJapanese(String(m.artist))) return null;
+        if (Array.isArray(m.genre_tags) && m.genre_tags.some((g: string) => JAPANESE_GENRE_RE.test(String(g)))) return null;
+      }
       const meta = (() => { try { return sanitize(m); } catch { return null; } })();
       const reason = typeof m.reason === "string" && m.reason.trim() ? m.reason.trim() : undefined;
       return { title: String(m.title), artist: String(m.artist), reason, ...meta };
@@ -285,12 +291,13 @@ export async function getSimilarTrackSuggestions(
   if (!apiKey) return { suggestions: [], error: "GEMINI_API_KEY not set" };
 
   try {
+    const japaneseSeed = isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
     // Deezerミス・カラオケフィルター分を見越して多めにリクエスト
     const buffered = Math.min(Math.ceil(count * 1.5), 50);
 
     // 1回目（バッファ込みで多めに取得）
     const prompt1 = buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles);
-    const first = await fetchSuggestions(apiKey, prompt1);
+    const first = await fetchSuggestions(apiKey, prompt1, japaneseSeed);
     if (first.error) return first;
 
     let suggestions = first.suggestions;
@@ -300,7 +307,7 @@ export async function getSimilarTrackSuggestions(
       const need = buffered - suggestions.length;
       const alreadyHave = suggestions.map((s) => `"${s.title}" by ${s.artist}`);
       const promptN = buildSimilarPrompt(seed, subSeeds, need, alreadyHave);
-      const next = await fetchSuggestions(apiKey, promptN);
+      const next = await fetchSuggestions(apiKey, promptN, japaneseSeed);
       if (next.error || next.suggestions.length === 0) break;
       suggestions = [...suggestions, ...next.suggestions];
     }
