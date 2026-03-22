@@ -41,6 +41,8 @@ type Props = {
   onLoadSavedPlaylist?: (p: SavedPlaylist) => void;
   onNavigate?: (mode: Mode) => void;
   showLogo?: boolean;
+  topBarLeft?: number;
+  topBarRight?: number;
 };
 
 type MatchBadge = { label: string; color: string; bg: string };
@@ -106,7 +108,7 @@ export default function SearchPanel({
   addToPlaylist, removeFromPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
   onResetSimilar, onSearchMore, loadingMore, viewingPlaylist, togglePublic, onOpenMenu, onOpenPanel,
   historyEntries = [], onClearHistory, onLoadHistoryEntry, savedPlaylistsAll = [], hasSession, onLoadSavedPlaylist, onNavigate,
-  showLogo = false,
+  showLogo = false, topBarLeft, topBarRight = 0,
 }: Props) {
   const { C } = useTheme();
   const isMobile = useMobile();
@@ -277,7 +279,15 @@ export default function SearchPanel({
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: C.bg }}>
 
       {/* 検索バー */}
-      <div style={{ padding: isMobile ? "12px 12px 10px" : "20px 20px 14px", paddingTop: isMobile ? "calc(env(safe-area-inset-top) + 16px)" : "20px", borderBottom: `1px solid ${C.sep}`, background: C.bg }}>
+      <div style={{
+        ...(topBarLeft !== undefined ? {
+          position: "fixed", top: 0, left: topBarLeft, right: topBarRight,
+          zIndex: 45, transition: "left 200ms ease-in-out",
+        } : {}),
+        padding: isMobile ? "12px 12px 10px" : "20px 20px 14px",
+        paddingTop: isMobile ? "calc(env(safe-area-inset-top) + 16px)" : "20px",
+        borderBottom: `1px solid ${C.sep}`, background: C.bg,
+      }}>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           {showLogo && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, marginRight: "4px" }}>
@@ -523,6 +533,9 @@ export default function SearchPanel({
           </button>
         )}
       </div>
+
+      {/* 検索バーfixed時のスペーサー */}
+      {topBarLeft !== undefined && <div style={{ height: 73, flexShrink: 0 }} />}
 
       {/* トラックリスト */}
       <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: isMobile ? "6px 8px" : "8px 12px", background: C.bg }}>

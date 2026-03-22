@@ -840,6 +840,8 @@ export default function Home() {
         onLoadSavedPlaylist={(p) => { setViewingPlaylist(p); navigateTo("playlist"); setScrollKey((k) => k + 1); }}
         onNavigate={navigateTo}
         showLogo={!isMobile && !sidebarOpen}
+        topBarLeft={!isMobile && sidebarMounted ? (sidebarOpen ? 180 : 44) : undefined}
+        topBarRight={!isMobile ? 260 : undefined}
       />
 
       {/* 右パネル (768px以上で常時表示) */}
