@@ -282,13 +282,15 @@ export default function SearchPanel({
       <div style={{
         ...(topBarLeft !== undefined ? {
           position: "fixed", top: 0, left: topBarLeft, right: topBarRight,
-          zIndex: 45, transition: "left 200ms ease-in-out",
-        } : {}),
-        padding: isMobile ? "12px 12px 10px" : "20px 20px 14px",
-        paddingTop: isMobile ? "calc(env(safe-area-inset-top) + 16px)" : "20px",
+          height: 56, zIndex: 201, transition: "left 200ms ease-in-out",
+          display: "flex", alignItems: "center", padding: "0 16px",
+        } : {
+          padding: isMobile ? "12px 12px 10px" : "20px 20px 14px",
+          paddingTop: isMobile ? "calc(env(safe-area-inset-top) + 16px)" : "20px",
+        }),
         borderBottom: `1px solid ${C.sep}`, background: C.bg,
       }}>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", width: topBarLeft !== undefined ? "100%" : undefined }}>
           {showLogo && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, marginRight: "4px" }}>
               <div style={{ width: 28, height: 28, background: "linear-gradient(135deg, #3C3489, #26215C)", borderRadius: "7px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(63,52,137,0.4)" }}>
@@ -535,7 +537,7 @@ export default function SearchPanel({
       </div>
 
       {/* 検索バーfixed時のスペーサー */}
-      {topBarLeft !== undefined && <div style={{ height: 73, flexShrink: 0 }} />}
+      {topBarLeft !== undefined && <div style={{ height: 56, flexShrink: 0 }} />}
 
       {/* トラックリスト */}
       <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: isMobile ? "6px 8px" : "8px 12px", background: C.bg }}>
