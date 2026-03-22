@@ -78,6 +78,7 @@ export default function Home() {
   // 1100px 未満では右パネルを非表示（モバイルではなく狭いデスクトップ）
   const isNarrow = useMobile(1100);
   const [mobileSheet, setMobileSheet] = useState<"none" | "seed" | "playlist" | "menu">("none");
+  const [narrowPanelOpen, setNarrowPanelOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   useEffect(() => {
     const saved = localStorage.getItem("dj_sidebar_v1");
@@ -794,6 +795,7 @@ export default function Home() {
         viewingPlaylist={viewingPlaylist}
         togglePublic={togglePublic}
         onOpenMenu={isMobile ? () => setMobileSheet("menu") : undefined}
+        onOpenPanel={(!isMobile && isNarrow) ? () => setNarrowPanelOpen((v) => !v) : undefined}
       />
 
       {/* 右パネル (デスクトップのみ・1100px以上) */}
@@ -831,6 +833,53 @@ export default function Home() {
             savedPlaylists={savedPlaylists}
             addTracksToExistingPlaylist={addTracksToExistingPlaylist}
           />
+        </div>
+      )}
+
+      {/* 狭いデスクトップ: 右パネルオーバーレイ */}
+      {!isMobile && isNarrow && narrowPanelOpen && (
+        <div
+          onClick={() => setNarrowPanelOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.35)" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: "absolute", top: 0, right: 0, bottom: 0,
+              width: "280px",
+              background: C.bg2,
+              borderLeft: `1px solid ${C.sep}`,
+              display: "flex", flexDirection: "column",
+              overflowY: "auto",
+              boxShadow: "-4px 0 24px rgba(0,0,0,0.15)",
+              animation: "slide-in-right 0.22s cubic-bezier(0.32,0.72,0,1)",
+            }}
+          >
+            <SeedPanel
+              mainSeed={mainSeed} setMainSeed={setMainSeed}
+              subSeeds={subSeeds} removeSubSeed={removeSubSeed}
+              exploreSimilar={exploreSimilar}
+              filters={filters} setFilters={setFilters}
+              similarCount={similarCount} setSimilarCount={setSimilarCount}
+              seedAnalyzing={seedAnalyzing} seedError={seedError}
+              playlistCount={playlist.length}
+              availableGenres={availableGenres}
+              hasSimilar={similarTracks.length > 0}
+              chatFilterIds={chatFilterIds}
+              chatFilterMessage={chatFilterMessage}
+              chatLoading={chatLoading}
+              onChatFilter={onChatFilter}
+              onClearChatFilter={() => { setChatFilterIds(null); setChatFilterMessage(""); }}
+            />
+            <div style={{ height: "1px", background: C.sep, margin: "0 16px" }} />
+            <PlaylistPanel
+              playlist={playlist} removeFromPlaylist={removeFromPlaylist}
+              playlistName={playlistName} setPlaylistName={setPlaylistName}
+              savePlaylist={savePlaylist} setPlaylist={setPlaylist}
+              savedPlaylists={savedPlaylists}
+              addTracksToExistingPlaylist={addTracksToExistingPlaylist}
+            />
+          </div>
         </div>
       )}
 

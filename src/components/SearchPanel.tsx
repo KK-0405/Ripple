@@ -31,6 +31,7 @@ type Props = {
   viewingPlaylist: SavedPlaylist | null;
   togglePublic: (id: string, isPublic: boolean) => Promise<void>;
   onOpenMenu?: () => void;
+  onOpenPanel?: () => void;
 };
 
 type MatchBadge = { label: string; color: string; bg: string };
@@ -94,7 +95,7 @@ export default function SearchPanel({
   mainSeed, subSeeds, setAsMainSeed, addToSubSeed,
   removeMainSeed, removeSubSeed,
   addToPlaylist, removeFromPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
-  onResetSimilar, onSearchMore, loadingMore, viewingPlaylist, togglePublic, onOpenMenu,
+  onResetSimilar, onSearchMore, loadingMore, viewingPlaylist, togglePublic, onOpenMenu, onOpenPanel,
 }: Props) {
   const { C } = useTheme();
   const isMobile = useMobile();
@@ -274,6 +275,19 @@ export default function SearchPanel({
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+          )}
+          {onOpenPanel && (
+            <button
+              onClick={onOpenPanel}
+              title="Seed / Playlist"
+              style={{ width: 34, height: 34, flexShrink: 0, border: `1px solid ${C.sep}`, background: C.s1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.t2, borderRadius: "8px", order: 99 }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.s2; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = C.s1; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
               </svg>
             </button>
           )}
