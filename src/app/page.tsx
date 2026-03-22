@@ -576,27 +576,29 @@ export default function Home() {
         </div>
       )}
 
-      {/* ミニナビ（閉じた時・top:73pxから） */}
-      {!isMobile && sidebarMounted && !sidebarOpen && (
-        <div style={{ position: "fixed", left: 0, top: 73, bottom: 0, width: 180, zIndex: 40, background: C.bg, borderRight: `1px solid ${C.sep}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 0" }}>
-          <div title="Search" onClick={() => { setQuery(""); setTracks([]); setSimilarTracks([]); setMode("search"); setMainSeed(null); setSubSeeds([]); setFilters(DEFAULT_FILTERS); setViewingPlaylist(null); setSeedError(null); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "search" && !viewingPlaylist ? C.accDim : "transparent", color: mode === "search" && !viewingPlaylist ? C.acc : C.t2 }} onMouseEnter={(e) => { if (!(mode === "search" && !viewingPlaylist)) (e.currentTarget as HTMLDivElement).style.background = C.hover; }} onMouseLeave={(e) => { if (!(mode === "search" && !viewingPlaylist)) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </div>
-          <div title="History" onClick={() => history.length > 0 ? navigateTo("history") : undefined} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "history" ? C.accDim : "transparent", color: mode === "history" ? C.acc : C.t2 }} onMouseEnter={(e) => { if (mode !== "history") (e.currentTarget as HTMLDivElement).style.background = C.hover; }} onMouseLeave={(e) => { if (mode !== "history") (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4"/><polyline points="3 3 3 7 7 7"/></svg>
-          </div>
-          <div title="Playlists" onClick={() => navigateTo("playlists")} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "playlists" ? C.accDim : "transparent", color: mode === "playlists" ? C.acc : C.t2 }} onMouseEnter={(e) => { if (mode !== "playlists") (e.currentTarget as HTMLDivElement).style.background = C.hover; }} onMouseLeave={(e) => { if (mode !== "playlists") (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          </div>
-        </div>
-      )}
-
-      {/* サイドバーボディ（Libraryナビ・top:73pxから開閉） */}
-      {!isMobile && sidebarMounted && sidebarOpen && <div style={{
-        position: "fixed", left: 0, top: 73, bottom: 0, width: 180,
-        zIndex: 40, background: C.s1, borderRight: `1px solid ${C.sep}`,
+      {/* サイドバーボディ（top:73px から・開閉で幅が変わる） */}
+      {!isMobile && sidebarMounted && <div style={{
+        position: "fixed", left: 0, top: 73, bottom: 0,
+        width: sidebarOpen ? 180 : 44,
+        zIndex: 40, background: C.bg, borderRight: `1px solid ${C.sep}`,
         display: "flex", flexDirection: "column", overflow: "hidden",
+        transition: "width 200ms ease-in-out",
       }}>
+
+        {/* 閉じた時: ミニナビアイコン */}
+        {!sidebarOpen && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 0" }}>
+            <div title="Search" onClick={() => { setQuery(""); setTracks([]); setSimilarTracks([]); setMode("search"); setMainSeed(null); setSubSeeds([]); setFilters(DEFAULT_FILTERS); setViewingPlaylist(null); setSeedError(null); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "search" && !viewingPlaylist ? C.accDim : "transparent", color: mode === "search" && !viewingPlaylist ? C.acc : C.t2 }} onMouseEnter={(e) => { if (!(mode === "search" && !viewingPlaylist)) (e.currentTarget as HTMLDivElement).style.background = C.hover; }} onMouseLeave={(e) => { if (!(mode === "search" && !viewingPlaylist)) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <div title="History" onClick={() => history.length > 0 ? navigateTo("history") : undefined} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "history" ? C.accDim : "transparent", color: mode === "history" ? C.acc : C.t2 }} onMouseEnter={(e) => { if (mode !== "history") (e.currentTarget as HTMLDivElement).style.background = C.hover; }} onMouseLeave={(e) => { if (mode !== "history") (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4"/><polyline points="3 3 3 7 7 7"/></svg>
+            </div>
+            <div title="Playlists" onClick={() => navigateTo("playlists")} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, cursor: "pointer", background: mode === "playlists" ? C.accDim : "transparent", color: mode === "playlists" ? C.acc : C.t2 }} onMouseEnter={(e) => { if (mode !== "playlists") (e.currentTarget as HTMLDivElement).style.background = C.hover; }} onMouseLeave={(e) => { if (mode !== "playlists") (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </div>
+          </div>
+        )}
 
         {/* フルナビ (expanded 時) */}
         {sidebarOpen && <nav style={{ padding: "10px 8px", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
