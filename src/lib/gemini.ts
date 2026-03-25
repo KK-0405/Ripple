@@ -10,14 +10,21 @@ export type GeminiMetadata = {
 };
 
 const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent";
-async function geminiPost(apiKey: string, body: object): Promise<any> {
-  const res = await fetch(`${GEMINI_API}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = (await res.json()) as any;
-  return { __data: data, __status: res.status, __ok: res.ok };
+async function geminiPost(apiKey: string, body: object, retries = 3): Promise<any> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(`${GEMINI_API}?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = (await res.json()) as any;
+    // 503/429 は一時的な過負荷 → バックオフして再試行
+    if ((res.status === 503 || res.status === 429) && attempt < retries) {
+      await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+      continue;
+    }
+    return { __data: data, __status: res.status, __ok: res.ok };
+  }
 }
 
 function extractText(data: any): string {
