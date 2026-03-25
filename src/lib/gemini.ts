@@ -262,7 +262,7 @@ SELECTION PHILOSOPHY — choose tracks based on OVERALL SIMILARITY, prioritized 
 2. LYRICAL & EMOTIONAL THEMES: Match the seed's lyrical subject matter, emotional tone, and narrative mood. If the seed is about anxiety, uncertainty, or the future, prioritize tracks with similar themes. These thematic connections are as important as sonic ones.
 3. MUSICAL COMPATIBILITY: Similar BPM (±8 BPM) and matching energy level.
 4. PRODUCTION STYLE & ERA: Same production aesthetic, era, cultural context.
-- Mix of well-known classics AND deeper cuts / album tracks / B-sides / underground favorites. Aim for roughly 40% well-known, 60% lesser-known gems.${excludeAnthems ? "\n- AVOID anthem-level mega-hits — tracks so universally famous that even non-fans know them (e.g. \"Bohemian Rhapsody\", \"Billie Jean\", \"Smells Like Teen Spirit\", \"Shape of You\"). Surface hidden gems and overlooked tracks instead." : ""}
+- ${excludeAnthems ? "Prioritize deeper cuts, album tracks, B-sides, and underground favorites. Aim for roughly 20% well-known, 80% lesser-known gems.\n- AVOID anthem-level mega-hits — tracks so universally famous that even non-fans know them (e.g. \"Bohemian Rhapsody\", \"Billie Jean\", \"Smells Like Teen Spirit\", \"Shape of You\"). Surface hidden gems and overlooked tracks instead." : "Include well-known anthems and classics. Aim for roughly 80% well-known hits, 20% deeper cuts."}
 - Draw from the same scene, label, producers, collaborators, or regional music community as the seed when relevant.
 
 CRITICAL RULES (violations are not acceptable):
@@ -345,7 +345,7 @@ export async function getSimilarTrackSuggestions(
   subSeeds: { title: string; artist: string; genre_tags?: string[] }[],
   count: number,
   excludeTitles: string[] = [],
-  excludeAnthems: boolean = true
+  excludeAnthems: boolean = false
 ): Promise<SimilarResult> {
   if (process.env.GEMINI_MOCK === "true") {
     const mockSongs = [

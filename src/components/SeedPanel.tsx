@@ -344,7 +344,7 @@ export default function SeedPanel({
             <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${C.sep}` }}>
               <div style={{ fontSize: "11px", color: C.t3, marginBottom: "4px" }}>絞り込み</div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0" }}>
-                <span style={{ fontSize: "12px", color: C.t2 }}>アンセムを含める</span>
+                <span style={{ fontSize: "12px", color: C.t2 }}>アンセムを除外</span>
                 <div style={{ marginLeft: "8px", flexShrink: 0 }}>
                   <input
                     type="checkbox"
