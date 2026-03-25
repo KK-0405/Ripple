@@ -16,6 +16,7 @@ type AuthContextType = {
   loading: boolean;
   signOut: () => void;
   refreshProfile: () => Promise<void>;
+  updateUserProfile: (updates: Partial<UserProfile>) => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signOut: () => {},
   refreshProfile: async () => {},
+  updateUserProfile: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -33,32 +35,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // localStorage キャッシュキー（auth user ID ごとに保存）
+  const profileCacheKey = (uid: string) => `dj_profile_v1_${uid}`;
+
+  const getCachedProfile = (uid: string): UserProfile | null => {
+    try {
+      const raw = localStorage.getItem(profileCacheKey(uid));
+      return raw ? (JSON.parse(raw) as UserProfile) : null;
+    } catch { return null; }
+  };
+
+  const setCachedProfile = (uid: string, profile: UserProfile) => {
+    try { localStorage.setItem(profileCacheKey(uid), JSON.stringify(profile)); } catch { /* ignore */ }
+  };
+
   const loadProfile = async (userId: string, fallbackEmail?: string) => {
-    const { data } = await supabase
-      .from("users")
-      .select("user_id, avatar_url")
-      .eq("id", userId)
-      .single();
-    if (data) {
-      setUserProfile(data);
-    } else if (fallbackEmail) {
-      // DBフェッチ失敗時はメールのローカルパートをフォールバック表示
-      setUserProfile({ user_id: fallbackEmail.split("@")[0] || "user", avatar_url: null });
+    // 1. キャッシュがあれば即座に表示（リロード時に "..." や email が出ない）
+    const cached = getCachedProfile(userId);
+    if (cached) setUserProfile(cached);
+
+    // 2. DB から最新データを取得して上書き・キャッシュ更新
+    try {
+      type Row = { user_id: string | null; avatar_url: string | null } | null;
+      const queryPromise = new Promise<Row>((resolve) => {
+        supabase
+          .from("users")
+          .select("user_id, avatar_url")
+          .eq("id", userId)
+          .single()
+          .then(
+            ({ data }) => resolve(data as Row),
+            () => resolve(null)
+          );
+      });
+      const timeoutPromise = new Promise<Row>((resolve) =>
+        setTimeout(() => resolve(null), 6000)
+      );
+      const data = await Promise.race([queryPromise, timeoutPromise]);
+
+      if (data?.user_id) {
+        const profile: UserProfile = { user_id: data.user_id, avatar_url: data.avatar_url ?? null };
+        setUserProfile(profile);
+        setCachedProfile(userId, profile);
+      } else if (!cached) {
+        // DB からも取れず、キャッシュもない場合のみフォールバック
+        const fallback = fallbackEmail?.split("@")[0] || userId.slice(0, 8) || "user";
+        setUserProfile({ user_id: fallback, avatar_url: null });
+      }
+    } catch {
+      if (!cached) {
+        const fallback = fallbackEmail?.split("@")[0] || userId.slice(0, 8) || "user";
+        setUserProfile({ user_id: fallback, avatar_url: null });
+      }
     }
-    // data も fallbackEmail もない場合は既存の userProfile を保持（ちらつき防止）
   };
 
   const refreshProfile = async () => {
     if (user) await loadProfile(user.id, user.email);
   };
 
+  // session があるのに userProfile が null のまま残った場合の保険
   useEffect(() => {
-    // getSession() は onAuthStateChange の INITIAL_SESSION イベントと競合してレースコンディションを起こすため使用しない。
-    // onAuthStateChange だけを使うのが Supabase v2 の推奨パターン。
+    if (!session || userProfile !== null) return;
+    const t = setTimeout(() => {
+      setUserProfile((prev) => {
+        if (prev !== null) return prev;
+        // キャッシュがあればキャッシュを使う（メールアドレスを見せない）
+        const cached = getCachedProfile(session.user.id);
+        if (cached) return cached;
+        // キャッシュもなければ UUID 先頭のみ（メールアドレスは使わない）
+        return { user_id: session.user.id.slice(0, 8), avatar_url: null };
+      });
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [session, userProfile]);
+
+  useEffect(() => {
+    // 初期ロードのフォールバック: onAuthStateChange が一定時間内に発火しない場合も
+    // loading=false にして UI がブロックされないようにする
+    const initFallback = setTimeout(() => setLoading(false), 4000);
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // 初回イベント受信時点でフォールバックタイマーは不要
+      clearTimeout(initFallback);
+
       // 遷移開始時に loading=true にして、未確定状態のUIが表示されないようにする
       setLoading(true);
       // 同期的に先に state を更新してから非同期処理へ
@@ -76,16 +138,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUserProfile(null);
         }
       } catch {
-        // プロフィール取得失敗時もローディングは解除する
-        if (session?.user?.email) {
-          setUserProfile({ user_id: session.user.email.split("@")[0] || "user", avatar_url: null });
-        }
+        // loadProfile が例外を投げた場合も必ずフォールバックをセット
+        setUserProfile((prev) => prev ?? {
+          user_id: session?.user?.email?.split("@")[0] || session?.user?.id?.slice(0, 8) || "user",
+          avatar_url: null,
+        });
       } finally {
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(initFallback);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = () => {
@@ -108,8 +174,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const updateUserProfile = (updates: Partial<UserProfile>) => {
+    setUserProfile((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...updates };
+      if (user) setCachedProfile(user.id, next);
+      return next;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, userProfile, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ session, user, userProfile, loading, signOut, refreshProfile, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -11,7 +11,6 @@ export type Track = {
   // Gemini metadata (populated after analysis)
   camelot?: string;
   energy?: number;
-  danceability?: number;
   is_vocal?: boolean;
   genre_tags?: string[];
   release_year?: number;

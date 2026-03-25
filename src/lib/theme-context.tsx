@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export type Colors = {
   bg: string;
@@ -113,10 +113,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // localStorage から初期値を同期読み込みして useState に渡すことで、
   // mounted フラグ + null return パターンを廃止する。
   // これにより再マウント時に画面が白くなる問題がなくなる。
-  const [isDark, setIsDarkState] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(STORAGE_KEY) === "dark";
-  });
+  // Always start false (SSR-safe). Read localStorage in useEffect to avoid
+  // hydration mismatch (server returns false, client would return true → mismatch).
+  const [isDark, setIsDarkState] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === "dark") setIsDarkState(true);
+  }, []);
 
   const setIsDark = (v: boolean) => {
     setIsDarkState(v);
@@ -124,6 +128,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const C = isDark ? DARK : LIGHT;
+
+  // body背景をテーマに同期（ダーク時に白地がちらつくのを防ぐ）
+  useEffect(() => {
+    document.body.style.background = C.bg;
+  }, [C.bg]);
 
   return (
     <ThemeContext.Provider value={{ isDark, setIsDark, C }}>

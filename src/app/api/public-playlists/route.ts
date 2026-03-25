@@ -30,6 +30,7 @@ export async function GET() {
     name: p.name,
     slug: p.slug,
     created_by: displayNameMap[p.user_id] ?? "No name",
+    tracks: Array.isArray(p.tracks) ? p.tracks : [],
     track_count: Array.isArray(p.tracks) ? p.tracks.length : 0,
     artwork_url: Array.isArray(p.tracks) && p.tracks.length > 0
       ? (p.tracks[0]?.album?.images?.[0]?.url ?? null)

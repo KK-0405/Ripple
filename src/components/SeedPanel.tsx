@@ -290,6 +290,18 @@ export default function SeedPanel({
             <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${C.sep}` }}>
               <div style={{ fontSize: "11px", color: C.t3, marginBottom: "4px" }}>アーティスト・時代</div>
               <CheckRow C={C} label="同じアーティスト" value={mainSeed?.artists[0]?.name} checked={filters.sameArtist} onChange={(v) => set({ sameArtist: v })} />
+              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", cursor: "pointer" }}>
+                <span style={{ fontSize: "12px", color: C.t2 }}>
+                  同名アーティストを除外
+                  {mainSeed?.artists[0]?.name && <span style={{ fontSize: "10px", color: C.t3, marginLeft: "5px" }}>({mainSeed.artists[0].name})</span>}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={filters.excludeSameArtist}
+                  onChange={(e) => set({ excludeSameArtist: e.target.checked })}
+                  style={{ accentColor: C.acc, cursor: "pointer", width: 13, height: 13, flexShrink: 0, marginLeft: "8px" }}
+                />
+              </label>
               <div style={{ marginTop: "6px" }}>
                 <div style={{ fontSize: "10px", color: C.t3, marginBottom: "6px" }}>
                   リリース年代{mainSeed?.release_year && <span style={{ color: C.t2, marginLeft: "6px" }}>{mainSeed.release_year}年</span>}
@@ -423,13 +435,13 @@ export default function SeedPanel({
         disabled={!mainSeed}
         style={{
           width: "100%", padding: "12px",
-          background: mainSeed ? C.acc : C.s1,
-          border: `1px solid ${mainSeed ? C.acc : C.sep}`,
+          background: mainSeed ? C.bg : C.s1,
+          border: `1px solid ${mainSeed ? C.s3 : C.sep}`,
           borderRadius: "10px",
-          color: mainSeed ? "#fff" : C.t3,
+          color: mainSeed ? C.acc : C.t3,
           fontSize: "13px", fontWeight: 700,
           cursor: mainSeed ? "pointer" : "default",
-          boxShadow: mainSeed ? "0 2px 8px rgba(88,86,214,0.3)" : "none",
+          boxShadow: "none",
           transition: "all 0.15s",
         }}
       >

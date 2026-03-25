@@ -21,10 +21,10 @@ export default async function ExplorePage() {
   const items = playlists ?? [];
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0e0c1e", color: "#fff", fontFamily: "Inter, 'Hiragino Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#FFFFFF", color: "#0F0F0F", fontFamily: "Inter, 'Hiragino Sans', sans-serif" }}>
 
       {/* ヘッダー */}
-      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "0 32px" }}>
+      <div style={{ borderBottom: "1px solid #E5E5E5", padding: "0 32px" }}>
         <div style={{ maxWidth: "960px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: "56px" }}>
           <a href={BASE_URL} style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
             <div style={{
@@ -32,7 +32,7 @@ export default async function ExplorePage() {
               background: "linear-gradient(135deg, #3C3489, #26215C)",
               borderRadius: "7px",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 2px 8px rgba(63,52,137,0.5)",
+              boxShadow: "0 2px 8px rgba(63,52,137,0.3)",
             }}>
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                 <circle cx="10" cy="10" r="2.2" fill="white" opacity="0.95"/>
@@ -40,16 +40,16 @@ export default async function ExplorePage() {
                 <circle cx="10" cy="10" r="8" fill="none" stroke="white" strokeWidth="1.1" opacity="0.5"/>
               </svg>
             </div>
-            <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Ripple</span>
+            <span style={{ fontSize: "14px", fontWeight: 700, color: "#0F0F0F", letterSpacing: "-0.01em" }}>Ripple</span>
           </a>
           <a
             href={BASE_URL}
             style={{
               padding: "7px 16px",
-              background: "rgba(255,255,255,0.1)",
-              border: "1px solid rgba(255,255,255,0.2)",
+              background: "#F2F2F2",
+              border: "1px solid #E5E5E5",
               borderRadius: "8px",
-              color: "#F1F1F1",
+              color: "#0F0F0F",
               fontSize: "13px", fontWeight: 600,
               textDecoration: "none",
             }}
@@ -61,13 +61,13 @@ export default async function ExplorePage() {
 
       {/* ページタイトル */}
       <div style={{ maxWidth: "960px", margin: "0 auto", padding: "48px 32px 32px" }}>
-        <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>
+        <div style={{ fontSize: "11px", fontWeight: 600, color: "#AAAAAA", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>
           Community
         </div>
-        <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+        <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#0F0F0F", letterSpacing: "-0.02em", margin: "0 0 8px" }}>
           みんなのプレイリスト
         </h1>
-        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+        <p style={{ fontSize: "14px", color: "#888888", margin: 0 }}>
           公開されているプレイリストを新着順で表示しています
         </p>
       </div>
@@ -75,7 +75,7 @@ export default async function ExplorePage() {
       {/* プレイリスト一覧 */}
       <div style={{ maxWidth: "960px", margin: "0 auto", padding: "0 32px 64px" }}>
         {items.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "80px 0", color: "rgba(255,255,255,0.3)", fontSize: "15px" }}>
+          <div style={{ textAlign: "center", padding: "80px 0", color: "#AAAAAA", fontSize: "15px" }}>
             まだ公開プレイリストはありません
           </div>
         ) : (
@@ -94,20 +94,20 @@ export default async function ExplorePage() {
                 >
                   <div
                     style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      background: "#FAFAFA",
+                      border: "1px solid #E5E5E5",
                       borderRadius: "14px",
                       overflow: "hidden",
                       transition: "border-color 0.15s, background 0.15s",
                       cursor: "pointer",
                     }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.2)";
-                      (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.08)";
+                      (e.currentTarget as HTMLDivElement).style.borderColor = "#D0D0D0";
+                      (e.currentTarget as HTMLDivElement).style.background = "#F2F2F2";
                     }}
                     onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.08)";
-                      (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)";
+                      (e.currentTarget as HTMLDivElement).style.borderColor = "#E5E5E5";
+                      (e.currentTarget as HTMLDivElement).style.background = "#FAFAFA";
                     }}
                   >
                     {/* アルバムアートグリッド */}
@@ -122,29 +122,29 @@ export default async function ExplorePage() {
                             style={{ width: "100%", height: "60px", objectFit: "cover", display: "block" }}
                           />
                         ) : (
-                          <div key={i} style={{ background: "rgba(255,255,255,0.08)", height: "60px" }} />
+                          <div key={i} style={{ background: "#E5E5E5", height: "60px" }} />
                         );
                       })}
                     </div>
 
                     {/* 情報 */}
                     <div style={{ padding: "14px 16px" }}>
-                      <div style={{ color: "#fff", fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "4px" }}>
+                      <div style={{ color: "#0F0F0F", fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "4px" }}>
                         {p.name}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px" }}>
+                        <span style={{ color: "#888888", fontSize: "12px" }}>
                           {p.created_by ? `by ${p.created_by}` : ""}
                         </span>
                         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "11px" }}>{tracks.length}曲</span>
-                          {createdAt && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px" }}>{createdAt}</span>}
+                          <span style={{ color: "#AAAAAA", fontSize: "11px" }}>{tracks.length}曲</span>
+                          {createdAt && <span style={{ color: "#AAAAAA", fontSize: "11px" }}>{createdAt}</span>}
                         </div>
                       </div>
 
                       {/* 先頭3曲プレビュー */}
                       {tracks.slice(0, 3).map((t) => (
-                        <div key={t.id} style={{ color: "rgba(255,255,255,0.35)", fontSize: "11px", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div key={t.id} style={{ color: "#AAAAAA", fontSize: "11px", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {t.name} — {t.artists[0]?.name}
                         </div>
                       ))}

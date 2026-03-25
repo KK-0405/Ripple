@@ -58,13 +58,31 @@ export async function POST(request: NextRequest) {
     }
 
     const cap = Math.min(count, 30);
-    const japaneseSeed = isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
 
     // Step1: Geminiに類似曲の提案＋メタデータを1回で取得
-    // gemini側でバッファ込みで多めに取得するため、capをそのまま渡す
-    const { suggestions, error: geminiError } = await getSimilarTrackSuggestions(seed, subSeeds, cap, excludeTitles);
+    // japaneseSeed はアーティストの実際の出身国・活動市場をGeminiが判定して返す
+    const { suggestions, japaneseSeed: geminiJapaneseSeed, error: geminiError } = await getSimilarTrackSuggestions(seed, subSeeds, cap, excludeTitles);
+    // Geminiが判定した値を優先、取得できなければフォールバック
+    const japaneseSeed = geminiJapaneseSeed ?? isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
     if (suggestions.length === 0) {
       return NextResponse.json({ tracks: [], _debug: geminiError ?? "Gemini returned 0 suggestions" });
+    }
+
+    // タイトル・アーティストの一致度スコアリング
+    function matchScore(deezerTitle: string, deezerArtist: string, sugTitle: string, sugArtist: string): number {
+      const dt = deezerTitle.toLowerCase();
+      const da = deezerArtist.toLowerCase();
+      const st = sugTitle.toLowerCase();
+      const sa = sugArtist.toLowerCase();
+      let score = 0;
+      // タイトルの単語が含まれるか
+      for (const w of st.split(/\s+/).filter((w) => w.length > 1)) if (dt.includes(w)) score += 2;
+      // アーティスト名の単語が含まれるか
+      for (const w of sa.split(/\s+/).filter((w) => w.length > 1)) if (da.includes(w)) score += 2;
+      // 完全一致ボーナス
+      if (dt === st) score += 4;
+      if (da === sa) score += 4;
+      return score;
     }
 
     // Step2: 各提案をDeezerで並列検索
@@ -72,15 +90,26 @@ export async function POST(request: NextRequest) {
       suggestions.map(async (s) => {
         try {
           const q = encodeURIComponent(`${s.title} ${s.artist}`);
-          const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=1`);
+          const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=5`);
           const data = (await res.json()) as any;
-          const hit = data?.data?.[0];
-          if (!hit) return null;
-          // Deezer側でカラオケアーティストが返ってきた場合も排除
-          if (isDeezerKaraoke(hit.artist?.name ?? "", hit.title ?? "")) return null;
-          // 非日本語シードの場合、Deezer結果に日本語文字が含まれていたら排除
-          if (!japaneseSeed && (isJapanese(hit.title ?? "") || isJapanese(hit.artist?.name ?? ""))) return null;
-          return mapDeezerTrack(hit);
+          const hits: any[] = data?.data ?? [];
+          if (hits.length === 0) return null;
+
+          // フィルタリング後にスコアが最も高い曲を選ぶ
+          const candidates = hits
+            .filter((hit) => {
+              if (isDeezerKaraoke(hit.artist?.name ?? "", hit.title ?? "")) return false;
+              if (!japaneseSeed && (isJapanese(hit.title ?? "") || isJapanese(hit.artist?.name ?? ""))) return false;
+              return true;
+            })
+            .map((hit) => ({
+              hit,
+              score: matchScore(hit.title ?? "", hit.artist?.name ?? "", s.title, s.artist),
+            }))
+            .sort((a, b) => b.score - a.score);
+
+          if (candidates.length === 0) return null;
+          return mapDeezerTrack(candidates[0].hit);
         } catch {
           return null;
         }
@@ -94,15 +123,14 @@ export async function POST(request: NextRequest) {
         const s = suggestions[i];
         return {
           ...track,
-          // 日本語コンテキスト or Geminiの提案自体が日本語なら日本語タイトル/アーティストを優先
-          // (RADWIMPSのように英字アーティスト名でも日本語曲が提案される場合に対応)
-          name: (japaneseSeed || isJapanese(s.title ?? "")) && s.title ? s.title : track.name,
-          artists: (japaneseSeed || isJapanese(s.artist ?? "")) && s.artist ? [{ name: s.artist }] : track.artists,
+          // 曲名・アーティストは常にGeminiの提案を使う（正確な情報源）
+          // DeezerはプレビューURL・アルバムアート・BPMの取得にのみ使う
+          name: s.title || track.name,
+          artists: s.artist ? [{ name: s.artist }] : track.artists,
           bpm: track.bpm || s.bpm || 0,
           key: s.key ?? "",
           camelot: s.camelot ?? "",
           energy: s.energy ?? 0.5,
-          danceability: s.danceability ?? 0.5,
           is_vocal: s.is_vocal ?? true,
           genre_tags: s.genre_tags ?? [],
           release_year: track.release_year || s.release_year || undefined,

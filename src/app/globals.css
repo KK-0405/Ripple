@@ -7,8 +7,6 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #fff;
-  color: #1d1d1f;
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -49,10 +47,31 @@ html, body {
   animation: drawer-slide-in 0.28s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* Left drawer slide-out animation */
+@keyframes drawer-slide-out {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+.drawer-exit {
+  animation: drawer-slide-out 0.26s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
 /* Right panel slide-in animation */
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }
+}
+.panel-enter {
+  animation: slide-in-right 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Right panel slide-out animation */
+@keyframes slide-out-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+.panel-exit {
+  animation: slide-out-right 0.26s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
 input, button, select, textarea {

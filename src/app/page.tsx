@@ -68,6 +68,7 @@ const DEFAULT_FILTERS: SimilarFilters = {
   selectedGenres: [],
   energyLevel: null,
   sameArtist: false,
+  excludeSameArtist: true,
   decade: null,
   excludePlaylist: false,
 };
@@ -76,20 +77,36 @@ export default function Home() {
   const { C, isDark, setIsDark } = useTheme();
   const isMobile = useMobile();
   const [mobileSheet, setMobileSheet] = useState<"none" | "seed" | "playlist" | "panel" | "menu">("none");
+  const [menuDrawerClosing, setMenuDrawerClosing] = useState(false);
+  const closeMobileMenu = () => {
+    setMenuDrawerClosing(true);
+    setTimeout(() => { setMenuDrawerClosing(false); setMobileSheet("none"); }, 260);
+  };
+  const [panelDrawerClosing, setPanelDrawerClosing] = useState(false);
+  const closeMobilePanel = () => {
+    setPanelDrawerClosing(true);
+    setTimeout(() => { setPanelDrawerClosing(false); setMobileSheet("none"); }, 260);
+  };
   const swipeTouchStart = useRef<{ x: number; y: number } | null>(null);
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     swipeTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   }, []);
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!swipeTouchStart.current || mobileSheet !== "none") return;
+    if (!swipeTouchStart.current) return;
     const dx = e.changedTouches[0].clientX - swipeTouchStart.current.x;
     const dy = e.changedTouches[0].clientY - swipeTouchStart.current.y;
     swipeTouchStart.current = null;
     // 水平方向が支配的、かつ 60px 以上のスワイプのみ判定
     if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    if (dx > 0) setMobileSheet("menu");   // 右スワイプ → 左パネル
-    else setMobileSheet("panel");          // 左スワイプ → 右パネル
-  }, [mobileSheet]);
+    if (mobileSheet === "none") {
+      if (dx > 0) setMobileSheet("menu");   // 右スワイプ → 左ドロワー開く
+      else setMobileSheet("panel");          // 左スワイプ → 右パネル開く
+    } else if (mobileSheet === "menu" && dx < 0) {
+      closeMobileMenu();                     // 左スワイプ → 左ドロワー閉じる
+    } else if (mobileSheet === "panel" && dx > 0) {
+      closeMobilePanel();                    // 右スワイプ → 右パネル閉じる
+    }
+  }, [mobileSheet, closeMobileMenu, closeMobilePanel]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarMounted, setSidebarMounted] = useState(false);
   useEffect(() => {
@@ -102,7 +119,7 @@ export default function Home() {
     localStorage.setItem("dj_sidebar_v1", next ? "1" : "0");
     return next;
   });
-  const { session, userProfile, loading: authLoading, signOut, refreshProfile } = useAuth();
+  const { session, userProfile, loading: authLoading, signOut, updateUserProfile } = useAuth();
   const [query, setQuery] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -182,6 +199,7 @@ export default function Home() {
   const exploreSimilar = async () => {
     if (!mainSeed) return;
     setLoading(true);
+    setSimilarTracks([]);
     setMode("similar");
     setScrollKey((k) => k + 1);
     try {
@@ -196,7 +214,7 @@ export default function Home() {
             bpm: mainSeed.bpm,
             camelot: mainSeed.camelot,
             energy: mainSeed.energy,
-            danceability: mainSeed.danceability,
+
             is_vocal: mainSeed.is_vocal,
             release_year: mainSeed.release_year,
           },
@@ -243,7 +261,7 @@ export default function Home() {
             bpm: mainSeed.bpm,
             camelot: mainSeed.camelot,
             energy: mainSeed.energy,
-            danceability: mainSeed.danceability,
+
             is_vocal: mainSeed.is_vocal,
             release_year: mainSeed.release_year,
           },
@@ -428,6 +446,10 @@ export default function Home() {
   const filteredSimilar = similarTracks.filter((track) => {
     if (filters.bpmRange && mainSeed?.bpm && track.bpm && Math.abs(track.bpm - mainSeed.bpm) > filters.bpmRange) return false;
     if (filters.sameArtist && mainSeed && track.artists[0]?.name !== mainSeed.artists[0]?.name) return false;
+    if (filters.excludeSameArtist && mainSeed) {
+      const seedName = mainSeed.artists[0]?.name?.toLowerCase() ?? "";
+      if (seedName && track.artists.some((a) => a.name.toLowerCase().includes(seedName))) return false;
+    }
     if (filters.sameKey && mainSeed?.key && track.key && track.key !== mainSeed.key) return false;
     if (filters.camelotAdjacent && mainSeed?.camelot && track.camelot && !isCamelotAdjacent(mainSeed.camelot, track.camelot)) return false;
     if (filters.selectedGenres.length > 0 && track.genre_tags?.length) {
@@ -519,20 +541,31 @@ export default function Home() {
                   if (!trimmed) return;
                   setUserIdSaving(true);
                   setUserIdError(null);
-                  const { data: conflict } = await supabase.from("users").select("id").eq("user_id", trimmed).single();
-                  if (conflict && conflict.id !== session?.user?.id) {
-                    setUserIdError("このIDはすでに使われています");
-                    setUserIdSaving(false);
-                    return;
-                  }
-                  const { error } = await supabase.from("users").update({ user_id: trimmed }).eq("id", session?.user?.id);
-                  if (error) {
+                  const timeout = <T,>(ms: number): Promise<T> => new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms));
+                  try {
+                    const { data: conflict } = await Promise.race([
+                      supabase.from("users").select("id").eq("user_id", trimmed).single(),
+                      timeout<{ data: null }>(6000),
+                    ]);
+                    if (conflict && (conflict as { id: string }).id !== session?.user?.id) {
+                      setUserIdError("このIDはすでに使われています");
+                      return;
+                    }
+                    const { error } = await Promise.race([
+                      supabase.from("users").update({ user_id: trimmed }).eq("id", session?.user?.id),
+                      timeout<{ error: Error }>(6000),
+                    ]);
+                    if (error) {
+                      setUserIdError("保存に失敗しました");
+                    } else {
+                      updateUserProfile({ user_id: trimmed });
+                      setShowUserSettings(false);
+                    }
+                  } catch {
                     setUserIdError("保存に失敗しました");
-                  } else {
-                    await refreshProfile();
-                    setShowUserSettings(false);
+                  } finally {
+                    setUserIdSaving(false);
                   }
-                  setUserIdSaving(false);
                 }}
                 style={{ padding: "8px 16px", border: "none", borderRadius: "8px", background: C.acc, color: C.bg, fontSize: "13px", fontWeight: 600, cursor: userIdSaving ? "not-allowed" : "pointer", opacity: userIdSaving || !newUserId.trim() ? 0.6 : 1 }}
               >
@@ -716,7 +749,7 @@ export default function Home() {
 
         {/* 認証フッター — 常時表示、sidebarOpen で見た目を切り替え */}
         <div style={{ flexShrink: 0, marginTop: sidebarOpen ? 0 : "auto", borderTop: `1px solid ${C.sep}`, padding: sidebarOpen ? "12px 10px" : "12px 0", display: "flex", justifyContent: sidebarOpen ? "stretch" : "center" }}>
-          {authLoading ? (
+          {(authLoading && !session) ? (
             <div style={{ width: sidebarOpen ? "100%" : 36, height: sidebarOpen ? 40 : 36, borderRadius: sidebarOpen ? "9px" : "50%", background: C.s2 }} />
           ) : session ? (
             sidebarOpen ? (
@@ -731,15 +764,17 @@ export default function Home() {
                     {(userProfile?.user_id ?? "?")[0].toUpperCase()}
                   </div>
                   <span style={{ fontSize: "12px", fontWeight: 500, color: C.t1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textAlign: "left" as const }}>
-                    {userProfile?.user_id ?? "No ID"}
+                    {userProfile?.user_id?.includes("@") ? userProfile.user_id.split("@")[0] : (userProfile?.user_id ?? "...")}
                   </span>
                   <span style={{ fontSize: "10px", color: C.t3 }}>⋯</span>
                 </button>
                 {showUserMenu && (
                   <div ref={userMenuRef} style={{ position: "absolute", bottom: "calc(100% + 6px)", left: 0, right: 0, background: C.bg, borderRadius: "10px", boxShadow: isDark ? "0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08)" : "0 4px 20px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)", zIndex: 51, overflow: "hidden" }}>
                     <div style={{ padding: "10px 14px 8px", borderBottom: `1px solid ${C.sep}` }}>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: C.t1 }}>{userProfile?.user_id}</div>
-                      <div style={{ fontSize: "11px", color: C.t3, marginTop: "1px" }}>{userProfile?.user_id ?? "No ID"}</div>
+                      <div style={{ fontSize: "12px", fontWeight: 600, color: C.t1 }}>
+                        {userProfile?.user_id?.includes("@") ? userProfile.user_id.split("@")[0] : (userProfile?.user_id ?? "...")}
+                      </div>
+                      <div style={{ fontSize: "11px", color: C.t3, marginTop: "1px" }}>Rippleアカウント</div>
                     </div>
                     <button
                       onClick={() => { setShowUserMenu(false); setNewUserId(userProfile?.user_id ?? ""); setUserIdError(null); setShowUserSettings(true); }}
@@ -811,8 +846,8 @@ export default function Home() {
         loadingMore={loadingMore}
         viewingPlaylist={viewingPlaylist}
         togglePublic={togglePublic}
-        onOpenMenu={undefined}
-        onOpenPanel={undefined}
+        onOpenMenu={isMobile ? () => { if (mobileSheet === "menu") closeMobileMenu(); else setMobileSheet("menu"); } : undefined}
+        onOpenPanel={isMobile ? () => { if (mobileSheet === "panel") closeMobilePanel(); else setMobileSheet("panel"); } : undefined}
         historyEntries={history}
         onClearHistory={() => { writeHistory([]); setHistory([]); }}
         onLoadHistoryEntry={(entry) => { setMainSeed(entry.mainSeed); setSubSeeds(entry.subSeeds); setSimilarTracks(entry.similarTracks); navigateTo("similar"); setViewingPlaylist(null); setFilters(DEFAULT_FILTERS); setScrollKey((k) => k + 1); }}
@@ -820,9 +855,9 @@ export default function Home() {
         hasSession={!!session}
         onLoadSavedPlaylist={(p) => { setViewingPlaylist(p); navigateTo("playlist"); setScrollKey((k) => k + 1); }}
         onNavigate={navigateTo}
-        showLogo={false}
-        topBarLeft={!isMobile && sidebarMounted ? 165 : undefined}
-        topBarRight={!isMobile ? 260 : undefined}
+        showLogo={isMobile}
+        topBarLeft={isMobile ? 0 : (sidebarMounted ? 165 : undefined)}
+        topBarRight={isMobile ? 0 : 260}
       />
 
       {/* 右パネル (768px以上で常時表示) */}
@@ -864,12 +899,13 @@ export default function Home() {
       )}
 
       {/* モバイル: 右パネルドロワー (グリッドボタンから開く) */}
-      {isMobile && mobileSheet === "panel" && (
+      {isMobile && (mobileSheet === "panel" || panelDrawerClosing) && (
         <div
-          onClick={() => setMobileSheet("none")}
-          style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)" }}
+          onClick={panelDrawerClosing ? undefined : closeMobilePanel}
+          style={{ position: "fixed", inset: 0, zIndex: 200, background: panelDrawerClosing ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.45)", transition: "background 0.26s", pointerEvents: panelDrawerClosing ? "none" : undefined }}
         >
           <div
+            className={panelDrawerClosing ? "panel-exit" : "panel-enter"}
             onClick={(e) => e.stopPropagation()}
             style={{
               position: "absolute", top: 0, right: 0, bottom: 0,
@@ -878,7 +914,7 @@ export default function Home() {
               borderLeft: `1px solid ${C.sep}`,
               display: "flex", flexDirection: "column",
               boxShadow: "-4px 0 24px rgba(0,0,0,0.2)",
-              animation: "slide-in-right 0.25s cubic-bezier(0.32,0.72,0,1)",
+              pointerEvents: panelDrawerClosing ? "none" : undefined,
             }}
           >
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: "env(safe-area-inset-bottom)" }}>
@@ -966,13 +1002,13 @@ export default function Home() {
       )}
 
       {/* モバイル: 左ドロワー (menu) */}
-      {isMobile && mobileSheet === "menu" && (
+      {isMobile && (mobileSheet === "menu" || menuDrawerClosing) && (
         <div
-          onClick={() => setMobileSheet("none")}
-          style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)" }}
+          onClick={menuDrawerClosing ? undefined : closeMobileMenu}
+          style={{ position: "fixed", inset: 0, zIndex: 200, background: menuDrawerClosing ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.45)", transition: "background 0.26s", pointerEvents: menuDrawerClosing ? "none" : undefined }}
         >
           <div
-            className="drawer-enter"
+            className={menuDrawerClosing ? "drawer-exit" : "drawer-enter"}
             onClick={(e) => e.stopPropagation()}
             style={{
               position: "absolute", top: 0, left: 0, bottom: 0,
@@ -983,6 +1019,7 @@ export default function Home() {
               overflowY: "auto",
               paddingTop: "env(safe-area-inset-top)",
               paddingBottom: "env(safe-area-inset-bottom)",
+              pointerEvents: menuDrawerClosing ? "none" : undefined,
             }}
           >
             {/* ロゴ + 閉じるボタン */}
@@ -994,7 +1031,7 @@ export default function Home() {
                 <div style={{ fontSize: "14px", fontWeight: 700, color: C.t1 }}>Ripple</div>
                 <div style={{ fontSize: "10px", color: C.t3 }}>Find Your Sound</div>
               </div>
-              <button onClick={() => setMobileSheet("none")} style={{ width: 30, height: 30, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.t3, borderRadius: "6px" }}>
+              <button onClick={closeMobileMenu} style={{ width: 30, height: 30, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.t3, borderRadius: "6px" }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
               </button>
             </div>
@@ -1053,7 +1090,7 @@ export default function Home() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.accDim, display: "flex", alignItems: "center", justifyContent: "center", color: C.acc, fontWeight: 700, fontSize: "14px" }}>{(userProfile?.user_id ?? "?")[0].toUpperCase()}</div>
-                    <span style={{ fontSize: "13px", fontWeight: 500, color: C.t1 }}>{userProfile?.user_id ?? "No ID"}</span>
+                    <span style={{ fontSize: "13px", fontWeight: 500, color: C.t1 }}>{userProfile?.user_id?.includes("@") ? userProfile.user_id.split("@")[0] : (userProfile?.user_id ?? "...")}</span>
                   </div>
                   <button onClick={() => signOut()} style={{ padding: "7px 14px", border: `1px solid ${C.sep}`, borderRadius: "8px", background: "none", color: C.red, fontSize: "13px", fontWeight: 500, cursor: "pointer" }}>ログアウト</button>
                 </div>

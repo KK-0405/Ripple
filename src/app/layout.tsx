@@ -12,6 +12,8 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
+        {/* Prevent white flash: set body bg before React hydrates */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('dj_theme_v1')==='dark'){document.body.style.background='#0F0F0F';}}catch(e){}` }} />
         <title>Ripple</title>
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />

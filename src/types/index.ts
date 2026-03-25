@@ -16,6 +16,7 @@ export type SimilarFilters = {
   energyLevel: null | "high" | "medium" | "low";
   // アーティスト・時代
   sameArtist: boolean;
+  excludeSameArtist: boolean;
   decade: string | null;
   // プレイリスト除外
   excludePlaylist: boolean;
