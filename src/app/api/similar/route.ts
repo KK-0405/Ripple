@@ -73,7 +73,9 @@ export async function POST(request: NextRequest) {
             .map((h) => ({ h, score: matchScore(h.trackName ?? "", h.artistName ?? "", s.title, s.artist) }))
             .sort((a, b) => b.score - a.score);
 
-          const best = candidates[0]?.h;
+          // スコアが低すぎる場合は別の曲とみなしてプレビュー/アートを使わない
+          const MIN_MATCH = isJapanese(s.title) ? 4 : 2;
+          const best = (candidates[0]?.score ?? 0) >= MIN_MATCH ? candidates[0]?.h : undefined;
           const artwork = best
             ? (best.artworkUrl100 as string | undefined)?.replace("100x100bb", "600x600bb") ?? ""
             : "";
