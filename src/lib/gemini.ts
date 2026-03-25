@@ -261,7 +261,8 @@ SELECTION PHILOSOPHY — choose tracks based on OVERALL SIMILARITY, prioritized 
 2. LYRICAL & EMOTIONAL THEMES: Match the seed's lyrical subject matter, emotional tone, and narrative mood. If the seed is about anxiety, uncertainty, or the future, prioritize tracks with similar themes. These thematic connections are as important as sonic ones.
 3. MUSICAL COMPATIBILITY: Similar BPM (±8 BPM) and matching energy level.
 4. PRODUCTION STYLE & ERA: Same production aesthetic, era, cultural context.
-- Mix of well-known classics AND deeper cuts / album tracks / B-sides / underground favorites. Aim for roughly 40% well-known, 60% lesser-known gems.
+- Prioritize deeper cuts, album tracks, B-sides, and underground favorites. Aim for roughly 20% well-known, 80% lesser-known gems.
+- AVOID anthem-level mega-hits — tracks so universally famous that even non-fans know them (e.g. "Bohemian Rhapsody", "Billie Jean", "Smells Like Teen Spirit", "Shape of You"). These songs need no discovery. Instead, surface hidden gems, fan favorites, and overlooked tracks that a dedicated fan would love.
 - Draw from the same scene, label, producers, collaborators, or regional music community as the seed when relevant.
 
 CRITICAL RULES (violations are not acceptable):
