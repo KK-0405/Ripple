@@ -1,58 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSimilarTrackSuggestions, isJapanese, isJapaneseContext } from "@/lib/gemini";
-import { fetchItunesLookup } from "@/lib/itunes";
 
-// Deezerが返したトラックのアーティスト名で最終フィルター
-const BLOCKED_ARTISTS = [
-  /歌っちゃ王/,
-  /うたっちゃ王/,
-  /karaoke/i,
-  /カラオケ/,
-  /tribute/i,
-  /cover version/i,
-  /JOYSOUND/i,
+const BLOCKED_PATTERNS = [
+  /歌っちゃ王/, /うたっちゃ王/, /karaoke/i, /カラオケ/,
+  /tribute/i, /cover version/i, /JOYSOUND/i,
 ];
 
-function isDeezerKaraoke(artistName: string, title: string): boolean {
-  return BLOCKED_ARTISTS.some((re) => re.test(artistName) || re.test(title));
+function isKaraoke(title: string, artist: string): boolean {
+  return BLOCKED_PATTERNS.some((re) => re.test(title) || re.test(artist));
 }
 
-function mapDeezerTrack(t: any) {
-  return {
-    id: String(t.id),
-    name: t.title,
-    artists: [{ name: t.artist?.name ?? "" }],
-    album: {
-      name: t.album?.title ?? "",
-      images: t.album?.cover_medium ? [{ url: t.album.cover_medium }] : [],
-    },
-    duration_ms: (t.duration ?? 0) * 1000,
-    bpm: t.bpm ? Math.round(t.bpm) : 0,
-    key: "",
-    url: t.link ?? `https://www.deezer.com/track/${t.id}`,
-    preview: t.preview ?? undefined,
-    release_year: t.release_date ? parseInt(t.release_date.slice(0, 4)) : undefined,
-  };
+// タイトル・アーティストの一致度スコアリング（日本語対応）
+function matchScore(hitTitle: string, hitArtist: string, sugTitle: string, sugArtist: string): number {
+  const ht = hitTitle.toLowerCase();
+  const ha = hitArtist.toLowerCase();
+  const st = sugTitle.toLowerCase();
+  const sa = sugArtist.toLowerCase();
+  let score = 0;
+  if (isJapanese(sugTitle)) {
+    if (ht.includes(st) || st.includes(ht)) score += 6;
+  } else {
+    for (const w of st.split(/\s+/).filter((w) => w.length > 1)) if (ht.includes(w)) score += 2;
+  }
+  if (isJapanese(sugArtist)) {
+    if (ha.includes(sa) || sa.includes(ha)) score += 6;
+  } else {
+    for (const w of sa.split(/\s+/).filter((w) => w.length > 1)) if (ha.includes(w)) score += 2;
+  }
+  if (ht === st) score += 4;
+  if (ha === sa) score += 4;
+  return score;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { seed, subSeeds = [], count = 20, excludeTitles = [], excludeAnthems = false } = (await request.json()) as {
       seed: {
-        title: string;
-        artist: string;
-        genre_tags?: string[];
-        bpm?: number;
-        camelot?: string;
-        energy?: number;
-        danceability?: number;
-        is_vocal?: boolean;
-        release_year?: number;
+        title: string; artist: string; genre_tags?: string[];
+        bpm?: number; camelot?: string; energy?: number;
+        danceability?: number; is_vocal?: boolean; release_year?: number;
       };
       subSeeds?: { title: string; artist: string; genre_tags?: string[] }[];
-      count?: number;
-      excludeTitles?: string[];
-      excludeAnthems?: boolean;
+      count?: number; excludeTitles?: string[]; excludeAnthems?: boolean;
     };
 
     if (!seed?.title || !seed?.artist) {
@@ -61,97 +50,60 @@ export async function POST(request: NextRequest) {
 
     const cap = Math.min(count, 30);
 
-    // Step1: Geminiに類似曲の提案＋メタデータを1回で取得
-    // japaneseSeed はアーティストの実際の出身国・活動市場をGeminiが判定して返す
+    // Step1: Geminiに類似曲の提案＋メタデータを取得
     const { suggestions, japaneseSeed: geminiJapaneseSeed, error: geminiError } = await getSimilarTrackSuggestions(seed, subSeeds, cap, excludeTitles, excludeAnthems);
-    // Geminiが判定した値を優先、取得できなければフォールバック
     const japaneseSeed = geminiJapaneseSeed ?? isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
     if (suggestions.length === 0) {
       return NextResponse.json({ tracks: [], _debug: geminiError ?? "Gemini returned 0 suggestions" });
     }
 
-    // タイトル・アーティストの一致度スコアリング（日本語対応）
-    function matchScore(deezerTitle: string, deezerArtist: string, sugTitle: string, sugArtist: string): number {
-      const dt = deezerTitle.toLowerCase();
-      const da = deezerArtist.toLowerCase();
-      const st = sugTitle.toLowerCase();
-      const sa = sugArtist.toLowerCase();
-      let score = 0;
-      // タイトル: 日本語は全体一致、英語は単語分割
-      if (isJapanese(sugTitle)) {
-        if (dt.includes(st) || st.includes(dt)) score += 6;
-      } else {
-        for (const w of st.split(/\s+/).filter((w) => w.length > 1)) if (dt.includes(w)) score += 2;
-      }
-      // アーティスト: 日本語は全体一致、英語は単語分割
-      if (isJapanese(sugArtist)) {
-        if (da.includes(sa) || sa.includes(da)) score += 6;
-      } else {
-        for (const w of sa.split(/\s+/).filter((w) => w.length > 1)) if (da.includes(w)) score += 2;
-      }
-      // 完全一致ボーナス
-      if (dt === st) score += 4;
-      if (da === sa) score += 4;
-      return score;
-    }
+    // Step2: 各提案をiTunesで並列検索（アルバムアート・プレビュー取得）
+    const locale = japaneseSeed ? "country=JP&lang=ja_jp" : "country=US&lang=en_us";
 
-    // Step2: 各提案をDeezerで並列検索
-    const deezerResults = await Promise.all(
+    const tracks = await Promise.all(
       suggestions.map(async (s) => {
         try {
           const q = encodeURIComponent(`${s.title} ${s.artist}`);
-          const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=10`);
+          const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&entity=song&${locale}&limit=5`);
           const data = (await res.json()) as any;
-          const hits: any[] = data?.data ?? [];
-          if (hits.length === 0) return null;
+          const hits: any[] = (data?.results ?? []).filter((r: any) => r.trackId);
 
-          // フィルタリング後にスコアが最も高い曲を選ぶ
           const candidates = hits
-            .filter((hit) => {
-              if (isDeezerKaraoke(hit.artist?.name ?? "", hit.title ?? "")) return false;
-              if (!japaneseSeed && (isJapanese(hit.title ?? "") || isJapanese(hit.artist?.name ?? ""))) return false;
-              return true;
-            })
-            .map((hit) => ({
-              hit,
-              score: matchScore(hit.title ?? "", hit.artist?.name ?? "", s.title, s.artist),
-            }))
+            .filter((h) => !isKaraoke(h.trackName ?? "", h.artistName ?? ""))
+            .map((h) => ({ h, score: matchScore(h.trackName ?? "", h.artistName ?? "", s.title, s.artist) }))
             .sort((a, b) => b.score - a.score);
 
-          if (candidates.length === 0) return null;
-          return mapDeezerTrack(candidates[0].hit);
-        } catch {
-          return null;
-        }
-      })
-    );
+          const best = candidates[0]?.h;
+          const artwork = best
+            ? (best.artworkUrl100 as string | undefined)?.replace("100x100bb", "600x600bb") ?? ""
+            : "";
 
-    // Deezerで見つかった曲はDeezerのプレビュー/アート付きで、見つからなかった曲はiTunesフォールバック
-    const tracksPromises = suggestions
-      .map((s, i) => {
-        const deezer = deezerResults[i];
-        if (deezer) {
-          // Deezerヒットあり: プレビュー・アルバムアート付き
-          return Promise.resolve({
-            ...deezer,
-            name: s.title || deezer.name,
-            artists: s.artist ? [{ name: s.artist }] : deezer.artists,
-            bpm: deezer.bpm || s.bpm || 0,
+          return {
+            id: best ? `it_${best.trackId}` : `gemini_${s.title}_${s.artist}`,
+            name: s.title,
+            artists: [{ name: s.artist }],
+            album: {
+              name: best?.collectionName ?? "",
+              images: artwork ? [{ url: artwork }] : [],
+            },
+            duration_ms: best?.trackTimeMillis ?? 0,
+            bpm: s.bpm || 0,
             key: s.key ?? "",
             camelot: s.camelot ?? "",
             energy: s.energy ?? 0.5,
             is_vocal: s.is_vocal ?? true,
             genre_tags: s.genre_tags ?? [],
-            release_year: deezer.release_year || s.release_year || undefined,
+            release_year: s.release_year ?? (best?.releaseDate ? parseInt(best.releaseDate.slice(0, 4)) : undefined),
+            url: best?.trackViewUrl ?? `https://music.apple.com/search?term=${encodeURIComponent(`${s.title} ${s.artist}`)}`,
+            preview: best?.previewUrl ?? undefined,
             reason: s.reason ?? undefined,
-          });
-        } else {
-          // Deezerヒットなし: iTunesからアルバムアート・プレビューを取得
-          return fetchItunesLookup(s.title, s.artist, japaneseSeed).then((itunes) => ({
-            id: `gemini_${i}_${s.title}`,
+          };
+        } catch {
+          return {
+            id: `gemini_${s.title}_${s.artist}`,
             name: s.title,
             artists: [{ name: s.artist }],
-            album: { name: itunes?.albumName ?? "", images: itunes?.albumArt ? [{ url: itunes.albumArt }] : [] },
+            album: { name: "", images: [] },
             duration_ms: 0,
             bpm: s.bpm || 0,
             key: s.key ?? "",
@@ -160,16 +112,15 @@ export async function POST(request: NextRequest) {
             is_vocal: s.is_vocal ?? true,
             genre_tags: s.genre_tags ?? [],
             release_year: s.release_year ?? undefined,
-            url: `https://www.deezer.com/search/${encodeURIComponent(`${s.title} ${s.artist}`)}`,
-            preview: itunes?.preview,
+            url: `https://music.apple.com/search?term=${encodeURIComponent(`${s.title} ${s.artist}`)}`,
+            preview: undefined,
             reason: s.reason ?? undefined,
-          }));
+          };
         }
-      });
+      })
+    );
 
-    const tracksWithMeta = (await Promise.all(tracksPromises)).slice(0, cap);
-
-    return NextResponse.json({ tracks: tracksWithMeta });
+    return NextResponse.json({ tracks: tracks.slice(0, cap) });
   } catch (error) {
     console.error("Similar error:", error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
