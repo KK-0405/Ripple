@@ -71,7 +71,7 @@ const DEFAULT_FILTERS: SimilarFilters = {
   excludeSameArtist: true,
   decade: null,
   excludePlaylist: false,
-  excludeAnthems: false,
+  excludeAnthems: true,
 };
 
 export default function Home() {

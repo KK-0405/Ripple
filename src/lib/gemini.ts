@@ -345,7 +345,7 @@ export async function getSimilarTrackSuggestions(
   subSeeds: { title: string; artist: string; genre_tags?: string[] }[],
   count: number,
   excludeTitles: string[] = [],
-  excludeAnthems: boolean = false
+  excludeAnthems: boolean = true
 ): Promise<SimilarResult> {
   if (process.env.GEMINI_MOCK === "true") {
     const mockSongs = [
