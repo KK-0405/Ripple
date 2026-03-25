@@ -114,8 +114,6 @@ export async function POST(request: NextRequest) {
             .filter((hit) => {
               if (isDeezerKaraoke(hit.artist?.name ?? "", hit.title ?? "")) return false;
               if (!japaneseSeed && (isJapanese(hit.title ?? "") || isJapanese(hit.artist?.name ?? ""))) return false;
-              // 日本語シードの場合、タイトルにも アーティスト名にも日本語がない完全英語曲は除外
-              if (japaneseSeed && !isJapanese(hit.title ?? "") && !isJapanese(hit.artist?.name ?? "")) return false;
               return true;
             })
             .map((hit) => ({
