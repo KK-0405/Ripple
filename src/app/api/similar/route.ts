@@ -96,15 +96,13 @@ export async function POST(request: NextRequest) {
       if (da === sa) score += 4;
       return score;
     }
-    // 最低スコア閾値：スコア0（全く一致なし）は除外
-    const MIN_SCORE = 2;
 
     // Step2: 各提案をDeezerで並列検索
     const deezerResults = await Promise.all(
       suggestions.map(async (s) => {
         try {
           const q = encodeURIComponent(`${s.title} ${s.artist}`);
-          const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=5`);
+          const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=10`);
           const data = (await res.json()) as any;
           const hits: any[] = data?.data ?? [];
           if (hits.length === 0) return null;
@@ -123,7 +121,6 @@ export async function POST(request: NextRequest) {
             .sort((a, b) => b.score - a.score);
 
           if (candidates.length === 0) return null;
-          if (candidates[0].score < MIN_SCORE) return null;
           return mapDeezerTrack(candidates[0].hit);
         } catch {
           return null;
