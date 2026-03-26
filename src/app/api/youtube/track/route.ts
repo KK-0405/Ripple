@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   if (apiKeys.length === 0) {
     return NextResponse.json({ searchUrl });
   }
-  const apiKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];
+  const apiKey = process.env.YOUTUBE_API_KEY_9 ?? apiKeys[Math.floor(Math.random() * apiKeys.length)];
 
   // Supabaseキャッシュを確認
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
