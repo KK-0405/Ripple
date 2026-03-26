@@ -34,14 +34,14 @@ function matchScore(hitTitle: string, hitArtist: string, sugTitle: string, sugAr
 
 export async function POST(request: NextRequest) {
   try {
-    const { seed, subSeeds = [], count = 20, excludeTitles = [], excludeAnthems = false } = (await request.json()) as {
+    const { seed, subSeeds = [], count = 20, excludeTitles = [], excludeAnthems = false, instruction } = (await request.json()) as {
       seed: {
         title: string; artist: string; genre_tags?: string[];
         bpm?: number; camelot?: string; energy?: number;
         danceability?: number; is_vocal?: boolean; release_year?: number;
       };
       subSeeds?: { title: string; artist: string; genre_tags?: string[] }[];
-      count?: number; excludeTitles?: string[]; excludeAnthems?: boolean;
+      count?: number; excludeTitles?: string[]; excludeAnthems?: boolean; instruction?: string;
     };
 
     if (!seed?.title || !seed?.artist) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const cap = Math.min(count, 30);
 
     // Step1: Geminiに類似曲の提案＋メタデータを取得
-    const { suggestions, japaneseSeed: geminiJapaneseSeed, error: geminiError } = await getSimilarTrackSuggestions(seed, subSeeds, cap, excludeTitles, excludeAnthems);
+    const { suggestions, japaneseSeed: geminiJapaneseSeed, error: geminiError } = await getSimilarTrackSuggestions(seed, subSeeds, cap, excludeTitles, excludeAnthems, instruction);
     const japaneseSeed = geminiJapaneseSeed ?? isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
     if (suggestions.length === 0) {
       return NextResponse.json({ tracks: [], _debug: geminiError ?? "Gemini returned 0 suggestions" });

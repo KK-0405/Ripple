@@ -228,7 +228,8 @@ function buildSimilarPrompt(
   count: number,
   excludeTitles: string[] = [],
   japaneseSeedOverride?: boolean,
-  excludeAnthems?: boolean
+  excludeAnthems?: boolean,
+  instruction?: string
 ): string {
   const genres = seed.genre_tags?.join(", ") || "unknown";
   const subGenreStr = subSeeds.flatMap((s) => s.genre_tags ?? []).filter(Boolean);
@@ -265,6 +266,7 @@ SELECTION PHILOSOPHY — choose tracks based on OVERALL SIMILARITY, prioritized 
 - ${excludeAnthems ? "Prioritize deeper cuts, album tracks, B-sides, and underground favorites. Aim for roughly 20% well-known, 80% lesser-known gems.\n- AVOID anthem-level mega-hits — tracks so universally famous that even non-fans know them (e.g. \"Bohemian Rhapsody\", \"Billie Jean\", \"Smells Like Teen Spirit\", \"Shape of You\"). Surface hidden gems and overlooked tracks instead." : "Include well-known anthems and classics. Aim for roughly 80% well-known hits, 20% deeper cuts."}
 - Draw from the same scene, label, producers, collaborators, or regional music community as the seed when relevant.
 
+${instruction ? `\nUSER INSTRUCTION (highest priority — override defaults if needed): ${instruction}\n` : ""}
 CRITICAL RULES (violations are not acceptable):
 1. Aim for ${count} elements. You MAY return fewer if you cannot find enough genuinely related tracks — quality over quantity. Never pad with unrelated songs just to hit the number.
 2. Stay within the seed's genre. Only widen to adjacent genres if you have exhausted the primary genre AND the adjacent genre is musically close (e.g. Hip-Hop → R&B is OK; Hip-Hop → Pop is NOT).
@@ -345,7 +347,8 @@ export async function getSimilarTrackSuggestions(
   subSeeds: { title: string; artist: string; genre_tags?: string[] }[],
   count: number,
   excludeTitles: string[] = [],
-  excludeAnthems: boolean = false
+  excludeAnthems: boolean = false,
+  instruction?: string
 ): Promise<SimilarResult> {
   if (process.env.GEMINI_MOCK === "true") {
     const mockSongs = [
@@ -374,7 +377,7 @@ export async function getSimilarTrackSuggestions(
       detectArtistOrigin(apiKey, seed.artist, seed.title),
       fetchSuggestions(
         apiKey,
-        buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, optimisticJapanese, excludeAnthems),
+        buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, optimisticJapanese, excludeAnthems, instruction),
         optimisticJapanese
       ),
     ]);
@@ -384,7 +387,7 @@ export async function getSimilarTrackSuggestions(
     // 楽観的推測が外れた場合は正しい判定で再取得
     let suggestions = first.suggestions;
     if (japaneseSeed !== optimisticJapanese) {
-      const retryPrompt = buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, japaneseSeed, excludeAnthems);
+      const retryPrompt = buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, japaneseSeed, excludeAnthems, instruction);
       const retried = await fetchSuggestions(apiKey, retryPrompt, japaneseSeed);
       if (!retried.error && retried.suggestions.length > 0) {
         suggestions = retried.suggestions;
@@ -395,7 +398,7 @@ export async function getSimilarTrackSuggestions(
     if (suggestions.length < buffered) {
       const need = buffered - suggestions.length;
       const alreadyHave = suggestions.map((s) => `"${s.title}" by ${s.artist}`);
-      const promptN = buildSimilarPrompt(seed, subSeeds, need, alreadyHave, japaneseSeed, excludeAnthems);
+      const promptN = buildSimilarPrompt(seed, subSeeds, need, alreadyHave, japaneseSeed, excludeAnthems, instruction);
       const next = await fetchSuggestions(apiKey, promptN, japaneseSeed);
       if (!next.error && next.suggestions.length > 0) {
         suggestions = [...suggestions, ...next.suggestions];
