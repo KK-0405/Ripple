@@ -287,7 +287,7 @@ CSS変数            : --wf-bg / --wf-surface / --wf-border / --wf-text / --wf-t
 | 項目 | 値 |
 |------|-----|
 | ホスティング | Vercel |
-| 本番URL | https://dj-discovery-ihhs.vercel.app/ |
+| 本番URL | https://ripplefm.vercel.app/ |
 | フレームワーク | Next.js (App Router) |
 
 > ローカルはDeezer APIのプロキシ問題があるため、必ずVercelでテストすること。

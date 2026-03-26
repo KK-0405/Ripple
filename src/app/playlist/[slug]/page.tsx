@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 
-const BASE_URL = "https://dj-discovery-ihhs.vercel.app";
+const BASE_URL = "https://ripplefm.vercel.app";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

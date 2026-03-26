@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-const BASE_URL = "https://dj-discovery-ihhs.vercel.app";
+const BASE_URL = "https://ripplefm.vercel.app";
 
 export const metadata = {
   title: "Explore — Ripple",
