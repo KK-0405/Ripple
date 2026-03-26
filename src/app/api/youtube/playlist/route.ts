@@ -57,8 +57,9 @@ export async function POST(request: NextRequest) {
       playlistId,
       url: `https://music.youtube.com/playlist?list=${playlistId}`,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("YouTube error:", error);
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    const detail = error?.response?.data ?? error?.message ?? String(error);
+    return NextResponse.json({ error: String(error), detail }, { status: 500 });
   }
 }

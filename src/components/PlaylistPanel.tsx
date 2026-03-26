@@ -109,7 +109,7 @@ export default function PlaylistPanel({
         window.open(data.url, "_blank");
         setShowYoutubeSelect(false);
       } else {
-        setExportError(`${data.error ?? "不明なエラー"} [client: ${debugClientId}]`);
+        setExportError(`${data.error ?? "不明なエラー"} [client: ${debugClientId}] ${JSON.stringify(data.detail ?? "")}`);
       }
     } catch (e: any) {
       setExportError(e?.message ?? "通信エラー");
