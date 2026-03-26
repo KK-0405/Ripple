@@ -32,11 +32,11 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 const GOOGLE_TOKEN_KEY = "dj_google_token_v1";
+const GOOGLE_REFRESH_KEY = "dj_google_refresh_v1";
 
-function saveGoogleToken(token: string) {
+function saveGoogleToken(token: string, expiresIn = 3600) {
   try {
-    // Google アクセストークンの有効期限は約3600秒。50分で失効とみなす
-    const expiresAt = Date.now() + 50 * 60 * 1000;
+    const expiresAt = Date.now() + (expiresIn - 120) * 1000; // 2分前に失効とみなす
     localStorage.setItem(GOOGLE_TOKEN_KEY, JSON.stringify({ token, expiresAt }));
   } catch { /* ignore */ }
 }
@@ -51,8 +51,34 @@ function loadGoogleToken(): string | null {
   } catch { return null; }
 }
 
+function saveRefreshToken(token: string) {
+  try { localStorage.setItem(GOOGLE_REFRESH_KEY, token); } catch { /* ignore */ }
+}
+
+function loadRefreshToken(): string | null {
+  try { return localStorage.getItem(GOOGLE_REFRESH_KEY); } catch { return null; }
+}
+
 function clearGoogleToken() {
-  try { localStorage.removeItem(GOOGLE_TOKEN_KEY); } catch { /* ignore */ }
+  try {
+    localStorage.removeItem(GOOGLE_TOKEN_KEY);
+    localStorage.removeItem(GOOGLE_REFRESH_KEY);
+  } catch { /* ignore */ }
+}
+
+async function refreshGoogleAccessToken(refreshToken: string): Promise<string | null> {
+  try {
+    const res = await fetch("/api/google/refresh-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) return null;
+    const { accessToken, expiresIn } = await res.json();
+    if (!accessToken) return null;
+    saveGoogleToken(accessToken, expiresIn);
+    return accessToken;
+  } catch { return null; }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -121,6 +147,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) await loadProfile(user.id, user.email);
   };
 
+  // googleToken が期限切れになったタイミングで自動更新
+  useEffect(() => {
+    if (!googleToken || !session?.user) return;
+    try {
+      const raw = localStorage.getItem(GOOGLE_TOKEN_KEY);
+      if (!raw) return;
+      const { expiresAt } = JSON.parse(raw);
+      const msUntilExpiry = expiresAt - Date.now();
+      if (msUntilExpiry <= 0) return;
+      const timer = setTimeout(async () => {
+        const refreshToken = loadRefreshToken();
+        if (!refreshToken) return;
+        const newToken = await refreshGoogleAccessToken(refreshToken);
+        if (newToken) setGoogleToken(newToken);
+      }, msUntilExpiry);
+      return () => clearTimeout(timer);
+    } catch { /* ignore */ }
+  }, [googleToken, session?.user]);
+
   // session があるのに userProfile が null のまま残った場合の保険
   useEffect(() => {
     if (!session || userProfile !== null) return;
@@ -158,10 +203,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.provider_token) {
         saveGoogleToken(session.provider_token);
         setGoogleToken(session.provider_token);
-      } else if (session?.user) {
-        // リロード後は provider_token が消えるので localStorage から復元
-        setGoogleToken(loadGoogleToken());
-      } else {
+      }
+      if (session?.provider_refresh_token) {
+        saveRefreshToken(session.provider_refresh_token);
+      }
+      if (!session?.provider_token && session?.user) {
+        // リロード後は provider_token が消えるので localStorage から復元、なければリフレッシュ
+        const cached = loadGoogleToken();
+        if (cached) {
+          setGoogleToken(cached);
+        } else {
+          const refreshToken = loadRefreshToken();
+          if (refreshToken) {
+            refreshGoogleAccessToken(refreshToken).then((newToken) => {
+              if (newToken) setGoogleToken(newToken);
+            });
+          }
+        }
+      }
+      if (!session) {
         clearGoogleToken();
         setGoogleToken(null);
       }

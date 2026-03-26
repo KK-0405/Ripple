@@ -80,9 +80,9 @@ export default function AuthModal({ onClose }: Props) {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // Supabaseダッシュボードで youtube スコープを追加設定してください
         scopes: "email profile https://www.googleapis.com/auth/youtube",
         redirectTo: "https://ripplefm.vercel.app",
+        queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
     // ページ遷移するので onClose 不要
