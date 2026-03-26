@@ -178,9 +178,10 @@ export default function PlaylistPanel({
             disabled={playlist.length === 0 || saveStatus === "saving"}
             style={{
               width: "100%", padding: "10px",
-              background: saveStatus === "saved" ? C.green : saveStatus === "error" ? C.red : playlist.length > 0 ? C.acc : C.s1,
-              border: "none", borderRadius: "10px",
-              color: playlist.length > 0 || saveStatus !== "idle" ? "#fff" : C.t3,
+              background: saveStatus === "saved" ? C.green : saveStatus === "error" ? C.red : "#fff",
+              border: `1px solid ${saveStatus === "saved" ? C.green : saveStatus === "error" ? C.red : C.sep}`,
+              borderRadius: "10px",
+              color: saveStatus === "saved" || saveStatus === "error" ? "#fff" : playlist.length > 0 ? "#111" : C.t3,
               fontSize: "12px", fontWeight: 700,
               cursor: playlist.length > 0 ? "pointer" : "default",
               boxShadow: "none",
@@ -208,10 +209,10 @@ export default function PlaylistPanel({
             style={{
               width: "100%", padding: "10px",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
-              background: googleToken && playlist.length > 0 ? "#1a1a1a" : C.s1,
-              border: `1px solid ${googleToken && playlist.length > 0 ? "#333" : C.sep}`,
+              background: "#fff",
+              border: `1px solid ${C.sep}`,
               borderRadius: "10px",
-              color: googleToken && playlist.length > 0 ? "#fff" : C.t3,
+              color: googleToken && playlist.length > 0 ? "#111" : C.t3,
               fontSize: "12px", fontWeight: 700,
               cursor: googleToken && playlist.length > 0 ? "pointer" : "not-allowed",
               opacity: googleToken ? 1 : 0.55,
