@@ -130,7 +130,7 @@ export default function SeedPanel({
           </div>
         ) : (
           <div style={{ padding: "12px", background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "10px", color: C.t3, fontSize: "12px", textAlign: "center" }}>
-            検索結果からメインを選択
+            メイン Seedを選択
           </div>
         )}
       </div>
