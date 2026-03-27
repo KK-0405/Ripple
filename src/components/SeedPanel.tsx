@@ -16,6 +16,7 @@ type Props = {
   setSimilarCount: (n: 10 | 20 | 30) => void;
   seedAnalyzing: boolean;
   seedError: string | null;
+  subSeedsAnalyzing: Set<string>;
   playlistCount: number;
   availableGenres: string[];
   hasSimilar: boolean;
@@ -67,9 +68,18 @@ function CheckRow({
 
 const DECADES = ["1970s", "1980s", "1990s", "2000s", "2010s", "2020s", "2025", "2026"];
 
+const SUB_INFLUENCE_OPTIONS: { key: string; label: string }[] = [
+  { key: "title", label: "曲" },
+  { key: "artist", label: "アーティスト" },
+  { key: "genre", label: "ジャンル" },
+  { key: "bpm", label: "BPM" },
+  { key: "era", label: "時代" },
+  { key: "mood", label: "背景" },
+];
+
 export default function SeedPanel({
   mainSeed, setMainSeed, subSeeds, removeSubSeed, exploreSimilar,
-  filters, setFilters, similarCount, setSimilarCount, seedAnalyzing, seedError, playlistCount, availableGenres,
+  filters, setFilters, similarCount, setSimilarCount, seedAnalyzing, seedError, subSeedsAnalyzing, playlistCount, availableGenres,
   hasSimilar, searchInstruction, setSearchInstruction,
 }: Props) {
   const { C } = useTheme();
@@ -157,20 +167,65 @@ export default function SeedPanel({
               サブ Seed を追加
             </div>
           )}
-          {subSeeds.map((track) => (
-            <div key={track.id} style={{
-              display: "flex", alignItems: "center", gap: "8px",
-              background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "8px", padding: "8px 10px",
-            }}>
-              <img src={track.album.images[0]?.url} alt={track.album.name} width={28} height={28} style={{ borderRadius: "5px", flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: C.t1, fontSize: "10px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.name}</div>
-                <div style={{ color: C.t2, fontSize: "9px" }}>{track.artists[0]?.name}</div>
+          {subSeeds.map((track) => {
+            const analyzing = subSeedsAnalyzing.has(track.id);
+            return (
+              <div key={track.id} style={{
+                display: "flex", alignItems: "center", gap: "8px",
+                background: C.s1, border: `1px solid ${C.sep}`, borderRadius: "8px", padding: "8px 10px",
+              }}>
+                <img src={track.album.images[0]?.url} alt={track.album.name} width={28} height={28} style={{ borderRadius: "5px", flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: C.t1, fontSize: "10px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.name}</div>
+                  <div style={{ color: C.t2, fontSize: "9px", marginBottom: "2px" }}>{track.artists[0]?.name}</div>
+                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", alignItems: "center" }}>
+                    {analyzing
+                      ? <span style={{ fontSize: "9px", color: C.acc }}>✦ 解析中...</span>
+                      : <>
+                          {track.bpm > 0 && <span style={{ fontSize: "9px", color: C.greenText, fontWeight: 600 }}>{track.bpm}</span>}
+                          {track.camelot && <span style={{ fontSize: "9px", color: C.blueText, background: C.blueDim, padding: "0 4px", borderRadius: "3px", fontWeight: 600 }}>{track.camelot}</span>}
+                          {track.release_year && <span style={{ fontSize: "9px", color: C.t3 }}>{track.release_year}</span>}
+                        </>
+                    }
+                  </div>
+                </div>
+                <button onClick={() => removeSubSeed(track.id)} style={{ background: "none", border: "none", color: C.t3, fontSize: "16px", cursor: "pointer" }}>×</button>
               </div>
-              <button onClick={() => removeSubSeed(track.id)} style={{ background: "none", border: "none", color: C.t3, fontSize: "16px", cursor: "pointer" }}>×</button>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
+        {/* サブシード影響範囲 */}
+        {subSeeds.length > 0 && (
+          <div style={{ marginTop: "10px" }}>
+            <div style={{ fontSize: "10px", color: C.t3, marginBottom: "6px" }}>参照する要素</div>
+            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+              {SUB_INFLUENCE_OPTIONS.map(({ key, label }) => {
+                const active = filters.subSeedInfluences.includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => set({
+                      subSeedInfluences: active
+                        ? filters.subSeedInfluences.filter((k) => k !== key)
+                        : [...filters.subSeedInfluences, key],
+                    })}
+                    style={{
+                      padding: "3px 8px", borderRadius: "20px", fontSize: "10px", fontWeight: 600,
+                      cursor: "pointer",
+                      background: active ? C.acc : C.s1,
+                      border: `1px solid ${active ? C.acc : C.s2}`,
+                      color: active ? "#fff" : C.t3,
+                      transition: "all 0.1s",
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 取得件数 */}

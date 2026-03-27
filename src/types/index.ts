@@ -22,6 +22,8 @@ export type SimilarFilters = {
   excludePlaylist: boolean;
   // アンセム除外
   excludeAnthems: boolean;
+  // サブシード影響範囲
+  subSeedInfluences: string[];
 };
 
 export type HistoryEntry = {

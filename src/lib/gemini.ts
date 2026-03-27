@@ -222,18 +222,55 @@ function isKaraokeOrCover(title: string, artist: string): boolean {
   return false;
 }
 
+type SubSeed = {
+  title: string;
+  artist: string;
+  genre_tags?: string[];
+  bpm?: number;
+  camelot?: string;
+  release_year?: number;
+  energy?: number;
+  is_vocal?: boolean;
+};
+
+function buildSubSeedSection(subSeeds: SubSeed[], influences: string[]): string {
+  if (subSeeds.length === 0 || influences.length === 0) return "";
+  const lines = subSeeds.map((s, i) => {
+    const hasTitle = influences.includes("title");
+    const hasArtist = influences.includes("artist");
+    const prefix = hasTitle && hasArtist
+      ? `"${s.title}" by ${s.artist}`
+      : hasTitle ? `"${s.title}"`
+      : hasArtist ? s.artist
+      : `Track ${i + 1}`;
+    const attrs: string[] = [];
+    if (influences.includes("genre") && s.genre_tags?.length) attrs.push(`Genre: ${s.genre_tags.slice(0, 3).join(", ")}`);
+    if (influences.includes("bpm") && s.bpm && s.bpm > 0) attrs.push(`BPM: ${s.bpm}`);
+    if (influences.includes("era") && s.release_year) attrs.push(`Era: ${s.release_year}`);
+    if (influences.includes("mood")) {
+      const mood: string[] = [];
+      if (s.energy !== undefined) mood.push(s.energy >= 0.7 ? "high energy" : s.energy >= 0.4 ? "mid energy" : "low energy");
+      if (s.is_vocal !== undefined) mood.push(s.is_vocal ? "vocal" : "instrumental");
+      if (mood.length) attrs.push(`Mood: ${mood.join(", ")}`);
+    }
+    return `${i + 1}. ${prefix}${attrs.length ? " — " + attrs.join(" | ") : ""}`;
+  });
+  return `\nSub-seed influences — blend these musical characteristics into your recommendations:\n${lines.join("\n")}`;
+}
+
 function buildSimilarPrompt(
   seed: { title: string; artist: string; genre_tags?: string[]; bpm?: number; camelot?: string; energy?: number; release_year?: number },
-  subSeeds: { title: string; artist: string; genre_tags?: string[] }[],
+  subSeeds: SubSeed[],
   count: number,
   excludeTitles: string[] = [],
   japaneseSeedOverride?: boolean,
   excludeAnthems?: boolean,
-  instruction?: string
+  instruction?: string,
+  subSeedInfluences?: string[]
 ): string {
   const genres = seed.genre_tags?.join(", ") || "unknown";
-  const subGenreStr = subSeeds.flatMap((s) => s.genre_tags ?? []).filter(Boolean);
-  const subInfo = subGenreStr.length ? `Sub-influences: ${subGenreStr.join(", ")}` : "";
+  const influences = subSeedInfluences ?? ["genre"];
+  const subSeedSection = buildSubSeedSection(subSeeds, influences);
   const excludeStr = excludeTitles.length
     ? `\n- Do NOT include these already-listed songs: ${excludeTitles.slice(0, 20).join(", ")}.`
     : "";
@@ -256,7 +293,7 @@ function buildSimilarPrompt(
 
 TASK: Output a JSON array of EXACTLY ${count} songs that a DJ could mix with "${seed.title}" by ${seed.artist}.
 
-Seed info — Genre: ${genres}. BPM≈${seed.bpm || "?"}, Camelot: ${seed.camelot || "?"}, Era: ${seed.release_year || "?"}, Energy: ${seed.energy ?? "?"}.${subInfo ? " " + subInfo : ""}
+Seed info — Genre: ${genres}. BPM≈${seed.bpm || "?"}, Camelot: ${seed.camelot || "?"}, Era: ${seed.release_year || "?"}, Energy: ${seed.energy ?? "?"}.${subSeedSection}
 
 SELECTION PHILOSOPHY — choose tracks based on OVERALL SIMILARITY, prioritized in this order:
 1. GENRE FIDELITY (highest priority): Stay true to the seed's genre(s). If the seed is Hip-Hop, the majority of results MUST be Hip-Hop. If J-Pop, results must be J-Pop. Do NOT drift into adjacent genres unless explicitly needed to fill the count. Genre loyalty overrides all other criteria.
@@ -344,11 +381,12 @@ export async function getSimilarTrackSuggestions(
     is_vocal?: boolean;
     release_year?: number;
   },
-  subSeeds: { title: string; artist: string; genre_tags?: string[] }[],
+  subSeeds: SubSeed[],
   count: number,
   excludeTitles: string[] = [],
   excludeAnthems: boolean = false,
-  instruction?: string
+  instruction?: string,
+  subSeedInfluences?: string[]
 ): Promise<SimilarResult> {
   if (process.env.GEMINI_MOCK === "true") {
     const mockSongs = [
@@ -377,7 +415,7 @@ export async function getSimilarTrackSuggestions(
       detectArtistOrigin(apiKey, seed.artist, seed.title),
       fetchSuggestions(
         apiKey,
-        buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, optimisticJapanese, excludeAnthems, instruction),
+        buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, optimisticJapanese, excludeAnthems, instruction, subSeedInfluences),
         optimisticJapanese
       ),
     ]);
@@ -387,7 +425,7 @@ export async function getSimilarTrackSuggestions(
     // 楽観的推測が外れた場合は正しい判定で再取得
     let suggestions = first.suggestions;
     if (japaneseSeed !== optimisticJapanese) {
-      const retryPrompt = buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, japaneseSeed, excludeAnthems, instruction);
+      const retryPrompt = buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, japaneseSeed, excludeAnthems, instruction, subSeedInfluences);
       const retried = await fetchSuggestions(apiKey, retryPrompt, japaneseSeed);
       if (!retried.error && retried.suggestions.length > 0) {
         suggestions = retried.suggestions;
@@ -398,7 +436,7 @@ export async function getSimilarTrackSuggestions(
     if (suggestions.length < buffered) {
       const need = buffered - suggestions.length;
       const alreadyHave = suggestions.map((s) => `"${s.title}" by ${s.artist}`);
-      const promptN = buildSimilarPrompt(seed, subSeeds, need, alreadyHave, japaneseSeed, excludeAnthems, instruction);
+      const promptN = buildSimilarPrompt(seed, subSeeds, need, alreadyHave, japaneseSeed, excludeAnthems, instruction, subSeedInfluences);
       const next = await fetchSuggestions(apiKey, promptN, japaneseSeed);
       if (!next.error && next.suggestions.length > 0) {
         suggestions = [...suggestions, ...next.suggestions];

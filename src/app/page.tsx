@@ -72,6 +72,7 @@ const DEFAULT_FILTERS: SimilarFilters = {
   decade: null,
   excludePlaylist: false,
   excludeAnthems: false,
+  subSeedInfluences: ["title", "artist", "genre", "bpm", "era", "mood"],
 };
 
 export default function Home() {
@@ -144,6 +145,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [mainSeed, setMainSeed] = useState<Track | null>(null);
   const [subSeeds, setSubSeeds] = useState<Track[]>([]);
+  const [subSeedsAnalyzing, setSubSeedsAnalyzing] = useState<Set<string>>(new Set());
   const [similarTracks, setSimilarTracks] = useState<Track[]>([]);
   const [playlist, setPlaylist] = useState<Track[]>([]);
   const [mode, setMode] = useState<Mode>("search");
@@ -227,9 +229,15 @@ export default function Home() {
             title: t.name,
             artist: t.artists[0]?.name ?? "",
             genre_tags: t.genre_tags,
+            bpm: t.bpm || undefined,
+            camelot: t.camelot || undefined,
+            release_year: t.release_year || undefined,
+            energy: t.energy,
+            is_vocal: t.is_vocal,
           })),
           count: similarCount,
           excludeAnthems: filters.excludeAnthems,
+          subSeedInfluences: filters.subSeedInfluences,
           instruction: searchInstruction.trim() || undefined,
         }),
       });
@@ -307,10 +315,16 @@ export default function Home() {
             title: t.name,
             artist: t.artists[0]?.name ?? "",
             genre_tags: t.genre_tags,
+            bpm: t.bpm || undefined,
+            camelot: t.camelot || undefined,
+            release_year: t.release_year || undefined,
+            energy: t.energy,
+            is_vocal: t.is_vocal,
           })),
           count: similarCount,
           excludeTitles,
           excludeAnthems: filters.excludeAnthems,
+          subSeedInfluences: filters.subSeedInfluences,
           instruction: searchInstruction.trim() || undefined,
         }),
       });
@@ -455,6 +469,7 @@ export default function Home() {
   const addToSubSeed = async (track: Track) => {
     if (subSeeds.find((t) => t.id === track.id) || mainSeed?.id === track.id) return;
     setSubSeeds((prev) => [...prev, track]);
+    setSubSeedsAnalyzing((prev) => new Set([...prev, track.id]));
     const artist = track.artists[0]?.name ?? "";
     let m = readCache()[cacheKey(track.name, artist)] ?? null;
     if (!m) {
@@ -472,6 +487,7 @@ export default function Home() {
     if (m) {
       setSubSeeds((prev) => prev.map((t) => t.id === track.id ? { ...t, genre_tags: m.genre_tags, energy: m.energy, danceability: m.danceability, is_vocal: m.is_vocal, camelot: m.camelot, bpm: t.bpm || m.bpm, release_year: m.release_year } : t));
     }
+    setSubSeedsAnalyzing((prev) => { const next = new Set(prev); next.delete(track.id); return next; });
   };
   const removeSubSeed = (id: string) => setSubSeeds(subSeeds.filter((t) => t.id !== id));
   const addToPlaylist = (track: Track) => { if (!playlist.find((t) => t.id === track.id)) setPlaylist([...playlist, track]); };
@@ -930,7 +946,7 @@ export default function Home() {
               exploreSimilar={exploreSimilar}
               filters={filters} setFilters={setFilters}
               similarCount={similarCount} setSimilarCount={setSimilarCount}
-              seedAnalyzing={seedAnalyzing} seedError={seedError}
+              seedAnalyzing={seedAnalyzing} seedError={seedError} subSeedsAnalyzing={subSeedsAnalyzing}
               playlistCount={playlist.length}
               availableGenres={availableGenres}
               hasSimilar={similarTracks.length > 0}
@@ -977,7 +993,7 @@ export default function Home() {
                 exploreSimilar={() => { exploreSimilar(); setMobileSheet("none"); }}
                 filters={filters} setFilters={setFilters}
                 similarCount={similarCount} setSimilarCount={setSimilarCount}
-                seedAnalyzing={seedAnalyzing} seedError={seedError}
+                seedAnalyzing={seedAnalyzing} seedError={seedError} subSeedsAnalyzing={subSeedsAnalyzing}
                 playlistCount={playlist.length}
                 availableGenres={availableGenres}
                 hasSimilar={similarTracks.length > 0}
@@ -1026,7 +1042,7 @@ export default function Home() {
                   exploreSimilar={() => { exploreSimilar(); setMobileSheet("none"); }}
                   filters={filters} setFilters={setFilters}
                   similarCount={similarCount} setSimilarCount={setSimilarCount}
-                  seedAnalyzing={seedAnalyzing} seedError={seedError}
+                  seedAnalyzing={seedAnalyzing} seedError={seedError} subSeedsAnalyzing={subSeedsAnalyzing}
                   playlistCount={playlist.length}
                   availableGenres={availableGenres}
                   hasSimilar={similarTracks.length > 0}
