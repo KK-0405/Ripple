@@ -32,7 +32,7 @@ function matchScore(hitTitle: string, hitArtist: string, sugTitle: string, sugAr
 }
 
 type Suggestion = {
-  title: string; artist: string; bpm: number; key?: string; camelot?: string;
+  title: string; artist: string; bpm?: number; key?: string; camelot?: string;
   energy?: number; is_vocal?: boolean; genre_tags?: string[]; release_year?: number; reason?: string;
 };
 
