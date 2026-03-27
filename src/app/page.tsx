@@ -937,6 +937,7 @@ export default function Home() {
           flexShrink: 0,
           minHeight: 0,
         }}>
+          <div style={{ height: 56, flexShrink: 0 }} />
           <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
             <SeedPanel
               mainSeed={mainSeed} setMainSeed={setMainSeed}
