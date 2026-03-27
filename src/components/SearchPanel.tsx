@@ -22,6 +22,7 @@ type Props = {
   removeSubSeed: (id: string) => void;
   addToPlaylist: (track: Track) => void;
   addAllToPlaylist: (tracks: Track[]) => void;
+  removeAllFromPlaylist: (tracks: Track[]) => void;
   removeFromPlaylist: (id: string) => void;
   isInPlaylist: (track: Track) => boolean;
   filteredSimilarCount: number;
@@ -106,7 +107,7 @@ export default function SearchPanel({
   query, setQuery, search, loading, scrollKey, mode, displayTracks,
   mainSeed, subSeeds, setAsMainSeed, addToSubSeed,
   removeMainSeed, removeSubSeed,
-  addToPlaylist, addAllToPlaylist, removeFromPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
+  addToPlaylist, addAllToPlaylist, removeAllFromPlaylist, removeFromPlaylist, isInPlaylist, filteredSimilarCount, metadataLoading,
   onResetSimilar, onSearchMore, loadingMore, viewingPlaylist, togglePublic, onOpenMenu, onOpenPanel,
   historyEntries = [], onClearHistory, onLoadHistoryEntry, savedPlaylistsAll = [], hasSession, onLoadSavedPlaylist, onNavigate,
   showLogo = false, topBarLeft, topBarRight = 0,
@@ -601,24 +602,24 @@ export default function SearchPanel({
             {displayTracks.length > 0 && (() => {
               const notAdded = displayTracks.filter(t => !isInPlaylist(t));
               const allAdded = notAdded.length === 0;
+              const addedTracks = displayTracks.filter(t => isInPlaylist(t));
               return (
                 <button
-                  onClick={() => addAllToPlaylist(notAdded)}
-                  disabled={allAdded}
+                  onClick={() => allAdded ? removeAllFromPlaylist(addedTracks) : addAllToPlaylist(notAdded)}
                   style={{
                     padding: "3px 10px",
-                    background: allAdded ? C.s2 : C.accDim,
-                    border: `1px solid ${allAdded ? C.s3 : C.accBorder}`,
+                    background: allAdded ? C.redDim ?? C.s2 : C.accDim,
+                    border: `1px solid ${allAdded ? C.red : C.accBorder}`,
                     borderRadius: "6px",
-                    color: allAdded ? C.t3 : C.acc,
+                    color: allAdded ? C.red : C.acc,
                     fontSize: "12px", fontWeight: 600,
-                    cursor: allAdded ? "default" : "pointer",
+                    cursor: "pointer",
                     flexShrink: 0, whiteSpace: "nowrap",
                   }}
-                  onMouseEnter={(e) => { if (!allAdded) e.currentTarget.style.background = C.s2; }}
-                  onMouseLeave={(e) => { if (!allAdded) e.currentTarget.style.background = C.accDim; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
                 >
-                  {allAdded ? "✓ 全曲追加済み" : `${notAdded.length}曲をリストへ一括追加`}
+                  {allAdded ? `${addedTracks.length}曲をリストから一括削除` : `${notAdded.length}曲をリストへ一括追加`}
                 </button>
               );
             })()}

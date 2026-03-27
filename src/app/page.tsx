@@ -492,6 +492,7 @@ export default function Home() {
   const removeSubSeed = (id: string) => setSubSeeds(subSeeds.filter((t) => t.id !== id));
   const addToPlaylist = (track: Track) => { setPlaylist((prev) => prev.find((t) => t.id === track.id) ? prev : [...prev, track]); };
   const addAllToPlaylist = (tracks: Track[]) => { setPlaylist((prev) => { const ids = new Set(prev.map((t) => t.id)); return [...prev, ...tracks.filter((t) => !ids.has(t.id))]; }); };
+  const removeAllFromPlaylist = (tracks: Track[]) => { const ids = new Set(tracks.map((t) => t.id)); setPlaylist((prev) => prev.filter((t) => !ids.has(t.id))); };
   const removeFromPlaylist = (id: string) => setPlaylist(playlist.filter((t) => t.id !== id));
   const isInPlaylist = (track: Track) => !!playlist.find((t) => t.id === track.id);
 
@@ -906,7 +907,7 @@ export default function Home() {
         query={query} setQuery={setQuery} search={search} loading={loading} scrollKey={scrollKey}
         mode={mode} displayTracks={displayTracks} mainSeed={mainSeed}
         subSeeds={subSeeds} setAsMainSeed={setAsMainSeed} removeMainSeed={() => setMainSeed(null)} addToSubSeed={addToSubSeed} removeSubSeed={removeSubSeed}
-        addToPlaylist={addToPlaylist} addAllToPlaylist={addAllToPlaylist} removeFromPlaylist={removeFromPlaylist} isInPlaylist={isInPlaylist}
+        addToPlaylist={addToPlaylist} addAllToPlaylist={addAllToPlaylist} removeAllFromPlaylist={removeAllFromPlaylist} removeFromPlaylist={removeFromPlaylist} isInPlaylist={isInPlaylist}
         filteredSimilarCount={filteredSimilar.length} metadataLoading={metadataLoading}
         onResetSimilar={() => { setSimilarTracks([]); navigateTo("search"); setFilters(DEFAULT_FILTERS); setViewingPlaylist(null); }}
         onSearchMore={exploreSimilarMore}
