@@ -558,11 +558,59 @@ export default function SearchPanel({
             ✕ 閉じる
           </button>
         )}
-        {(mode === "similar" || mode === "playlist") && (
+        {mode === "similar" && (
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            {displayTracks.length > 0 && (() => {
+              const notAdded = displayTracks.filter(t => !isInPlaylist(t));
+              const allAdded = notAdded.length === 0;
+              return (
+                <button
+                  onClick={() => notAdded.forEach(t => addToPlaylist(t))}
+                  disabled={allAdded}
+                  style={{
+                    padding: "3px 10px",
+                    background: allAdded ? C.s2 : C.accDim,
+                    border: `1px solid ${allAdded ? C.s3 : C.accBorder}`,
+                    borderRadius: "6px",
+                    color: allAdded ? C.t3 : C.acc,
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    cursor: allAdded ? "default" : "pointer",
+                    flexShrink: 0,
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) => { if (!allAdded) e.currentTarget.style.background = C.s2; }}
+                  onMouseLeave={(e) => { if (!allAdded) e.currentTarget.style.background = C.accDim; }}
+                >
+                  {allAdded ? "✓ 全曲追加済" : `+ ${notAdded.length}曲を一括追加`}
+                </button>
+              );
+            })()}
+            <button
+              onClick={onResetSimilar}
+              style={{
+                padding: "3px 10px",
+                background: "none",
+                border: `1px solid ${C.s3}`,
+                borderRadius: "6px",
+                color: C.t3,
+                fontSize: "11px",
+                fontWeight: 500,
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.t2; e.currentTarget.style.color = C.t2; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.s3; e.currentTarget.style.color = C.t3; }}
+            >
+              ✕ 閉じる
+            </button>
+          </div>
+        )}
+        {mode === "playlist" && (
           <button
             onClick={onResetSimilar}
             style={{
-              marginLeft: mode === "playlist" ? "8px" : "auto",
+              marginLeft: "8px",
               padding: "3px 10px",
               background: "none",
               border: `1px solid ${C.s3}`,
