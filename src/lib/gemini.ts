@@ -98,7 +98,7 @@ Return ONLY a JSON array, same order as input. No explanation, no markdown.
 Songs:
 ${list}
 
-Each object: { bpm: integer, key: string, camelot: string, energy: float 0-1, is_vocal: boolean, genre_tags: string[], release_year: integer, confidence: "high"|"medium"|"low" }`;
+Each object: { bpm: integer, key: string (format: "X major" or "X minor", e.g. "E major", "F# minor"), camelot: string, energy: float 0-1, is_vocal: boolean, genre_tags: string[], release_year: integer, confidence: "high"|"medium"|"low" }`;
 
   try {
     const result = await geminiPost(apiKey, { contents: [{ parts: [{ text: prompt }] }] });
@@ -280,7 +280,7 @@ CRITICAL RULES (violations are not acceptable):
 OUTPUT FORMAT: A raw JSON array only. No markdown fences, no explanation, no text before or after the array.
 Array length must be ${count}. Start with [ and end with ].
 
-Each element: {"title":"...","artist":"...","bpm":128,"key":"F# minor","camelot":"2A","energy":0.7,"is_vocal":true,"genre_tags":["House","Deep House","Nu-Disco","Electronic"],"release_year":2005,"confidence":"high","reason":"..."}
+Each element: {"title":"...","artist":"...","bpm":128,"key":"F# minor" (always "X major" or "X minor" format),"camelot":"2A","energy":0.7,"is_vocal":true,"genre_tags":["House","Deep House","Nu-Disco","Electronic"],"release_year":2005,"confidence":"high","reason":"..."}
 
 The "genre_tags" field: provide 3–6 specific genre labels that accurately describe this track. Include the primary genre plus subgenres, scene labels, and mood/era descriptors (e.g. ["Techno","Minimal Techno","Detroit Techno","Dark","Rave"]). Be specific — avoid vague labels like "Electronic" or "Music" alone.
 
