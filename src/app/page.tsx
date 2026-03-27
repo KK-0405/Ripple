@@ -202,23 +202,28 @@ export default function Home() {
     setSimilarTracks([]);
     setMode("similar");
     setScrollKey((k) => k + 1);
+
+    // ストリーム中に seed/subSeeds が変わっても履歴保存が壊れないようスナップショット
+    const seedSnapshot = mainSeed;
+    const subSeedsSnapshot = [...subSeeds];
+    const collectedTracks: Track[] = [];
+
     try {
       const res = await fetch("/api/similar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           seed: {
-            title: mainSeed.name,
-            artist: mainSeed.artists[0]?.name ?? "",
-            genre_tags: mainSeed.genre_tags,
-            bpm: mainSeed.bpm,
-            camelot: mainSeed.camelot,
-            energy: mainSeed.energy,
-
-            is_vocal: mainSeed.is_vocal,
-            release_year: mainSeed.release_year,
+            title: seedSnapshot.name,
+            artist: seedSnapshot.artists[0]?.name ?? "",
+            genre_tags: seedSnapshot.genre_tags,
+            bpm: seedSnapshot.bpm,
+            camelot: seedSnapshot.camelot,
+            energy: seedSnapshot.energy,
+            is_vocal: seedSnapshot.is_vocal,
+            release_year: seedSnapshot.release_year,
           },
-          subSeeds: subSeeds.map((t) => ({
+          subSeeds: subSeedsSnapshot.map((t) => ({
             title: t.name,
             artist: t.artists[0]?.name ?? "",
             genre_tags: t.genre_tags,
@@ -228,23 +233,55 @@ export default function Home() {
           instruction: searchInstruction.trim() || undefined,
         }),
       });
-      const data = await res.json();
-      setSimilarTracks(data.tracks ?? []);
-      if (data._debug) setSeedError(String(data._debug));
-      if (data.tracks?.length > 0) {
-        setHistory(pushHistory({
-          id: mainSeed.id,
-          savedAt: Date.now(),
-          mainSeed,
-          subSeeds,
-          similarTracks: data.tracks,
-        }));
+
+      if (!res.body) throw new Error("No response body");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const msg = JSON.parse(line) as { type: string; track?: Track; message?: string };
+            if (msg.type === "start") {
+              // Gemini 完了 → ローディング解除してリスト表示開始
+              setLoading(false);
+            } else if (msg.type === "track" && msg.track) {
+              collectedTracks.push(msg.track);
+              setSimilarTracks((prev) => [...prev, msg.track!]);
+            } else if (msg.type === "done") {
+              if (collectedTracks.length > 0) {
+                setHistory(pushHistory({
+                  id: seedSnapshot.id,
+                  savedAt: Date.now(),
+                  mainSeed: seedSnapshot,
+                  subSeeds: subSeedsSnapshot,
+                  similarTracks: collectedTracks,
+                }));
+              }
+              break outer;
+            } else if (msg.type === "error") {
+              setSeedError(msg.message ?? "Unknown error");
+              break outer;
+            }
+          } catch { /* JSON parse error - skip malformed line */ }
+        }
       }
     } catch (e) {
       setSimilarTracks([]);
       setSeedError(String(e));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const exploreSimilarMore = async () => {
@@ -263,7 +300,6 @@ export default function Home() {
             bpm: mainSeed.bpm,
             camelot: mainSeed.camelot,
             energy: mainSeed.energy,
-
             is_vocal: mainSeed.is_vocal,
             release_year: mainSeed.release_year,
           },
@@ -278,12 +314,41 @@ export default function Home() {
           instruction: searchInstruction.trim() || undefined,
         }),
       });
-      const data = await res.json();
-      setSimilarTracks((prev) => [...prev, ...(data.tracks ?? [])]);
+
+      if (!res.body) throw new Error("No response body");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const msg = JSON.parse(line) as { type: string; track?: Track; message?: string };
+            if (msg.type === "track" && msg.track) {
+              setSimilarTracks((prev) => [...prev, msg.track!]);
+            } else if (msg.type === "done") {
+              break outer;
+            } else if (msg.type === "error") {
+              setSeedError(msg.message ?? "Unknown error");
+              break outer;
+            }
+          } catch { /* skip malformed line */ }
+        }
+      }
     } catch (e) {
       setSeedError(String(e));
+    } finally {
+      setLoadingMore(false);
     }
-    setLoadingMore(false);
   };
 
   const authHeaders = () => ({
