@@ -608,10 +608,10 @@ export default function SearchPanel({
                   onClick={() => allAdded ? removeAllFromPlaylist(addedTracks) : addAllToPlaylist(notAdded)}
                   style={{
                     padding: "3px 10px",
-                    background: allAdded ? C.redDim ?? C.s2 : C.accDim,
-                    border: `1px solid ${allAdded ? C.red : C.accBorder}`,
+                    background: C.accDim,
+                    border: `1px solid ${C.accBorder}`,
                     borderRadius: "6px",
-                    color: allAdded ? C.red : C.acc,
+                    color: C.acc,
                     fontSize: "12px", fontWeight: 600,
                     cursor: "pointer",
                     flexShrink: 0, whiteSpace: "nowrap",
