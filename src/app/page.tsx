@@ -501,8 +501,6 @@ export default function Home() {
   useEffect(() => {
     if (similarTracks.length > 0) {
       setFilters((f) => ({ ...f, selectedGenres: [] }));
-      setChatFilterIds(null);
-      setChatFilterMessage("");
     }
   }, [similarTracks]);
 
