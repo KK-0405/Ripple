@@ -1289,7 +1289,10 @@ export default function SearchPanel({
       )}
 
       {/* トラック詳細モーダル */}
-      {selectedTrack && (
+      {selectedTrack && (() => {
+        // メインシードが解析更新された場合は最新データを使用
+        const detailTrack = mainSeed?.id === selectedTrack.id ? mainSeed : selectedTrack;
+        return (
         <div
           onClick={() => { setSelectedTrack(null); setYtData({ loading: false }); }}
           style={{
@@ -1316,29 +1319,29 @@ export default function SearchPanel({
             {/* ヘッダー：アルバムアート + 基本情報 */}
             <div style={{ display: "flex", gap: "14px", padding: "20px 20px 16px", alignItems: "flex-start" }}>
               <img
-                src={selectedTrack.album.images[0]?.url}
-                alt={selectedTrack.album.name}
+                src={detailTrack.album.images[0]?.url}
+                alt={detailTrack.album.name}
                 style={{ width: 96, height: 96, borderRadius: "10px", flexShrink: 0, objectFit: "cover", boxShadow: "0 4px 16px rgba(0,0,0,0.2)" }}
               />
               <div style={{ flex: 1, minWidth: 0, paddingTop: "2px" }}>
                 <div style={{ fontSize: "16px", fontWeight: 700, color: C.t1, lineHeight: 1.3, marginBottom: "5px" }}>
-                  {selectedTrack.name}
+                  {detailTrack.name}
                 </div>
                 <div style={{ fontSize: "14px", color: C.t2, marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {selectedTrack.artists.map((a) => a.name).join(", ")}
+                  {detailTrack.artists.map((a) => a.name).join(", ")}
                 </div>
                 <div style={{ fontSize: "12px", color: C.t3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {selectedTrack.album.name}
-                  {selectedTrack.release_year && ` · ${selectedTrack.release_year}`}
+                  {detailTrack.album.name}
+                  {detailTrack.release_year && ` · ${detailTrack.release_year}`}
                 </div>
-                {selectedTrack.is_vocal !== undefined && (
+                {detailTrack.is_vocal !== undefined && (
                   <div style={{ marginTop: "6px" }}>
                     <span style={{
                       fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "20px",
-                      background: selectedTrack.is_vocal ? C.purpleDim : C.s2,
-                      color: selectedTrack.is_vocal ? C.purple : C.t3,
+                      background: detailTrack.is_vocal ? C.purpleDim : C.s2,
+                      color: detailTrack.is_vocal ? C.purple : C.t3,
                     }}>
-                      {selectedTrack.is_vocal ? "ボーカルあり" : "インスト"}
+                      {detailTrack.is_vocal ? "ボーカルあり" : "インスト"}
                     </span>
                   </div>
                 )}
@@ -1358,38 +1361,38 @@ export default function SearchPanel({
               <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
                 <div style={{ background: C.s1, borderRadius: "7px", padding: "5px 10px", display: "flex", alignItems: "center", gap: "6px" }}>
                   <span style={{ fontSize: "10px", color: C.t3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>BPM</span>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: selectedTrack.bpm ? C.t1 : C.t3 }}>{selectedTrack.bpm || "—"}</span>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: detailTrack.bpm ? C.t1 : C.t3 }}>{detailTrack.bpm || "—"}</span>
                 </div>
                 <div style={{ background: C.s1, borderRadius: "7px", padding: "5px 10px", display: "flex", alignItems: "center", gap: "6px" }}>
                   <span style={{ fontSize: "10px", color: C.t3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Key</span>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: selectedTrack.camelot ? C.blue : C.t3 }}>{selectedTrack.camelot || "—"}</span>
-                  {selectedTrack.key && <span style={{ fontSize: "11px", color: C.t3 }}>{selectedTrack.key}</span>}
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: detailTrack.camelot ? C.blue : C.t3 }}>{detailTrack.camelot || "—"}</span>
+                  {detailTrack.key && <span style={{ fontSize: "11px", color: C.t3 }}>{detailTrack.key}</span>}
                 </div>
                 <div style={{ background: C.s1, borderRadius: "7px", padding: "5px 10px", display: "flex", alignItems: "center", gap: "6px" }}>
                   <span style={{ fontSize: "10px", color: C.t3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Energy</span>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: selectedTrack.energy !== undefined ? C.acc : C.t3 }}>
-                    {selectedTrack.energy !== undefined ? `${Math.round(selectedTrack.energy * 100)}%` : "—"}
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: detailTrack.energy !== undefined ? C.acc : C.t3 }}>
+                    {detailTrack.energy !== undefined ? `${Math.round(detailTrack.energy * 100)}%` : "—"}
                   </span>
                 </div>
               </div>
 
               {/* エネルギー バー */}
-              {selectedTrack.energy !== undefined && (
+              {detailTrack.energy !== undefined && (
                 <div style={{ marginBottom: "14px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
                     <span style={{ fontSize: "12px", color: C.t3 }}>エネルギー</span>
-                    <span style={{ fontSize: "12px", color: C.t2, fontWeight: 600 }}>{Math.round(selectedTrack.energy * 100)}%</span>
+                    <span style={{ fontSize: "12px", color: C.t2, fontWeight: 600 }}>{Math.round(detailTrack.energy * 100)}%</span>
                   </div>
                   <div style={{ height: "4px", borderRadius: "2px", background: C.s2, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${selectedTrack.energy * 100}%`, borderRadius: "2px", background: C.acc }} />
+                    <div style={{ height: "100%", width: `${detailTrack.energy * 100}%`, borderRadius: "2px", background: C.acc }} />
                   </div>
                 </div>
               )}
 
               {/* ジャンルタグ */}
-              {selectedTrack.genre_tags && selectedTrack.genre_tags.length > 0 && (
+              {detailTrack.genre_tags && detailTrack.genre_tags.length > 0 && (
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px" }}>
-                  {selectedTrack.genre_tags.map((g, i) => (
+                  {detailTrack.genre_tags.map((g, i) => (
                     <span key={i} style={{
                       padding: "3px 10px", borderRadius: "20px",
                       background: C.s2, color: C.t1,
@@ -1400,21 +1403,21 @@ export default function SearchPanel({
               )}
 
               {/* 類似の理由・曲の紹介 */}
-              {selectedTrack.reason && (
+              {detailTrack.reason && (
                 <div style={{
                   background: C.s1, borderRadius: "10px",
                   padding: "12px 14px", marginBottom: "4px",
                   borderLeft: `3px solid ${C.acc}`,
                 }}>
                   <div style={{ fontSize: "11px", fontWeight: 600, color: C.t3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>選曲の理由</div>
-                  <div style={{ fontSize: "14px", color: C.t1, lineHeight: 1.65 }}>{selectedTrack.reason}</div>
+                  <div style={{ fontSize: "14px", color: C.t1, lineHeight: 1.65 }}>{detailTrack.reason}</div>
                 </div>
               )}
 
               {/* 未解析メッセージ */}
-              {selectedTrack.energy === undefined && !selectedTrack.reason && (
+              {detailTrack.energy === undefined && !detailTrack.reason && (
                 <div style={{ fontSize: "12px", color: C.t3, textAlign: "center", padding: "6px 0", fontStyle: "italic" }}>
-                  {mainSeed?.id === selectedTrack.id
+                  {mainSeed?.id === detailTrack.id
                     ? "✦ メタデータを解析中..."
                     : "✦ メインシードに設定するとメタデータを自動解析"}
                 </div>
@@ -1427,17 +1430,17 @@ export default function SearchPanel({
                   onClick={() => togglePreview(selectedTrack)}
                   style={{
                     padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
-                    background: playingId === selectedTrack.id ? C.acc : C.s1,
-                    border: `1px solid ${playingId === selectedTrack.id ? C.acc : C.s2}`,
-                    color: playingId === selectedTrack.id ? "#fff" : C.t2,
+                    background: playingId === detailTrack.id ? C.acc : C.s1,
+                    border: `1px solid ${playingId === detailTrack.id ? C.acc : C.s2}`,
+                    color: playingId === detailTrack.id ? "#fff" : C.t2,
                     cursor: "pointer", flexShrink: 0,
                   }}
                 >
-                  {playingId === selectedTrack.id ? "⏸ 停止" : "▶ プレビュー"}
+                  {playingId === detailTrack.id ? "⏸ 停止" : "▶ プレビュー"}
                 </button>
               {(mode === "search" || mode === "playlist") && (() => {
-                const isMain = mainSeed?.id === selectedTrack.id;
-                const inSub = !!subSeeds.find((t) => t.id === selectedTrack.id);
+                const isMain = mainSeed?.id === detailTrack.id;
+                const inSub = !!subSeeds.find((t) => t.id === detailTrack.id);
                 return (
                   <>
                     <button
@@ -1453,7 +1456,7 @@ export default function SearchPanel({
                       {isMain ? "✓ メイン" : "メイン"}
                     </button>
                     <button
-                      onClick={() => { inSub ? removeSubSeed(selectedTrack.id) : addToSubSeed(selectedTrack); }}
+                      onClick={() => { inSub ? removeSubSeed(detailTrack.id) : addToSubSeed(selectedTrack); }}
                       style={{
                         padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
                         background: inSub ? C.greenDim : C.s1,
@@ -1471,7 +1474,7 @@ export default function SearchPanel({
                 const inPl = isInPlaylist(selectedTrack);
                 return (
                   <button
-                    onClick={() => { inPl ? removeFromPlaylist(selectedTrack.id) : addToPlaylist(selectedTrack); }}
+                    onClick={() => { inPl ? removeFromPlaylist(detailTrack.id) : addToPlaylist(selectedTrack); }}
                     style={{
                       padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
                       background: inPl ? C.accDim : C.s1,
@@ -1524,7 +1527,8 @@ export default function SearchPanel({
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
