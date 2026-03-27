@@ -538,12 +538,13 @@ export default function SearchPanel({
 
       {/* モードバー */}
       <div style={{
-        display: "flex", alignItems: "center", gap: "8px",
+        display: "flex", alignItems: "center", gap: "6px",
         padding: isMobile ? "7px 12px" : "7px 20px",
         borderBottom: `1px solid ${C.sep}`,
         background: C.s1,
+        overflow: "hidden",
       }}>
-        <span style={{ fontSize: "11px", color: C.t3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        <span style={{ fontSize: "11px", color: C.t3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0 }}>
           {mode === "search" ? "検索結果"
             : mode === "playlist" ? `${viewingPlaylist?.name ?? "プレイリスト"} — ${displayTracks.length}曲`
             : mode === "history" ? "履歴"
@@ -615,7 +616,7 @@ export default function SearchPanel({
                   onMouseEnter={(e) => { if (!allAdded) e.currentTarget.style.background = C.s2; }}
                   onMouseLeave={(e) => { if (!allAdded) e.currentTarget.style.background = C.accDim; }}
                 >
-                  {allAdded ? "✓ 全曲追加済" : `+ ${notAdded.length}曲を一括追加`}
+                  {allAdded ? "✓ 全追加済" : isMobile ? `+ ${notAdded.length}曲追加` : `+ ${notAdded.length}曲を一括追加`}
                 </button>
               );
             })()}
