@@ -536,6 +536,9 @@ export default function SearchPanel({
         </div>
       </div>
 
+      {/* 検索バーfixed時のスペーサー */}
+      {topBarLeft !== undefined && <div style={{ height: "calc(56px + env(safe-area-inset-top, 0px))", flexShrink: 0 }} />}
+
       {/* モードバー */}
       <div style={{
         display: "flex", alignItems: "center", gap: "6px",
@@ -660,9 +663,6 @@ export default function SearchPanel({
           </button>
         )}
       </div>
-
-      {/* 検索バーfixed時のスペーサー */}
-      {topBarLeft !== undefined && <div style={{ height: "calc(56px + env(safe-area-inset-top, 0px))", flexShrink: 0 }} />}
 
       {/* トラックリスト */}
       <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: isMobile ? "6px 8px" : "8px 12px", background: C.bg }}>
