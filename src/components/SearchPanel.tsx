@@ -979,8 +979,8 @@ export default function SearchPanel({
                 {/* モバイル: アクションボタン (トラック情報の下) */}
                 {isMobile && (mode === "search" || mode === "playlist") && (
                   <div style={{ display: "flex", gap: "6px", marginTop: "7px" }} onClick={(e) => e.stopPropagation()}>
-                    <button onClick={(e) => { e.stopPropagation(); isMain ? removeMainSeed() : setAsMainSeed(track); }} style={{ flex: 1, padding: "5px 0", background: isMain ? C.acc : C.s1, border: `1px solid ${isMain ? C.acc : C.s2}`, borderRadius: "8px", color: isMain ? C.bg : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
-                      {isMain ? "★ メイン" : "メイン"}
+                    <button onClick={(e) => { e.stopPropagation(); isMain ? removeMainSeed() : setAsMainSeed(track); }} style={{ flex: 1, padding: "5px 0", background: isMain ? C.accDim : C.s1, border: `1px solid ${isMain ? C.accBorder : C.s2}`, borderRadius: "8px", color: isMain ? C.acc : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
+                      {isMain ? "✓ メイン" : "メイン"}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); inSubSeed ? removeSubSeed(track.id) : addToSubSeed(track); }} style={{ flex: 1, padding: "5px 0", background: inSubSeed ? C.greenDim : C.s1, border: `1px solid ${inSubSeed ? C.green : C.s2}`, borderRadius: "8px", color: inSubSeed ? C.greenText : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
                       {inSubSeed ? "✓ サブ" : "サブ"}
@@ -992,8 +992,8 @@ export default function SearchPanel({
                 )}
                 {isMobile && mode === "similar" && (
                   <div style={{ display: "flex", gap: "6px", marginTop: "7px" }} onClick={(e) => e.stopPropagation()}>
-                    <button onClick={(e) => { e.stopPropagation(); isMain ? removeMainSeed() : setAsMainSeed(track); }} style={{ flex: 1, padding: "5px 0", background: isMain ? C.acc : C.s1, border: `1px solid ${isMain ? C.acc : C.s2}`, borderRadius: "8px", color: isMain ? C.bg : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
-                      {isMain ? "★ メイン" : "メイン"}
+                    <button onClick={(e) => { e.stopPropagation(); isMain ? removeMainSeed() : setAsMainSeed(track); }} style={{ flex: 1, padding: "5px 0", background: isMain ? C.accDim : C.s1, border: `1px solid ${isMain ? C.accBorder : C.s2}`, borderRadius: "8px", color: isMain ? C.acc : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
+                      {isMain ? "✓ メイン" : "メイン"}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); inSubSeed ? removeSubSeed(track.id) : addToSubSeed(track); }} style={{ flex: 1, padding: "5px 0", background: inSubSeed ? C.greenDim : C.s1, border: `1px solid ${inSubSeed ? C.green : C.s2}`, borderRadius: "8px", color: inSubSeed ? C.greenText : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
                       {inSubSeed ? "✓ サブ" : "サブ"}
@@ -1008,8 +1008,8 @@ export default function SearchPanel({
               {/* アクション (PC: 右端、モバイル: トラック情報の下に横並びで表示) */}
               {!isMobile && (mode === "search" || mode === "playlist") && (
                 <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                  <button onClick={(e) => { e.stopPropagation(); isMain ? removeMainSeed() : setAsMainSeed(track); }} style={{ padding: "5px 10px", background: isMain ? C.acc : C.s1, border: `1px solid ${isMain ? C.acc : C.s2}`, borderRadius: "8px", color: isMain ? C.bg : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
-                    {isMain ? "★ メイン" : "メイン"}
+                  <button onClick={(e) => { e.stopPropagation(); isMain ? removeMainSeed() : setAsMainSeed(track); }} style={{ padding: "5px 10px", background: isMain ? C.accDim : C.s1, border: `1px solid ${isMain ? C.accBorder : C.s2}`, borderRadius: "8px", color: isMain ? C.acc : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    {isMain ? "✓ メイン" : "メイン"}
                   </button>
                   <button onClick={(e) => { e.stopPropagation(); inSubSeed ? removeSubSeed(track.id) : addToSubSeed(track); }} style={{ padding: "5px 10px", background: inSubSeed ? C.greenDim : C.s1, border: `1px solid ${inSubSeed ? C.green : C.s2}`, borderRadius: "8px", color: inSubSeed ? C.greenText : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
                     {inSubSeed ? "✓ サブ" : "サブ"}
@@ -1021,8 +1021,8 @@ export default function SearchPanel({
               )}
               {!isMobile && mode === "similar" && (
                 <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                  <button onClick={(e) => { e.stopPropagation(); isMain ? removeMainSeed() : setAsMainSeed(track); }} style={{ padding: "5px 10px", background: isMain ? C.acc : C.s1, border: `1px solid ${isMain ? C.acc : C.s2}`, borderRadius: "8px", color: isMain ? C.bg : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
-                    {isMain ? "★ メイン" : "メイン"}
+                  <button onClick={(e) => { e.stopPropagation(); isMain ? removeMainSeed() : setAsMainSeed(track); }} style={{ padding: "5px 10px", background: isMain ? C.accDim : C.s1, border: `1px solid ${isMain ? C.accBorder : C.s2}`, borderRadius: "8px", color: isMain ? C.acc : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    {isMain ? "✓ メイン" : "メイン"}
                   </button>
                   <button onClick={(e) => { e.stopPropagation(); inSubSeed ? removeSubSeed(track.id) : addToSubSeed(track); }} style={{ padding: "5px 10px", background: inSubSeed ? C.greenDim : C.s1, border: `1px solid ${inSubSeed ? C.green : C.s2}`, borderRadius: "8px", color: inSubSeed ? C.greenText : C.t2, fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
                     {inSubSeed ? "✓ サブ" : "サブ"}
@@ -1414,7 +1414,9 @@ export default function SearchPanel({
               {/* 未解析メッセージ */}
               {selectedTrack.energy === undefined && !selectedTrack.reason && (
                 <div style={{ fontSize: "12px", color: C.t3, textAlign: "center", padding: "6px 0", fontStyle: "italic" }}>
-                  ✦ Seed に設定するとメタデータを自動解析
+                  {mainSeed?.id === selectedTrack.id
+                    ? "✦ メタデータを解析中..."
+                    : "✦ メインシードに設定するとメタデータを自動解析"}
                 </div>
               )}
             </div>
@@ -1442,13 +1444,13 @@ export default function SearchPanel({
                       onClick={() => { isMain ? removeMainSeed() : setAsMainSeed(selectedTrack); }}
                       style={{
                         padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
-                        background: isMain ? C.acc : C.s1,
-                        border: `1px solid ${isMain ? C.acc : C.s2}`,
-                        color: isMain ? "#fff" : C.t2,
+                        background: isMain ? C.accDim : C.s1,
+                        border: `1px solid ${isMain ? C.accBorder : C.s2}`,
+                        color: isMain ? C.acc : C.t2,
                         cursor: "pointer",
                       }}
                     >
-                      {isMain ? "★ メイン" : "メイン"}
+                      {isMain ? "✓ メイン" : "メイン"}
                     </button>
                     <button
                       onClick={() => { inSub ? removeSubSeed(selectedTrack.id) : addToSubSeed(selectedTrack); }}
