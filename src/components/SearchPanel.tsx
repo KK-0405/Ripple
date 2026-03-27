@@ -637,6 +637,34 @@ export default function SearchPanel({
         )}
       </div>
 
+      {/* 一括追加ボタン（類似曲モード・スクロール外で常時表示） */}
+      {mode === "similar" && displayTracks.length > 0 && (() => {
+        const notAdded = displayTracks.filter(t => !isInPlaylist(t));
+        const allAdded = notAdded.length === 0;
+        return (
+          <div style={{ padding: "8px 12px 4px", flexShrink: 0, background: C.bg }}>
+            <button
+              onClick={() => notAdded.forEach(t => addToPlaylist(t))}
+              disabled={allAdded}
+              style={{
+                width: "100%", padding: "10px",
+                background: allAdded ? C.s2 : C.accDim,
+                border: `1px solid ${allAdded ? C.s3 : C.accBorder}`,
+                borderRadius: "10px",
+                color: allAdded ? C.t3 : C.acc,
+                fontSize: "13px", fontWeight: 700,
+                cursor: allAdded ? "default" : "pointer",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { if (!allAdded) e.currentTarget.style.background = C.s2; }}
+              onMouseLeave={(e) => { if (!allAdded) e.currentTarget.style.background = C.accDim; }}
+            >
+              {allAdded ? "✓ 全曲追加済み" : `+ ${notAdded.length}曲をまとめてリストに追加`}
+            </button>
+          </div>
+        );
+      })()}
+
       {/* 検索バーfixed時のスペーサー */}
       {topBarLeft !== undefined && <div style={{ height: "calc(56px + env(safe-area-inset-top, 0px))", flexShrink: 0 }} />}
 
@@ -822,34 +850,6 @@ export default function SearchPanel({
             )}
           </div>
         )}
-
-        {/* 一括追加ボタン（類似曲モード） */}
-        {mode === "similar" && displayTracks.length > 0 && (() => {
-          const notAdded = displayTracks.filter(t => !isInPlaylist(t));
-          const allAdded = notAdded.length === 0;
-          return (
-            <div style={{ padding: isMobile ? "6px 4px 4px" : "6px 4px 4px" }}>
-              <button
-                onClick={() => notAdded.forEach(t => addToPlaylist(t))}
-                disabled={allAdded}
-                style={{
-                  width: "100%", padding: "10px",
-                  background: allAdded ? C.s2 : C.accDim,
-                  border: `1px solid ${allAdded ? C.s3 : C.accBorder}`,
-                  borderRadius: "10px",
-                  color: allAdded ? C.t3 : C.acc,
-                  fontSize: "13px", fontWeight: 700,
-                  cursor: allAdded ? "default" : "pointer",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={(e) => { if (!allAdded) e.currentTarget.style.background = C.s2; }}
-                onMouseLeave={(e) => { if (!allAdded) e.currentTarget.style.background = C.accDim; }}
-              >
-                {allAdded ? "✓ 全曲追加済み" : `+ ${notAdded.length}曲をまとめてリストに追加`}
-              </button>
-            </div>
-          );
-        })()}
 
         {displayTracks.map((track) => {
           const badges = mode === "similar" ? getMatchBadges(track, mainSeed, C) : [];
