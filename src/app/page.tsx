@@ -551,7 +551,7 @@ export default function Home() {
 
   return (
     <div
-      style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: isMobile ? "100dvh" : "100vh", background: C.bg, overflow: "hidden" }}
+      style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: isMobile ? "100dvh" : "100vh", background: C.bg, overflow: "hidden", paddingBottom: isMobile ? "env(safe-area-inset-bottom, 0px)" : undefined }}
       onTouchStart={isMobile ? handleTouchStart : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
