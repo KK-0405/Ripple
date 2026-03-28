@@ -45,3 +45,23 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# local work files
+/screenshots/
+/skills/
+make_portfolio.py
+make_portfolio2.py
+make_portfolio_v3.mjs
+portfolio_ripple.pptx
+portfolio_ripple_v3.pptx
+take_detail.mjs
+take_detail2.mjs
+take_mj_final.mjs
+take_mj_screenshots.mjs
+take_mj_similar.mjs
+take_mj_v3.mjs
+take_screenshots.mjs
+take_screenshots2.mjs
+take_screenshots3.mjs
+take_screenshots4.mjs
+take_screenshots5.mjs
