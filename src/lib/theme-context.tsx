@@ -134,10 +134,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.body.style.background = C.bg;
   }, [C.bg]);
 
-  // ステータスバースタイルをテーマに同期（iOS PWA用）
+  // ステータスバー・theme-colorをテーマに同期（iOS PWA用）
   useEffect(() => {
-    const m = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if (m) m.setAttribute('content', isDark ? 'black' : 'default');
+    const statusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (statusMeta) statusMeta.setAttribute('content', isDark ? 'black' : 'default');
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.setAttribute('content', isDark ? '#0F0F0F' : '#FFFFFF');
   }, [isDark]);
 
   return (
