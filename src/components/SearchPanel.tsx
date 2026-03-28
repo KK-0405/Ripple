@@ -1530,110 +1530,115 @@ export default function SearchPanel({
             </div>
 
             {/* アクションボタン */}
-            <div style={{ padding: "12px 20px 18px", borderTop: `1px solid ${C.sep}`, display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-              <button
-                  onClick={() => togglePreview(selectedTrack)}
-                  style={{
-                    padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
-                    background: playingId === detailTrack.id ? C.acc : C.s1,
-                    border: `1px solid ${playingId === detailTrack.id ? C.acc : C.s2}`,
-                    color: playingId === detailTrack.id ? "#fff" : C.t2,
-                    cursor: "pointer", flexShrink: 0,
-                  }}
-                >
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                    {playingId === detailTrack.id
-                      ? <><svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><rect x="0" y="0" width="3.5" height="12" rx="1"/><rect x="6.5" y="0" width="3.5" height="12" rx="1"/></svg>停止</>
-                      : <><svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><path d="M0 0L10 6L0 12V0Z"/></svg>プレビュー</>
-                    }
-                  </span>
-                </button>
-              {(mode === "search" || mode === "playlist") && (() => {
-                const isMain = mainSeed?.id === detailTrack.id;
-                const inSub = !!subSeeds.find((t) => t.id === detailTrack.id);
-                return (
-                  <>
-                    <button
-                      onClick={() => { isMain ? removeMainSeed() : setAsMainSeed(selectedTrack); }}
-                      style={{
-                        padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
-                        background: isMain ? C.accDim : C.s1,
-                        border: `1px solid ${isMain ? C.accBorder : C.s2}`,
-                        color: isMain ? C.acc : C.t2,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {isMain ? "✓ メイン" : "メイン"}
-                    </button>
-                    <button
-                      onClick={() => { inSub ? removeSubSeed(detailTrack.id) : addToSubSeed(selectedTrack); }}
-                      style={{
-                        padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
-                        background: inSub ? C.greenDim : C.s1,
-                        border: `1px solid ${inSub ? C.green : C.s2}`,
-                        color: inSub ? "#1b7a34" : C.t2,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {inSub ? "✓ サブ" : "サブ"}
-                    </button>
-                  </>
-                );
-              })()}
-              {(() => {
-                const inPl = isInPlaylist(selectedTrack);
-                return (
-                  <button
-                    onClick={() => { inPl ? removeFromPlaylist(detailTrack.id) : addToPlaylist(selectedTrack); }}
+            <div style={{ borderTop: `1px solid ${C.sep}` }}>
+              {/* 1行目: 操作ボタン */}
+              <div style={{ padding: "12px 20px 10px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                <button
+                    onClick={() => togglePreview(selectedTrack)}
                     style={{
                       padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
-                      background: inPl ? C.accDim : C.s1,
-                      border: `1px solid ${inPl ? C.acc : C.s2}`,
-                      color: inPl ? C.acc : C.t2,
-                      cursor: "pointer",
+                      background: playingId === detailTrack.id ? C.acc : C.s1,
+                      border: `1px solid ${playingId === detailTrack.id ? C.acc : C.s2}`,
+                      color: playingId === detailTrack.id ? "#fff" : C.t2,
+                      cursor: "pointer", flexShrink: 0,
                     }}
                   >
-                    {inPl ? "✓ リスト" : "リスト"}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                      {playingId === detailTrack.id
+                        ? <><svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><rect x="0" y="0" width="3.5" height="12" rx="1"/><rect x="6.5" y="0" width="3.5" height="12" rx="1"/></svg>停止</>
+                        : <><svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><path d="M0 0L10 6L0 12V0Z"/></svg>プレビュー</>
+                      }
+                    </span>
                   </button>
-                );
-              })()}
-              {/* YouTube リンク (右端) */}
-              {ytData.loading ? (
-                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "5px" }}>
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" style={{ animation: "ripple-spin 1s linear infinite" }}>
-                    <circle cx="10" cy="10" r="2.2" fill={C.t3} opacity="0.9" />
-                    <circle cx="10" cy="10" r="5" stroke={C.t3} strokeWidth="1.6" strokeLinecap="round" strokeDasharray="23.6 7.8" opacity="0.6" fill="none" />
-                    <circle cx="10" cy="10" r="8" stroke={C.t3} strokeWidth="1.1" strokeLinecap="round" strokeDasharray="37.7 12.6" opacity="0.35" fill="none" />
-                  </svg>
-                  <span style={{ fontSize: "12px", color: C.t3 }}>取得中...</span>
-                </div>
-              ) : (ytData.videoUrl || ytData.searchUrl) ? (
-                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                  {ytData.viewCount && (
-                    <span style={{ fontSize: "12px", color: C.t3, whiteSpace: "nowrap" }}>{ytData.viewCount}</span>
-                  )}
-                  <a
-                    href={ytData.videoUrl ?? ytData.searchUrl}
-                    target="_blank" rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: "5px",
-                      padding: "7px 12px", borderRadius: "8px",
-                      background: "rgba(255,0,0,0.07)",
-                      border: "1px solid rgba(255,0,0,0.18)",
-                      color: "#cc0000",
-                      fontSize: "13px", fontWeight: 600,
-                      textDecoration: "none",
-                    }}
-                  >
-                    <svg width="13" height="9" viewBox="0 0 24 17" fill="#cc0000">
-                      <path d="M23.5 2.5S23.2.9 22.5.2C21.6-.8 20.6-.8 20.1-.8 16.8-1 12-1 12-1s-4.8 0-8.1.2C3.4-.8 2.4-.8 1.5.2.8.9.5 2.5.5 2.5S.2 4.4.2 6.3v1.8C.2 10 .5 11.9.5 11.9S.8 13.5 1.5 14.2c.9 1 2.1.9 2.6 1C5.8 15.4 12 15.4 12 15.4s4.8 0 8.1-.3c.5 0 1.7-.1 2.6-1 .7-.7 1-2.3 1-2.3s.3-1.9.3-3.8V6.3c0-1.9-.3-3.8-.3-3.8z"/>
-                      <path d="M9.5 11V4.5l6.5 3.3-6.5 3.2z" fill="#fff"/>
+                {(mode === "search" || mode === "playlist") && (() => {
+                  const isMain = mainSeed?.id === detailTrack.id;
+                  const inSub = !!subSeeds.find((t) => t.id === detailTrack.id);
+                  return (
+                    <>
+                      <button
+                        onClick={() => { isMain ? removeMainSeed() : setAsMainSeed(selectedTrack); }}
+                        style={{
+                          padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
+                          background: isMain ? C.accDim : C.s1,
+                          border: `1px solid ${isMain ? C.accBorder : C.s2}`,
+                          color: isMain ? C.acc : C.t2,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {isMain ? "✓ メイン" : "メイン"}
+                      </button>
+                      <button
+                        onClick={() => { inSub ? removeSubSeed(detailTrack.id) : addToSubSeed(selectedTrack); }}
+                        style={{
+                          padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
+                          background: inSub ? C.greenDim : C.s1,
+                          border: `1px solid ${inSub ? C.green : C.s2}`,
+                          color: inSub ? "#1b7a34" : C.t2,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {inSub ? "✓ サブ" : "サブ"}
+                      </button>
+                    </>
+                  );
+                })()}
+                {(() => {
+                  const inPl = isInPlaylist(selectedTrack);
+                  return (
+                    <button
+                      onClick={() => { inPl ? removeFromPlaylist(detailTrack.id) : addToPlaylist(selectedTrack); }}
+                      style={{
+                        padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
+                        background: inPl ? C.accDim : C.s1,
+                        border: `1px solid ${inPl ? C.acc : C.s2}`,
+                        color: inPl ? C.acc : C.t2,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {inPl ? "✓ リスト" : "リスト"}
+                    </button>
+                  );
+                })()}
+              </div>
+              {/* 2行目: YouTube (常に固定高さでレイアウトシフトなし) */}
+              <div style={{ padding: "0 20px 16px", height: "38px", display: "flex", alignItems: "center", gap: "8px" }}>
+                {ytData.loading ? (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 20 20" fill="none" style={{ animation: "ripple-spin 1s linear infinite", flexShrink: 0 }}>
+                      <circle cx="10" cy="10" r="2.2" fill={C.t3} opacity="0.9" />
+                      <circle cx="10" cy="10" r="5" stroke={C.t3} strokeWidth="1.6" strokeLinecap="round" strokeDasharray="23.6 7.8" opacity="0.6" fill="none" />
+                      <circle cx="10" cy="10" r="8" stroke={C.t3} strokeWidth="1.1" strokeLinecap="round" strokeDasharray="37.7 12.6" opacity="0.35" fill="none" />
                     </svg>
-                    YouTube で見る
-                  </a>
-                </div>
-              ) : null}
+                    <span style={{ fontSize: "12px", color: C.t3 }}>YouTube 取得中...</span>
+                  </>
+                ) : (ytData.videoUrl || ytData.searchUrl) ? (
+                  <>
+                    {ytData.viewCount && (
+                      <span style={{ fontSize: "12px", color: C.t3, whiteSpace: "nowrap" }}>{ytData.viewCount}</span>
+                    )}
+                    <a
+                      href={ytData.videoUrl ?? ytData.searchUrl}
+                      target="_blank" rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: "5px",
+                        padding: "7px 12px", borderRadius: "8px",
+                        background: "rgba(255,0,0,0.07)",
+                        border: "1px solid rgba(255,0,0,0.18)",
+                        color: "#cc0000",
+                        fontSize: "13px", fontWeight: 600,
+                        textDecoration: "none",
+                      }}
+                    >
+                      <svg width="13" height="9" viewBox="0 0 24 17" fill="#cc0000">
+                        <path d="M23.5 2.5S23.2.9 22.5.2C21.6-.8 20.6-.8 20.1-.8 16.8-1 12-1 12-1s-4.8 0-8.1.2C3.4-.8 2.4-.8 1.5.2.8.9.5 2.5.5 2.5S.2 4.4.2 6.3v1.8C.2 10 .5 11.9.5 11.9S.8 13.5 1.5 14.2c.9 1 2.1.9 2.6 1C5.8 15.4 12 15.4 12 15.4s4.8 0 8.1-.3c.5 0 1.7-.1 2.6-1 .7-.7 1-2.3 1-2.3s.3-1.9.3-3.8V6.3c0-1.9-.3-3.8-.3-3.8z"/>
+                        <path d="M9.5 11V4.5l6.5 3.3-6.5 3.2z" fill="#fff"/>
+                      </svg>
+                      YouTube で見る
+                    </a>
+                  </>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
