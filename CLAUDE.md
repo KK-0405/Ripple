@@ -291,3 +291,11 @@ CSS変数            : --wf-bg / --wf-surface / --wf-border / --wf-text / --wf-t
 | フレームワーク | Next.js (App Router) |
 
 > ローカルはDeezer APIのプロキシ問題があるため、必ずVercelでテストすること。
+
+---
+
+## スライド・パワポ作成
+スライド・パワポ・プレゼン資料の作成を依頼された場合は、必ず以下のファイルを順番に読んでから作業を開始すること：
+
+Read skills/slides-maker/SKILL.md
+Read skills/slides-maker/references/design-system.md
