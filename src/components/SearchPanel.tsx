@@ -1629,8 +1629,8 @@ export default function SearchPanel({
                   );
                 })()}
               </div>
-              {/* 2行目: YouTube (常に固定高さでレイアウトシフトなし) */}
-              <div style={{ padding: "0 20px", paddingBottom: isMobile ? "calc(env(safe-area-inset-bottom, 34px) + 12px)" : "16px", minHeight: "38px", display: "flex", alignItems: "center", gap: "8px" }}>
+              {/* 2行目: YouTube — height固定でレイアウトシフト完全防止 */}
+              <div style={{ padding: "0 20px 14px", height: "52px", boxSizing: "border-box", display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
                 {ytData.loading ? (
                   <>
                     <svg width="12" height="12" viewBox="0 0 20 20" fill="none" style={{ animation: "ripple-spin 1s linear infinite", flexShrink: 0 }}>
