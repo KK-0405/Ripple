@@ -7,6 +7,9 @@ export async function GET(request: NextRequest) {
   if (!query) {
     return NextResponse.json({ error: "query is required" }, { status: 400 });
   }
+  if (query.length > 200) {
+    return NextResponse.json({ error: "query too long" }, { status: 400 });
+  }
 
   try {
     const [tracks, artists] = await Promise.all([

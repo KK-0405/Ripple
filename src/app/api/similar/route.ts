@@ -107,6 +107,13 @@ export async function POST(request: NextRequest) {
   if (!seed?.title || !seed?.artist) {
     return new Response(JSON.stringify({ error: "seed is required" }), { status: 400 });
   }
+  if (typeof seed.title !== "string" || seed.title.length > 300 ||
+      typeof seed.artist !== "string" || seed.artist.length > 300) {
+    return new Response(JSON.stringify({ error: "invalid seed" }), { status: 400 });
+  }
+  if (!Array.isArray(excludeTitles) || excludeTitles.length > 500) {
+    return new Response(JSON.stringify({ error: "invalid excludeTitles" }), { status: 400 });
+  }
 
   const cap = Math.min(count, 30);
   const encoder = new TextEncoder();

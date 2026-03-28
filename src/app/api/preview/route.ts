@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  if (!/^\d+$/.test(id)) return NextResponse.json({ error: "invalid id" }, { status: 400 });
 
   try {
     const res = await fetch(`https://api.deezer.com/track/${id}`);

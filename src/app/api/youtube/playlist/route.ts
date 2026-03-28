@@ -7,6 +7,12 @@ export async function POST(request: NextRequest) {
   if (!googleToken) {
     return NextResponse.json({ error: "Googleログインのアクセストークンがありません" }, { status: 401 });
   }
+  if (title && (typeof title !== "string" || title.length > 150)) {
+    return NextResponse.json({ error: "invalid title" }, { status: 400 });
+  }
+  if (!Array.isArray(tracks) || tracks.length > 200) {
+    return NextResponse.json({ error: "invalid tracks" }, { status: 400 });
+  }
 
   const auth = new google.auth.OAuth2();
   auth.setCredentials({ access_token: googleToken });

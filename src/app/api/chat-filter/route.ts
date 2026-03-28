@@ -10,6 +10,12 @@ export async function POST(req: NextRequest) {
   if (!instruction || !Array.isArray(tracks) || tracks.length === 0) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
+  if (typeof instruction !== "string" || instruction.length > 500) {
+    return NextResponse.json({ error: "instruction too long" }, { status: 400 });
+  }
+  if (tracks.length > 100) {
+    return NextResponse.json({ error: "too many tracks" }, { status: 400 });
+  }
 
   const trackList = tracks
     .map((t: any, i: number) => {
