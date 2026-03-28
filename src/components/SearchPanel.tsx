@@ -122,6 +122,9 @@ export default function SearchPanel({
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [playingTrack, setPlayingTrack] = useState<Track | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [detailDragY, setDetailDragY] = useState(0);
+  const detailDragRef = useRef<{ startY: number; dragging: boolean }>({ startY: 0, dragging: false });
+  const detailPanelRef = useRef<HTMLDivElement>(null);
   type YtData = { videoUrl?: string; viewCount?: string | null; searchUrl?: string; loading: boolean };
   const [ytData, setYtData] = useState<YtData>({ loading: false });
   const [ytViewCounts, setYtViewCounts] = useState<Record<string, string>>({});
@@ -1395,11 +1398,25 @@ export default function SearchPanel({
 
       {/* トラック詳細モーダル */}
       {selectedTrack && (() => {
+        const closeDetail = () => { setSelectedTrack(null); setYtData({ loading: false }); setDetailDragY(0); };
+        const onTouchStart = (e: React.TouchEvent) => {
+          if ((detailPanelRef.current?.scrollTop ?? 0) > 0) return;
+          detailDragRef.current = { startY: e.touches[0].clientY, dragging: true };
+        };
+        const onTouchMove = (e: React.TouchEvent) => {
+          if (!detailDragRef.current.dragging) return;
+          const delta = e.touches[0].clientY - detailDragRef.current.startY;
+          if (delta > 0) setDetailDragY(delta);
+        };
+        const onTouchEnd = () => {
+          detailDragRef.current.dragging = false;
+          if (detailDragY > 80) { closeDetail(); } else { setDetailDragY(0); }
+        };
         // メインシードが解析更新された場合は最新データを使用
         const detailTrack = mainSeed?.id === selectedTrack.id ? mainSeed : selectedTrack;
         return (
         <div
-          onClick={() => { setSelectedTrack(null); setYtData({ loading: false }); }}
+          onClick={closeDetail}
           style={{
             position: "fixed", inset: 0, zIndex: 1000,
             background: "rgba(0,0,0,0.45)",
@@ -1410,7 +1427,11 @@ export default function SearchPanel({
           }}
         >
           <div
+            ref={detailPanelRef}
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={isMobile ? onTouchStart : undefined}
+            onTouchMove={isMobile ? onTouchMove : undefined}
+            onTouchEnd={isMobile ? onTouchEnd : undefined}
             style={{
               background: C.bg, borderRadius: isMobile ? "20px 20px 0 0" : "16px",
               width: "100%", maxWidth: isMobile ? "100%" : "500px",
@@ -1419,8 +1440,16 @@ export default function SearchPanel({
               maxHeight: isMobile ? "92vh" : "88vh",
               boxShadow: "0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.07)",
               marginTop: isMobile ? "auto" : undefined,
+              transform: isMobile && detailDragY > 0 ? `translateY(${detailDragY}px)` : undefined,
+              transition: isMobile && detailDragY === 0 ? "transform 0.25s ease" : "none",
             }}
           >
+            {/* ドラッグハンドル（モバイルのみ） */}
+            {isMobile && (
+              <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: C.sep }} />
+              </div>
+            )}
             {/* ヘッダー：アルバムアート + 基本情報 */}
             <div style={{ display: "flex", gap: "14px", padding: "20px 20px 16px", alignItems: "flex-start" }}>
               <img
@@ -1452,7 +1481,7 @@ export default function SearchPanel({
                 )}
               </div>
               <button
-                onClick={() => { setSelectedTrack(null); setYtData({ loading: false }); }}
+                onClick={closeDetail}
                 style={{
                   background: C.s1, border: "none", borderRadius: "50%",
                   width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
