@@ -12,8 +12,6 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
-        {/* Prevent white flash: set body bg before React hydrates */}
-        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('dj_theme_v1')==='dark'){document.body.style.background='#0F0F0F';}}catch(e){}` }} />
         <title>Ripple</title>
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="manifest" href="/manifest.json" />
@@ -22,9 +20,11 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Ripple" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+        {/* Set bg color and status bar style based on saved theme before React hydrates */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var d=localStorage.getItem('dj_theme_v1')==='dark';if(d){document.body.style.background='#0F0F0F';var m=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');if(m)m.content='black';}}catch(e){}` }} />
         <meta property="og:title" content="Ripple" />
         <meta property="og:description" content="Find Your Sound" />
         <meta property="og:image" content="/icon.svg" />
