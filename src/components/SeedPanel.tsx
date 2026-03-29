@@ -418,7 +418,7 @@ export default function SeedPanel({
         <textarea
           value={searchInstruction}
           onChange={(e) => setSearchInstruction(e.target.value)}
-          placeholder={"例: アニソン以外\nインストのみ / 80年代限定"}
+          placeholder={"例: アニソン以外\nインストのみ / グラミー賞受賞曲のみ\nビルボード TOP 10 入りした曲を優先して"}
           rows={2}
           style={{
             width: "100%", padding: "9px 10px",
