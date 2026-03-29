@@ -1182,7 +1182,6 @@ export default function SearchPanel({
           </div>
         </div>
       </div>
-
       {/* モバイル検索オーバーレイ */}
       {isMobile && mobileSearchOpen && (
         <div style={{

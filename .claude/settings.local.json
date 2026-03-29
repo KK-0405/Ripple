@@ -15,7 +15,8 @@
       "Bash(curl:*)",
       "Bash(node:*)",
       "Bash(git commit -m \"fix: simplify getMetadataBatch by removing buggy cache logic:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:zenn.dev)"
     ]
   }
 }

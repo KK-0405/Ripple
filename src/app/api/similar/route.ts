@@ -93,14 +93,14 @@ async function fetchItunesTrack(s: Suggestion, locale: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const { seed, subSeeds = [], count = 20, excludeTitles = [], excludeAnthems = false, instruction, subSeedInfluences } = (await request.json()) as {
+  const { seed, subSeeds = [], count = 20, excludeTitles = [], excludeAnthems = false, excludeSeedArtist = false, instruction, subSeedInfluences } = (await request.json()) as {
     seed: {
       title: string; artist: string; genre_tags?: string[];
       bpm?: number; camelot?: string; energy?: number;
       danceability?: number; is_vocal?: boolean; release_year?: number;
     };
     subSeeds?: { title: string; artist: string; genre_tags?: string[]; bpm?: number; camelot?: string; release_year?: number; energy?: number; is_vocal?: boolean }[];
-    count?: number; excludeTitles?: string[]; excludeAnthems?: boolean; instruction?: string;
+    count?: number; excludeTitles?: string[]; excludeAnthems?: boolean; excludeSeedArtist?: boolean; instruction?: string;
     subSeedInfluences?: string[];
   };
 
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       try {
         // Phase 1: Gemini で類似曲候補を取得（ここが最も時間がかかる）
         const { suggestions, japaneseSeed: geminiJapaneseSeed, error: geminiError } =
-          await getSimilarTrackSuggestions(seed, subSeeds, cap, excludeTitles, excludeAnthems, instruction, subSeedInfluences);
+          await getSimilarTrackSuggestions(seed, subSeeds, cap, excludeTitles, excludeAnthems, instruction, subSeedInfluences, excludeSeedArtist);
 
         const japaneseSeed = geminiJapaneseSeed ?? isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
 

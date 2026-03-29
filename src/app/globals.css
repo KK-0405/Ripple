@@ -10,7 +10,9 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* iOS overscroll prevention */
+  /* iOS overscroll prevention — overflow:hidden is required because
+     overscroll-behavior:none is ignored by iOS Safari/WebKit */
+  overflow: hidden;
   overscroll-behavior: none;
 }
 

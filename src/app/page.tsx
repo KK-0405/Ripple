@@ -237,6 +237,7 @@ export default function Home() {
           })),
           count: similarCount,
           excludeAnthems: filters.excludeAnthems,
+          excludeSeedArtist: filters.excludeSameArtist,
           subSeedInfluences: filters.subSeedInfluences,
           instruction: searchInstruction.trim() || undefined,
         }),
@@ -551,7 +552,7 @@ export default function Home() {
 
   return (
     <div
-      style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: isMobile ? "100dvh" : "100vh", background: C.bg, overflow: "hidden" }}
+      style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: C.bg, overflow: "hidden" }}
       onTouchStart={isMobile ? handleTouchStart : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
@@ -952,7 +953,7 @@ export default function Home() {
           minHeight: 0,
         }}>
           <div style={{ height: 56, flexShrink: 0 }} />
-          <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+          <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             <SeedPanel
               mainSeed={mainSeed} setMainSeed={setMainSeed}
               subSeeds={subSeeds} removeSubSeed={removeSubSeed}
@@ -968,7 +969,7 @@ export default function Home() {
             />
           </div>
           <div style={{ height: "1px", background: "rgba(0,0,0,0.07)", flexShrink: 0 }} />
-          <div style={{ flexShrink: 0, overflowY: "auto", maxHeight: "50vh" }}>
+          <div style={{ flexShrink: 0, overflowY: "auto", maxHeight: "50vh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             <PlaylistPanel
               playlist={playlist} removeFromPlaylist={removeFromPlaylist}
               playlistName={playlistName} setPlaylistName={setPlaylistName}

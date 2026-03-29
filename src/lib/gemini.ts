@@ -266,13 +266,18 @@ function buildSimilarPrompt(
   japaneseSeedOverride?: boolean,
   excludeAnthems?: boolean,
   instruction?: string,
-  subSeedInfluences?: string[]
+  subSeedInfluences?: string[],
+  excludeSeedArtist?: boolean
 ): string {
   const genres = seed.genre_tags?.join(", ") || "unknown";
   const influences = subSeedInfluences ?? ["genre"];
   const subSeedSection = buildSubSeedSection(subSeeds, influences);
   const excludeStr = excludeTitles.length
     ? `\n- Do NOT include these already-listed songs: ${excludeTitles.slice(0, 20).join(", ")}.`
+    : "";
+
+  const excludeArtistStr = excludeSeedArtist
+    ? `\n- Do NOT include any songs by the seed artist "${seed.artist}" themselves, regardless of how their name is written (in English, Japanese, katakana, or any other script).`
     : "";
 
   const japaneseSeed = japaneseSeedOverride ?? isJapaneseContext(seed.title, seed.artist, seed.genre_tags);
@@ -307,7 +312,7 @@ ${instruction ? `\nUSER INSTRUCTION (highest priority — override defaults if n
 CRITICAL RULES (violations are not acceptable):
 1. Aim for ${count} elements. You MAY return fewer if you cannot find enough genuinely related tracks — quality over quantity. Never pad with unrelated songs just to hit the number.
 2. Stay within the seed's genre. Only widen to adjacent genres if you have exhausted the primary genre AND the adjacent genre is musically close (e.g. Hip-Hop → R&B is OK; Hip-Hop → Pop is NOT).
-3. Exclude the seed song itself.${excludeStr}
+3. Exclude the seed song itself.${excludeStr}${excludeArtistStr}
 4. EXCLUDE karaoke, カラオケ, cover versions, tribute recordings, instrumental covers, BGM collections, sound-alike tracks. Only original artist recordings. NEVER include artists such as "歌っちゃ王", "Karaoke Version", "Karaoke All Stars", or any karaoke/cover label artist.
 5. ${langRule}
 6. Every object must have ALL fields — do not omit any field or output partial objects.
@@ -386,7 +391,8 @@ export async function getSimilarTrackSuggestions(
   excludeTitles: string[] = [],
   excludeAnthems: boolean = false,
   instruction?: string,
-  subSeedInfluences?: string[]
+  subSeedInfluences?: string[],
+  excludeSeedArtist?: boolean
 ): Promise<SimilarResult> {
   if (process.env.GEMINI_MOCK === "true") {
     const mockSongs = [
@@ -415,7 +421,7 @@ export async function getSimilarTrackSuggestions(
       detectArtistOrigin(apiKey, seed.artist, seed.title),
       fetchSuggestions(
         apiKey,
-        buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, optimisticJapanese, excludeAnthems, instruction, subSeedInfluences),
+        buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, optimisticJapanese, excludeAnthems, instruction, subSeedInfluences, excludeSeedArtist),
         optimisticJapanese
       ),
     ]);
@@ -425,7 +431,7 @@ export async function getSimilarTrackSuggestions(
     // 楽観的推測が外れた場合は正しい判定で再取得
     let suggestions = first.suggestions;
     if (japaneseSeed !== optimisticJapanese) {
-      const retryPrompt = buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, japaneseSeed, excludeAnthems, instruction, subSeedInfluences);
+      const retryPrompt = buildSimilarPrompt(seed, subSeeds, buffered, excludeTitles, japaneseSeed, excludeAnthems, instruction, subSeedInfluences, excludeSeedArtist);
       const retried = await fetchSuggestions(apiKey, retryPrompt, japaneseSeed);
       if (!retried.error && retried.suggestions.length > 0) {
         suggestions = retried.suggestions;
@@ -436,7 +442,7 @@ export async function getSimilarTrackSuggestions(
     if (suggestions.length < buffered) {
       const need = buffered - suggestions.length;
       const alreadyHave = suggestions.map((s) => `"${s.title}" by ${s.artist}`);
-      const promptN = buildSimilarPrompt(seed, subSeeds, need, alreadyHave, japaneseSeed, excludeAnthems, instruction, subSeedInfluences);
+      const promptN = buildSimilarPrompt(seed, subSeeds, need, alreadyHave, japaneseSeed, excludeAnthems, instruction, subSeedInfluences, excludeSeedArtist);
       const next = await fetchSuggestions(apiKey, promptN, japaneseSeed);
       if (!next.error && next.suggestions.length > 0) {
         suggestions = [...suggestions, ...next.suggestions];
