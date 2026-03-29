@@ -956,7 +956,7 @@ export default function SearchPanel({
                   )}
                   {/* 類似モードではBPMをマッチバッジ側に表示するためここでは非表示 */}
                   {mode !== "similar" && (
-                    <span style={{ fontSize: "11px", color: track.bpm ? "#1b7a34" : C.t3, fontWeight: 500 }}>
+                    <span style={{ fontSize: "11px", color: track.bpm ? C.t2 : C.t3, fontWeight: 500 }}>
                       {track.bpm ? `${track.bpm} BPM` : "— BPM"}
                     </span>
                   )}
