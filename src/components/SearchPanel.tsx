@@ -1154,7 +1154,7 @@ export default function SearchPanel({
           >
             {/* SVG の pause アイコン（ズレなし） */}
             {playingTrack ? (
-              <svg width="10" height="12" viewBox="0 0 10 12" fill="#fff">
+              <svg width="10" height="12" viewBox="0 0 10 12" fill={C.bg}>
                 <rect x="0" y="0" width="3.5" height="12" rx="1"/>
                 <rect x="6.5" y="0" width="3.5" height="12" rx="1"/>
               </svg>
@@ -1567,7 +1567,7 @@ export default function SearchPanel({
                       padding: "7px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
                       background: playingId === detailTrack.id ? C.acc : C.s1,
                       border: `1px solid ${playingId === detailTrack.id ? C.acc : C.s2}`,
-                      color: playingId === detailTrack.id ? "#fff" : C.t2,
+                      color: playingId === detailTrack.id ? C.bg : C.t2,
                       cursor: "pointer", flexShrink: 0,
                     }}
                   >
