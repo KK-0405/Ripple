@@ -36,7 +36,7 @@ const IMG_RATIO = 1.6;
 // ============================================================
 // ヘルパー関数
 // ============================================================
-const TOTAL = 12;
+const TOTAL = 11;
 
 function header(slide, title, pageNum) {
   slide.addShape(pptx.ShapeType.rect, {
@@ -136,15 +136,21 @@ function accentCard(slide, x, y, w, h, barColor) {
     x: 0.6, y: 4.65, w: 7.5, h: 0.3,
     fontFace: F.gothic, fontSize: 11, color: C.navyMid, underline: true,
   });
+  s.addText('https://github.com/KK-0405/Ripple', {
+    x: 0.6, y: 5.02, w: 7.5, h: 0.3,
+    fontFace: F.gothic, fontSize: 11, color: C.navyMid, underline: true,
+  });
 
   // QRコード
   try {
     const qrData = readFileSync('public/qr_ripple.png');
-    s.addImage({ data: 'image/png;base64,' + qrData.toString('base64'), x: 0.6, y: 5.05, w: 1.55, h: 1.55 });
+    s.addImage({ data: 'image/png;base64,' + qrData.toString('base64'), x: 0.6, y: 5.42, w: 1.55, h: 1.55 });
   } catch {}
-  s.addText('ripplefm.vercel.app', {
-    x: 0.6, y: 6.65, w: 1.55, h: 0.22,
-    fontFace: F.gothic, fontSize: 7.5, color: C.textSub, align: 'center',
+
+  // コードメトリクス（日付右横・1行）
+  s.addText('6,494行  ·  29ファイル  ·  4コンポーネント  ·  12 APIエンドポイント', {
+    x: 3.10, y: 6.9, w: 5.6, h: 0.28,
+    fontFace: F.gothic, fontSize: 8.5, color: C.textSub, valign: 'middle',
   });
 
   s.addText('2026年3月　｜　開発期間：7日', {
@@ -225,34 +231,56 @@ function accentCard(slide, x, y, w, h, barColor) {
     });
   }
 
-  // ── カード2・3（共通テンプレート）──
-  const cols2 = [
-    {
-      badge: '¥0', title: '完全無料構成',
-      body: 'Vercel・Supabase・Gemini・Deezer・iTunes・YouTube の 6 サービスをすべて無料枠・無料 API で組み合わせた。初期費用・月額費用ともにゼロで本番運用中。',
-      num: '¥0', unit: '月額費用',
-    },
-    {
-      badge: 'FS', title: 'フルスタック独学 × AI活用',
-      body: 'フロントエンド（Next.js / React）から API ルート・DB 設計・外部 API 連携・Vercel デプロイまで一気通貫で独学実装。仕様策定から実装・デバッグまで Claude Code（AI）を積極活用し、未経験から本番リリースまでこなした。',
-      num: '6', unit: '連携外部サービス数',
-    },
-  ];
+  // ── カード2（完全無料 × フルスタック独学、マージ版）──
+  {
+    const x = 0.45 + 4.27;   // = 4.72（カード1の直後）
+    const cardW = 8.32;       // 右端 13.04 まで
+    const innerX = x + 0.15;
+    const innerW = cardW - 0.3; // = 8.02
 
-  cols2.forEach(({ badge, title, body, num, unit }, i) => {
-    const x = 0.45 + (i + 1) * 4.27;
-    const cardW = 4.05;
     s.addShape(pptx.ShapeType.rect, { x, y: 1.28, w: cardW, h: 5.9, fill: { color: C.card }, line: { color: C.border, width: 0.5 } });
     s.addShape(pptx.ShapeType.rect, { x, y: 1.28, w: cardW, h: 0.08, fill: { color: C.navy }, line: { type: 'none' } });
-    circleBadge(s, badge, x + 0.2, 1.42, 0.52, badge === '¥0' ? 11 : 12, C.navy);
-    s.addText(title, { x: x + 0.85, y: 1.44, w: cardW - 1.0, h: 0.45, fontFace: F.mincho, fontSize: 14, bold: true, color: C.navy });
-    s.addShape(pptx.ShapeType.line, { x: x + 0.15, y: 2.02, w: cardW - 0.3, h: 0, line: { color: C.border, width: 0.5 } });
-    s.addText(body, { x: x + 0.15, y: 2.12, w: cardW - 0.3, h: 2.6, fontFace: F.gothic, fontSize: 10.5, color: C.textBody, wrap: true });
-    s.addShape(pptx.ShapeType.rect, { x: x + 0.15, y: 4.85, w: cardW - 0.3, h: 2.15, fill: { color: C.bg }, line: { color: C.border, width: 0.5 } });
-    s.addShape(pptx.ShapeType.line, { x: x + 0.15, y: 4.85, w: cardW - 0.3, h: 0, line: { color: C.navyLine, width: 1.0 } });
-    s.addText(num, { x: x + 0.15, y: 5.0, w: cardW - 0.3, h: 1.0, fontFace: F.num, fontSize: 36, bold: true, color: C.navy, align: 'center' });
-    s.addText(unit, { x: x + 0.15, y: 6.05, w: cardW - 0.3, h: 0.5, fontFace: F.gothic, fontSize: 10, color: C.textSub, align: 'center' });
-  });
+    circleBadge(s, '¥0', x + 0.2, 1.42, 0.52, 11, C.navy);
+    s.addText('完全無料 × フルスタック独学', { x: x + 0.85, y: 1.44, w: cardW - 1.0, h: 0.45, fontFace: F.mincho, fontSize: 14, bold: true, color: C.navy });
+    s.addShape(pptx.ShapeType.line, { x: innerX, y: 2.02, w: innerW, h: 0, line: { color: C.border, width: 0.5 } });
+
+    s.addText('Next.js から API・DB 設計・Vercel デプロイまで一気通貫で独学実装。Claude Code（AI）で仕様〜デバッグを効率化し、下記 6 サービスをすべて ¥0 で組み合わせ本番リリース。', {
+      x: innerX, y: 2.12, w: innerW, h: 0.65,
+      fontFace: F.gothic, fontSize: 10.5, color: C.textBody, wrap: true,
+    });
+
+    // 6 サービス一覧テーブル（スライド8の内容を要約）
+    const svcRows = [
+      ['Vercel',           'ホスティング',             'Hobby（無料）',                'Next.js デプロイ・CDN 配信'],
+      ['Supabase',         'DB / 認証',                'Free（500MB・Auth 無制限）',    'プレイリスト・キャッシュ・ユーザー管理'],
+      ['Google Gemini',    'AI エンジン',              '無料枠',                       '類似曲レコメンド・BPM / キー解析'],
+      ['iTunes API',       '楽曲検索・メタデータ',     '完全無料（Apple 公式）',        'メイン検索・アルバムアート取得'],
+      ['Deezer API',       'BPM 補完・プレビュー補完', '無料（商用利用可）',            'BPM 取得・プレビューフォールバック'],
+      ['YouTube Data API', '動画・書き出し',           '無料クォータ（10,000 u/日）',  'プレイリスト書き出し・動画 ID 検索'],
+    ];
+    const svcColW = [1.55, 1.75, 2.0, 2.72]; // 合計 8.02
+    const svcTbl = [
+      ['サービス', '用途', 'プラン / 無料枠', '主な役割'].map(h => ({
+        text: h,
+        options: { fill: C.navy, color: C.textWhite, fontFace: F.gothic, fontSize: 9.5, bold: true, border: { type: 'solid', color: C.border, pt: 0.5 }, align: 'center', valign: 'middle' },
+      })),
+      ...svcRows.map((row, ri) => row.map((cell, ci) => ({
+        text: cell,
+        options: { fill: ri % 2 === 0 ? C.card : C.bg, color: ci === 0 ? C.navy : C.textBody, fontFace: ci === 0 ? F.mincho : F.gothic, fontSize: 9.5, bold: ci === 0, border: { type: 'solid', color: C.border, pt: 0.5 }, valign: 'middle' },
+      }))),
+    ];
+    s.addTable(svcTbl, { x: innerX, y: 2.85, w: innerW, colW: svcColW, rowH: 0.44 });
+    // テーブル下端 = 2.85 + 7 * 0.44 = 5.93
+
+    // 2 つのメトリクス（¥0 / 6）
+    const metW = (innerW - 0.2) / 2; // = 3.91
+    [['¥0', '月額費用', 0], ['6', '連携外部サービス数', metW + 0.2]].forEach(([num, unit, offset]) => {
+      s.addShape(pptx.ShapeType.rect, { x: innerX + offset, y: 6.05, w: metW, h: 1.05, fill: { color: C.bg }, line: { color: C.border, width: 0.5 } });
+      s.addShape(pptx.ShapeType.line, { x: innerX + offset, y: 6.05, w: metW, h: 0, line: { color: C.navyLine, width: 1.0 } });
+      s.addText(num, { x: innerX + offset, y: 6.12, w: metW, h: 0.62, fontFace: F.num, fontSize: 30, bold: true, color: C.navy, align: 'center' });
+      s.addText(unit, { x: innerX + offset, y: 6.78, w: metW, h: 0.28, fontFace: F.gothic, fontSize: 9.5, color: C.textSub, align: 'center' });
+    });
+  }
 }
 
 // ============================================================
@@ -265,7 +293,7 @@ function accentCard(slide, x, y, w, h, barColor) {
 
   const steps = [
     { num: '01', label: '課題', title: '既存サービスへの不満', body: '他の音楽サービスの類似曲おすすめ機能は条件を細かく指定できなかった。趣味のDJで曲を探す際に、BPM・キー・ジャンル・雰囲気を自分で組み合わせて検索できるサービスがなく手間だった。' },
-    { num: '02', label: '着想', title: 'AIなら解決できると考えた', body: 'Google Gemini APIを使えば、曲の雰囲気・BPM・キーを理解したうえで「似ている曲」を文脈込みで提案できるのではないかと考えた。' },
+    { num: '02', label: '動機', title: 'Claude Code × フルスタック実践への挑戦', body: '話題となっていた新技術 Claude Code を実際のプロダクト開発で試してみたかった。\n\nまた、授業でフロントエンドからバックエンド・DB 設計まで体系的に学んでいたので、その知識を活かして 1 から本番アプリをフルスタックで自分の手で作り切ってみたいと考えた。' },
     { num: '03', label: '実行', title: '完全無料で本番アプリを構築', body: '「すべて無料のサービスだけで、実際に使えるアプリを作る」という制約を自分に課し、Next.js + Gemini + Supabase で実装。Vercel で公開した。' },
     { num: '04', label: '成果', title: 'AI が選曲理由付きで提案', body: 'Billie Jean（Michael Jackson）を入れると、同じグルーヴ感・BPM・エネルギーを持つ曲が選曲理由テキスト付きで最大30曲提案される。追加検索も可能。' },
   ];
@@ -446,7 +474,7 @@ function accentCard(slide, x, y, w, h, barColor) {
   // AIカード: y=5.00, h=2.25
   const fItemH = 0.40, fGap = 0.04;
   const filters = [
-    { label: 'BPM 範囲',        desc: '制限なし / ±5 / ±10 / ±20 から選択' },
+    { label: 'BPM 範囲',        desc: '制限なし / ±5 / ±10 から選択' },
     { label: 'キー',             desc: '同じキー or Camelot 隣接（±1）' },
     { label: 'ジャンル',         desc: 'Seed の genre_tags から複数選択可' },
     { label: 'エネルギー',       desc: '高 / 中 / 低 の 3 段階' },
@@ -512,11 +540,9 @@ function accentCard(slide, x, y, w, h, barColor) {
   const panelW = 13.33 - panelX - 0.25;
 
   const points = [
-    { title: '選曲理由テキスト', body: '各曲に「なぜこの曲を推薦するか」の解説文を Gemini が自動生成。グルーヴ感・BPM・ミックス適性まで詳述する。' },
-    { title: 'BPM・キー・Energy 表示', body: '各曲の BPM・Camelot キー・Energy・ジャンルタグを一覧表示。DJ ミックスの判断材料になる。' },
-    { title: 'プレイリストへ追加・保存', body: '個別追加または「全曲を一括追加」でプレイリストに登録。保存したプレイリストはログイン後も永続的に管理・編集できる。' },
-    { title: 'プレイリスト共有', body: '公開設定にすると /explore ページに一覧表示され、他のユーザーが閲覧できる。非公開設定も可能。' },
+    { title: '各曲に表示される情報', body: '曲名・アーティスト・アルバム名・発売年・YouTube 再生数・キー・BPM・メインシードと関係するジャンル・AI による選曲理由をまとめて表示。DJ ミックスに必要な情報をすべて一画面で確認できる。' },
     { title: '探索履歴に自動保存', body: '左パネルの HISTORY に探索結果が自動記録される。最大20件保存し、過去の探索を再閲覧・再利用できる。' },
+    { title: 'プレイリストへ追加・保存', body: '個別追加または「全曲を一括追加」でプレイリストに登録。保存したプレイリストはログイン後も永続的に管理・編集できる。' },
     { title: 'YouTube Music へ書き出し', body: 'プレイリストを YouTube Music のライブラリへ自動書き出し。YouTube Data API でプレイリスト作成・曲追加まで一括処理。（※ OAuth 審査待ち・現在はテストユーザーのみ）' },
   ];
 
@@ -556,11 +582,13 @@ function accentCard(slide, x, y, w, h, barColor) {
     { title: '再生数 & YouTube', body: 'Deezer から取得した再生数統計と「YouTube で見る」ボタン。クリックで公式 MV に遷移。' },
   ];
 
-  const totalH = sh;
-  const itemH = totalH / annotations.length - 0.08;
+  const pageBottom = 7.25;
+  const totalPanelH = pageBottom - 0.85;
+  const gap = 0.08;
+  const itemH = (totalPanelH - gap * (annotations.length - 1)) / annotations.length;
 
   annotations.forEach(({ title, body }, i) => {
-    const y = 0.85 + i * (itemH + 0.08);
+    const y = 0.85 + i * (itemH + gap);
     accentCard(s, panelX, y, panelW, itemH, C.navy);
     s.addText(title, { x: panelX + 0.22, y: y + 0.08, w: panelW - 0.3, h: 0.30, fontFace: F.mincho, fontSize: 10.5, bold: true, color: C.navy });
     s.addText(body, { x: panelX + 0.22, y: y + 0.40, w: panelW - 0.3, h: itemH - 0.48, fontFace: F.gothic, fontSize: 9.5, color: C.textBody, wrap: true });
@@ -568,51 +596,87 @@ function accentCard(slide, x, y, w, h, barColor) {
 
 }
 
+
+
 // ============================================================
-// スライド 8: 技術スタック
+// スライド 8: アーキテクチャ図
 // ============================================================
 {
   const s = pptx.addSlide();
   s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 7.5, fill: { color: C.bg }, line: { type: 'none' } });
-  header(s, '6つの無料サービスを組み合わせて月額¥0での本番運用を実現', 8);
+  header(s, 'アプリケーションアーキテクチャ ── Next.js（Vercel）× 5 外部サービス', 8);
 
-  s.addShape(pptx.ShapeType.rect, { x: 0.45, y: 0.85, w: 12.43, h: 0.52, fill: { color: C.panel }, line: { color: C.navyLine, width: 0.5 } });
-  s.addText('月額費用 ¥0 ／ 初期費用 ¥0 ／ すべて商用利用可能な無料枠・無料 API のみ使用', {
-    x: 0.45, y: 0.85, w: 12.43, h: 0.52,
-    fontFace: F.gothic, fontSize: 12.5, bold: true, color: C.navy, align: 'center', valign: 'middle',
+  // ── ブラウザ ──
+  s.addShape(pptx.ShapeType.rect, { x: 0.25, y: 2.90, w: 1.92, h: 1.60, fill: { color: C.panel }, line: { color: C.navyLine, width: 0.8 } });
+  s.addText('ユーザー', { x: 0.25, y: 3.10, w: 1.92, h: 0.32, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy, align: 'center' });
+  s.addText('ブラウザ', { x: 0.25, y: 3.44, w: 1.92, h: 0.28, fontFace: F.gothic, fontSize: 10, color: C.textBody, align: 'center' });
+
+  // ブラウザ → Next.js 矢印
+  s.addShape(pptx.ShapeType.line, { x: 2.17, y: 3.70, w: 0.25, h: 0, line: { color: C.navyLine, width: 1.2 } });
+  s.addText('▶', { x: 2.30, y: 3.57, w: 0.22, h: 0.24, fontFace: F.gothic, fontSize: 9, color: C.navyLine, align: 'center' });
+
+  // ── Next.js / Vercel ──
+  const NX = 2.48, NY = 0.88, NW = 5.02, NH = 6.22;
+  s.addShape(pptx.ShapeType.rect, { x: NX, y: NY, w: NW, h: NH, fill: { color: C.card }, line: { color: C.navyMid, width: 1.2 } });
+  s.addShape(pptx.ShapeType.rect, { x: NX, y: NY, w: NW, h: 0.42, fill: { color: C.navy }, line: { type: 'none' } });
+  s.addText('Next.js  /  Vercel', { x: NX + 0.15, y: NY + 0.05, w: NW - 0.30, h: 0.32, fontFace: F.mincho, fontSize: 13, bold: true, color: C.textWhite, align: 'center' });
+
+  // App Router ボックス
+  const ARY = NY + 0.52, ARH = 1.72;
+  s.addShape(pptx.ShapeType.rect, { x: NX + 0.22, y: ARY, w: NW - 0.44, h: ARH, fill: { color: C.bg }, line: { color: C.border, width: 0.6 } });
+  s.addShape(pptx.ShapeType.rect, { x: NX + 0.22, y: ARY, w: NW - 0.44, h: 0.06, fill: { color: C.navyMid }, line: { type: 'none' } });
+  s.addText('App Router  ──  UI 層', { x: NX + 0.38, y: ARY + 0.12, w: NW - 0.76, h: 0.30, fontFace: F.mincho, fontSize: 11, bold: true, color: C.navy });
+  s.addText('· React Server / Client Components（画面描画・インタラクション）\n· ページルーティング / レイアウト管理\n· PWA 対応 / レスポンシブ UI', {
+    x: NX + 0.38, y: ARY + 0.50, w: NW - 0.76, h: 1.10,
+    fontFace: F.gothic, fontSize: 9.5, color: C.textBody, wrap: true,
   });
 
-  const rows = [
-    ['Vercel',           'ホスティング',             'Hobby（無料）',                          'Next.js アプリのデプロイ・CDN 配信'],
-    ['Supabase',         'DB / 認証',                'Free（500MB, Auth 無制限）',              'プレイリスト保存・YouTube キャッシュ・ユーザー管理'],
-    ['Google Gemini',    'AI エンジン',              'gemini-3.1-flash-lite-preview（無料枠）', '類似曲レコメンド・メタデータ解析（BPM / キー / Energy）'],
-    ['iTunes API',       '楽曲検索・メタデータ',     '完全無料（Apple 公式）',                  'メイン検索窓口・アルバムアート・基本メタデータ取得'],
-    ['Deezer API',       'BPM 補完・プレビュー補完', '無料（商用利用可）',                      'BPM 取得（サーバー側）・iTunes プレビュー期限切れ時のフォールバック取得'],
-    ['YouTube Data API', '動画・書き出し',           '無料クォータ（10,000 u/日）',             'YouTube プレイリスト書き出し・動画 ID 検索'],
+  // ↓ 矢印（App Router → API Routes）
+  s.addShape(pptx.ShapeType.line, { x: NX + NW / 2, y: ARY + ARH + 0.04, w: 0, h: 0.18, line: { color: C.navyLine, width: 1.0 } });
+  s.addText('▼', { x: NX + NW / 2 - 0.12, y: ARY + ARH + 0.16, w: 0.24, h: 0.20, fontFace: F.gothic, fontSize: 8, color: C.navyLine, align: 'center' });
+
+  // API Routes ボックス
+  const APIY = ARY + ARH + 0.44, APIH = NY + NH - APIY - 0.12;
+  s.addShape(pptx.ShapeType.rect, { x: NX + 0.22, y: APIY, w: NW - 0.44, h: APIH, fill: { color: C.bg }, line: { color: C.border, width: 0.6 } });
+  s.addShape(pptx.ShapeType.rect, { x: NX + 0.22, y: APIY, w: NW - 0.44, h: 0.06, fill: { color: C.navyMid }, line: { type: 'none' } });
+  s.addText('API Routes  ──  サーバー層', { x: NX + 0.38, y: APIY + 0.12, w: NW - 0.76, h: 0.30, fontFace: F.mincho, fontSize: 11, bold: true, color: C.navy });
+
+  const routeItems = [
+    ['Gemini AI',     '類似曲探索・BPM / キー解析・絞り込みフィルター'],
+    ['iTunes API',    '楽曲検索・アルバムアート取得'],
+    ['Deezer API',    'BPM 補完・プレビュー URL フォールバック'],
+    ['YouTube API',   '再生数取得・プレイリスト書き出し'],
+    ['Supabase',      'プレイリスト保存・読み込み・ユーザー認証'],
   ];
-
-  const colW = [1.7, 2.0, 2.7, 5.93];
-  const colHeaders = ['サービス', '用途', 'プラン / 無料枠', '主な役割'];
-
-  const tbl = [
-    colHeaders.map(h => ({ text: h, options: { fill: C.navy, color: C.textWhite, fontFace: F.gothic, fontSize: 10, bold: true, border: { type: 'solid', color: C.border, pt: 0.5 }, align: 'center', valign: 'middle' } })),
-    ...rows.map((row, ri) => row.map((cell, ci) => ({
-      text: cell,
-      options: { fill: ri % 2 === 0 ? C.card : C.bg, color: ci === 0 ? C.navy : C.textBody, fontFace: ci === 0 ? F.mincho : F.gothic, fontSize: 10, bold: ci === 0, border: { type: 'solid', color: C.border, pt: 0.5 }, valign: 'middle' },
-    }))),
-  ];
-
-  s.addTable(tbl, { x: 0.45, y: 1.48, w: 12.43, colW, rowH: 0.73 });
-
-  // フローバー (table bottom = 1.48 + 7*0.73 = 6.59, bar at 6.65)
-  s.addShape(pptx.ShapeType.rect, { x: 0.45, y: 6.65, w: 12.43, h: 0.50, fill: { color: C.card }, line: { color: C.border, width: 0.5 } });
-  s.addText('データフロー：ユーザー → Next.js (Vercel) → API ルート → Gemini / iTunes / Deezer / YouTube → Supabase（保存）', {
-    x: 0.6, y: 6.65, w: 12.1, h: 0.50,
-    fontFace: F.gothic, fontSize: 10.5, color: C.textBody, align: 'center', valign: 'middle',
+  routeItems.forEach(([svc, desc], i) => {
+    const ry = APIY + 0.52 + i * 0.62;
+    s.addShape(pptx.ShapeType.rect, { x: NX + 0.38, y: ry, w: 1.22, h: 0.24, fill: { color: C.navyMid }, line: { type: 'none' } });
+    s.addText(svc, { x: NX + 0.38, y: ry, w: 1.22, h: 0.24, fontFace: F.gothic, fontSize: 8.5, bold: true, color: C.textWhite, align: 'center', valign: 'middle' });
+    s.addText('→  ' + desc, { x: NX + 1.68, y: ry, w: NW - 1.90, h: 0.24, fontFace: F.gothic, fontSize: 9, color: C.textBody, valign: 'middle' });
   });
 
+  // Next.js → サービス群 矢印
+  s.addShape(pptx.ShapeType.line, { x: NX + NW + 0.05, y: NY + NH / 2, w: 0.22, h: 0, line: { color: C.navyLine, width: 1.2 } });
+  s.addText('▶', { x: NX + NW + 0.16, y: NY + NH / 2 - 0.12, w: 0.22, h: 0.24, fontFace: F.gothic, fontSize: 9, color: C.navyLine, align: 'center' });
+
+  // ── 外部サービス ──
+  const SX = NX + NW + 0.44, SW = 13.33 - SX - 0.22;
+  const services = [
+    { name: 'Google Gemini API', role: 'AI エンジン',          sub: '類似曲推薦・BPM / キー解析',        bar: C.navyMid },
+    { name: 'iTunes Search API', role: '楽曲検索・メタデータ', sub: 'メイン検索・アルバムアート取得',     bar: C.navyMid },
+    { name: 'Deezer API',        role: 'BPM / プレビュー',     sub: 'BPM 補完・プレビューフォールバック', bar: C.navyMid },
+    { name: 'YouTube Data API',  role: '動画・書き出し',        sub: '再生数取得・プレイリスト書き出し',   bar: C.navyMid },
+    { name: 'Supabase',          role: 'DB / 認証',             sub: 'プレイリスト保存・ユーザー管理',     bar: C.navy },
+  ];
+  const SH = (NH - 4 * 0.18) / 5;
+  services.forEach(({ name, role, sub, bar }, i) => {
+    const sy = NY + i * (SH + 0.18);
+    accentCard(s, SX, sy, SW, SH, bar);
+    s.addText(name, { x: SX + 0.22, y: sy + 0.14, w: SW - 0.30, h: 0.28, fontFace: F.mincho, fontSize: 11, bold: true, color: C.navy });
+    s.addText(role, { x: SX + 0.22, y: sy + 0.44, w: SW - 0.30, h: 0.24, fontFace: F.gothic, fontSize: 9.5, bold: true, color: C.navyMid });
+    s.addText(sub,  { x: SX + 0.22, y: sy + 0.70, w: SW - 0.30, h: 0.28, fontFace: F.gothic, fontSize: 9, color: C.textBody });
+  });
 }
-
 
 // ============================================================
 // スライド 9: ER図
@@ -621,7 +685,7 @@ function accentCard(slide, x, y, w, h, barColor) {
 {
   const s = pptx.addSlide();
   s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 7.5, fill: { color: C.bg }, line: { type: 'none' } });
-  header(s, 'ER図 (Supabase / PostgreSQL) ── RLS で行単位アクセス制御', 9);
+  header(s, 'ER図 (Supabase) ── RLS で行単位アクセス制御', 9);
 
   const HDR_H = 0.44, ROW_H = 0.42, TOP_Y = 0.92;
   const LX=0.30, LW=3.85, MX=4.50, MW=4.70, RX=9.55, RW=3.48;
@@ -752,20 +816,40 @@ function accentCard(slide, x, y, w, h, barColor) {
     fontFace: F.gothic, fontSize: 11, color: C.textBody,
   });
 
-  const LX = 0.40, LY = 1.28, LW = 7.10, LH = 5.78;
+  const LX = 0.40, LY = 1.28, LW = 5.20, LH = 5.78;
 
-  // 左カラム: API選定の試行錯誤
-  accentCard(s, LX, LY, LW, LH, C.navy);
+  // 左カラム: 仕様策定の工夫 + スコープクリープ
+  const C1Y = LY, C1H = 2.55;
+  accentCard(s, LX, C1Y, LW, C1H, C.navyMid);
+  s.addText('仕様策定の工夫', { x: LX+0.22, y: C1Y+0.10, w: LW-0.30, h: 0.36, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy });
+  s.addShape(pptx.ShapeType.line, { x: LX+0.22, y: C1Y+0.50, w: LW-0.44, h: 0, line: { color: C.navyLine, width: 0.5 } });
+  s.addText('自分がクライアントの立場に立ち、ChatGPTと対話しながら仕様書を策定した。ユーザー視点で欲しい機能を洗い出し、技術要件に落とし込む作業を事前に行ったことで、開発の方向性がブレにくくなった。', {
+    x: LX+0.22, y: C1Y+0.60, w: LW-0.44, h: C1H-0.70,
+    fontFace: F.gothic, fontSize: 10, color: C.textBody, wrap: true,
+  });
+
+  const C2Y = C1Y + C1H + 0.18, C2H = LH - C1H - 0.18;
+  accentCard(s, LX, C2Y, LW, C2H, 'C8102E');
+  s.addText('スコープクリープと反省点', { x: LX+0.22, y: C2Y+0.10, w: LW-0.30, h: 0.36, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy });
+  s.addShape(pptx.ShapeType.line, { x: LX+0.22, y: C2Y+0.50, w: LW-0.44, h: 0, line: { color: C.navyLine, width: 0.5 } });
+  s.addText('開発が進むにつれ「この機能も追加したい」が増え続け、当初の想定より完成が大幅に遅れた。仕様書の段階でMust / Want を厳密に切り分け、スコープを固めてから着手すべきだった。\n\nまた、使用するAPIの選定をAIの提案にそのまま従ってしまい、実際に試して初めて「無料枠の廃止」「CORS制約」「URLの有効期限」などの制約に気づくケースが多く、遠回りになった。設計段階で公式ドキュメントや利用規約を自分で調べてから採用を決めるべきだった。', {
+    x: LX+0.22, y: C2Y+0.60, w: LW-0.44, h: C2H-0.70,
+    fontFace: F.gothic, fontSize: 10, color: C.textBody, wrap: true,
+  });
+
+  // 右カラム: API選定の試行錯誤
+  const RX = 5.80, RW = 7.10;
+  accentCard(s, RX, LY, RW, LH, C.navy);
   s.addText('API 選定の試行錯誤', {
-    x: LX+0.22, y: LY+0.10, w: LW-0.30, h: 0.38,
+    x: RX+0.22, y: LY+0.10, w: RW-0.30, h: 0.38,
     fontFace: F.mincho, fontSize: 13, bold: true, color: C.navy,
   });
   s.addText('当初想定したAPIが使えず、仕様を大幅に変更せざるをえなかった', {
-    x: LX+0.22, y: LY+0.50, w: LW-0.30, h: 0.26,
+    x: RX+0.22, y: LY+0.50, w: RW-0.30, h: 0.26,
     fontFace: F.gothic, fontSize: 9.5, color: C.textBody, italic: true,
   });
   s.addShape(pptx.ShapeType.line, {
-    x: LX+0.22, y: LY+0.82, w: LW-0.44, h: 0,
+    x: RX+0.22, y: LY+0.82, w: RW-0.44, h: 0,
     line: { color: C.navyLine, width: 0.5 },
   });
 
@@ -790,82 +874,14 @@ function accentCard(slide, x, y, w, h, barColor) {
 
   apiItems.forEach(({ from, to, body }, i) => {
     const ay = LY + 0.96 + i * 1.20;
-    s.addShape(pptx.ShapeType.rect, { x: LX+0.22, y: ay, w: 1.90, h: 0.24, fill: { color: C.navyMid }, line: { type: 'none' } });
-    s.addText(from, { x: LX+0.22, y: ay, w: 1.90, h: 0.24, fontFace: F.gothic, fontSize: 8.5, bold: true, color: C.textWhite, align: 'center', valign: 'middle' });
-    s.addText('→', { x: LX+2.18, y: ay-0.02, w: 0.28, h: 0.28, fontFace: F.gothic, fontSize: 11, bold: true, color: C.navy });
-    s.addText(to, { x: LX+2.50, y: ay, w: LW-2.70, h: 0.24, fontFace: F.gothic, fontSize: 9.5, bold: true, color: C.navy, valign: 'middle' });
-    s.addText(body, { x: LX+0.22, y: ay+0.28, w: LW-0.44, h: 0.82, fontFace: F.gothic, fontSize: 9, color: C.textBody, wrap: true });
-  });
-
-  // 右カラム
-  const RX = 7.70, RW = 5.20;
-
-  // カード1: 仕様策定の工夫
-  const C1Y = LY, C1H = 2.55;
-  accentCard(s, RX, C1Y, RW, C1H, C.navyMid);
-  s.addText('仕様策定の工夫', { x: RX+0.22, y: C1Y+0.10, w: RW-0.30, h: 0.36, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy });
-  s.addShape(pptx.ShapeType.line, { x: RX+0.22, y: C1Y+0.50, w: RW-0.44, h: 0, line: { color: C.navyLine, width: 0.5 } });
-  s.addText('自分がクライアントの立場に立ち、ChatGPTと対話しながら仕様書を策定した。ユーザー視点で欲しい機能を洗い出し、技術要件に落とし込む作業を事前に行ったことで、開発の方向性がブレにくくなった。', {
-    x: RX+0.22, y: C1Y+0.60, w: RW-0.44, h: C1H-0.70,
-    fontFace: F.gothic, fontSize: 10, color: C.textBody, wrap: true,
-  });
-
-  // カード2: スコープクリープと学び
-  const C2Y = C1Y + C1H + 0.18, C2H = LH - C1H - 0.18;
-  accentCard(s, RX, C2Y, RW, C2H, 'C8102E');
-  s.addText('スコープクリープと反省点', { x: RX+0.22, y: C2Y+0.10, w: RW-0.30, h: 0.36, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy });
-  s.addShape(pptx.ShapeType.line, { x: RX+0.22, y: C2Y+0.50, w: RW-0.44, h: 0, line: { color: C.navyLine, width: 0.5 } });
-  s.addText('開発が進むにつれ「この機能も追加したい」が増え続け、当初の想定より完成が大幅に遅れた。仕様書の段階でMust / Want を厳密に切り分け、スコープを固めてから着手すべきだった。\n\nまた、使用するAPIの選定をAIの提案にそのまま従ってしまい、実際に試して初めて「無料枠の廃止」「CORS制約」「URLの有効期限」などの制約に気づくケースが多く、遠回りになった。設計段階で公式ドキュメントや利用規約を自分で調べてから採用を決めるべきだった。', {
-    x: RX+0.22, y: C2Y+0.60, w: RW-0.44, h: C2H-0.70,
-    fontFace: F.gothic, fontSize: 10, color: C.textBody, wrap: true,
+    s.addShape(pptx.ShapeType.rect, { x: RX+0.22, y: ay, w: 1.90, h: 0.24, fill: { color: C.navyMid }, line: { type: 'none' } });
+    s.addText(from, { x: RX+0.22, y: ay, w: 1.90, h: 0.24, fontFace: F.gothic, fontSize: 8.5, bold: true, color: C.textWhite, align: 'center', valign: 'middle' });
+    s.addText('→', { x: RX+2.18, y: ay-0.02, w: 0.28, h: 0.28, fontFace: F.gothic, fontSize: 11, bold: true, color: C.navy });
+    s.addText(to, { x: RX+2.50, y: ay, w: RW-2.70, h: 0.24, fontFace: F.gothic, fontSize: 9.5, bold: true, color: C.navy, valign: 'middle' });
+    s.addText(body, { x: RX+0.22, y: ay+0.28, w: RW-0.44, h: 0.82, fontFace: F.gothic, fontSize: 9, color: C.textBody, wrap: true });
   });
 }
 
-// ============================================================
-// スライド 11: セキュリティ対策
-// ============================================================
-{
-  const s = pptx.addSlide();
-  s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 7.5, fill: { color: C.bg }, line: { type: 'none' } });
-  header(s, '本番運用を意識したセキュリティ監査と対策を自主的に実施', 11);
-
-  s.addText('個人開発でも本番環境に公開するからには攻撃リスクがある。Claude によるセキュリティ診断を自主的に実施し、OWASP Top 10 の観点から脆弱性を洗い出して優先度順にすべて修正・デプロイした。', {
-    x: 0.45, y: 0.85, w: 12.43, h: 0.40,
-    fontFace: F.gothic, fontSize: 11, color: C.textBody, wrap: true,
-  });
-
-  const LX2 = 0.45, CX2 = 4.60, RX2 = 8.75;
-  const CW2 = 3.95, CH2 = 2.68, Y1 = 1.38, Y2 = 4.18;
-
-  const cards = [
-    { x: LX2, y: Y1, bar: 'C8102E', badge: '高', title: '不要コードの削除',   body: '【問題】開発中に追加した /api/debug-spotify が本番に残存。このエンドポイントにアクセスするだけでSpotify API認証情報の設定状況が外部から確認でき、攻撃者への情報提供になっていた。\n\n【対応】デバッグエンドポイントを完全削除。関連するSpotifyライブラリのコードも全て除去した。' },
-    { x: LX2, y: Y2, bar: 'C8102E', badge: '高', title: '入力バリデーション',  body: '【問題】全APIに入力チェックなし。悪意あるリクエストで外部APIクォータを大量消費するDoS攻撃が可能だった。\n\n【対応】5エンドポイントに上限を追加: /api/search クエリ200文字、/api/similar タイトル300文字・除外リスト500件、/api/preview 数値IDのみ許可（正規表現）' },
-    { x: CX2, y: Y1, bar: C.navyMid, badge: '中', title: 'セキュリティヘッダー', body: '【問題】HTTPレスポンスにセキュリティヘッダーが未設定。クリックジャッキング・MIME偽装・XSS等の攻撃に無防備だった。\n\n【対応】next.config.ts に 6 種追加:\n· X-Frame-Options: DENY\n· X-Content-Type-Options: nosniff\n· X-XSS-Protection: 1; mode=block\n· HSTS・Referrer-Policy・Permissions-Policy' },
-    { x: CX2, y: Y2, bar: C.navyMid, badge: '中', title: 'エラー情報漏洩の防止', body: '【問題】/api/chat-filter のエラーレスポンスに Gemini API の生レスポンステキスト（最大200文字）が含まれていた。内部のプロンプト設計やエラー詳細が外部から参照できる状態だった。\n\n【対応】エラー時はサーバーログにのみ詳細を記録し、クライアントには汎用メッセージのみ返却するよう修正。' },
-  ];
-
-  cards.forEach(({ x, y, bar, badge, title, body }) => {
-    accentCard(s, x, y, CW2, CH2, bar);
-    s.addShape(pptx.ShapeType.rect, { x, y, w: 0.75, h: 0.32, fill: { color: bar }, line: { type: 'none' } });
-    s.addText(badge, { x, y, w: 0.75, h: 0.32, fontFace: F.gothic, fontSize: 9, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle' });
-    s.addText(title, { x: x+0.85, y: y+0.04, w: CW2-0.95, h: 0.28, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy });
-    s.addShape(pptx.ShapeType.line, { x: x+0.15, y: y+0.38, w: CW2-0.30, h: 0, line: { color: C.border, width: 0.5 } });
-    s.addText(body, { x: x+0.15, y: y+0.48, w: CW2-0.30, h: CH2-0.58, fontFace: F.gothic, fontSize: 9.5, color: C.textBody, wrap: true });
-  });
-
-  // 右カラム（縦長1枚）: x=RX2 y=Y1 w=CW2 h=Y2+CH2-Y1=5.48
-  const RCH = Y2 + CH2 - Y1;
-  accentCard(s, RX2, Y1, CW2, RCH, C.navyLine);
-  s.addShape(pptx.ShapeType.rect, { x: RX2, y: Y1, w: 0.75, h: 0.32, fill: { color: C.navyLine }, line: { type: 'none' } });
-  s.addText('中', { x: RX2, y: Y1, w: 0.75, h: 0.32, fontFace: F.gothic, fontSize: 9, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle' });
-  s.addText('YouTube API ── OAuth 未公開による意図的アクセス制限', { x: RX2+0.85, y: Y1+0.04, w: CW2-0.95, h: 0.28, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy });
-  s.addShape(pptx.ShapeType.line, { x: RX2+0.15, y: Y1+0.38, w: CW2-0.30, h: 0, line: { color: C.border, width: 0.5 } });
-  s.addText('【現状】Google OAuth アプリを未公開（テスト中）のため、YouTube プレイリスト書き出し機能は Google Cloud Console でテストユーザーに登録したアカウントのみ使用可能。\n\n【理由】YouTube Data API の write スコープ（プレイリスト作成・追加）は Google による OAuth アプリ審査が必要。審査前は「このアプリは Google の確認を受けていません」という警告が表示され、一般ユーザーはアクセスを拒否される。\n\n【判断】機能の実装は完了。一般公開に向けた Google への OAuth 審査申請を今後予定。現時点では意図的にテストユーザー限定で運用し、不特定多数によるクォータ消費を防いでいる。', {
-    x: RX2+0.15, y: Y1+0.48, w: CW2-0.30, h: RCH-0.58,
-    fontFace: F.gothic, fontSize: 9.5, color: C.textBody, wrap: true,
-  });
-
-}
 
 // ============================================================
 // スライド 12: まとめ
@@ -873,18 +889,15 @@ function accentCard(slide, x, y, w, h, barColor) {
 {
   const s = pptx.addSlide();
   s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 7.5, fill: { color: C.bg }, line: { type: 'none' } });
-  header(s, 'まとめ', 12);
+  header(s, 'まとめ', 11);
 
-  // ── 今回の気づき（全面） ──
-  // header底 ≈ 0.85, URLバー 6.80
-  // タイトルバー y=1.84, h=0.32
-  // 2カード y=2.31, h=3.50 → 底5.81, URLバー6.80
+  // ── 今回の気づき（3カラム）──
   const KY = 1.84;
   s.addShape(pptx.ShapeType.rect, { x: 0.45, y: KY, w: 12.43, h: 0.32, fill: { color: C.panel }, line: { color: C.navyLine, width: 0.5 } });
   s.addText('今回の気づき', { x: 0.60, y: KY, w: 4.0, h: 0.32, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy, valign: 'middle' });
 
-  const kCardW = (12.43 - 0.20) / 2; // 6.115
-  const kCardH = 3.50;
+  const kCardW = (12.43 - 0.40) / 3; // ≈ 4.01
+  const kCardH = 4.30;
   const kCards = [
     {
       num: '①', title: 'AIは実装を加速させるが、設計の判断は人間が持つべき',
@@ -894,15 +907,19 @@ function accentCard(slide, x, y, w, h, barColor) {
       num: '②', title: '授業では習わなかった領域を実践で習得した',
       body: 'Vercel での本番環境へのデプロイ・GitHub と連携した開発フロー・iOS の Safe Area や PWA 対応など、授業では習わなかった実装上のハマりどころを実際に経験した。「なぜ動かないか」を調べる力がついた。',
     },
+    {
+      num: '③', title: 'セキュリティは AI 任せが限界、自分で学ぶ必要がある',
+      body: '今回のセキュリティ対策は Claude による診断に頼った部分が大きく、「なぜ危険か」を自分の言葉で説明できるレベルには達していない。\n\n本番環境として運用するなら、SQL インジェクション・XSS・CORS・認証の仕組みなどを体系的に自分で学ぶ必要があると強く感じた。AI は問題を発見してくれるが、理解と判断は自分が持つべきだという課題が残った。',
+    },
   ];
   kCards.forEach(({ num, title, body }, i) => {
     const kx = 0.45 + i * (kCardW + 0.20);
     const ky = 2.31;
     s.addShape(pptx.ShapeType.rect, { x: kx, y: ky, w: kCardW, h: kCardH, fill: { color: C.card }, line: { color: C.border, width: 0.5 } });
     s.addShape(pptx.ShapeType.rect, { x: kx, y: ky, w: kCardW, h: 0.08, fill: { color: C.navyMid }, line: { type: 'none' } });
-    s.addText(num + '  ' + title, { x: kx+0.18, y: ky+0.16, w: kCardW-0.32, h: 0.38, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy, wrap: true });
-    s.addShape(pptx.ShapeType.line, { x: kx+0.18, y: ky+0.64, w: kCardW-0.36, h: 0, line: { color: C.border, width: 0.4 } });
-    s.addText(body, { x: kx+0.18, y: ky+0.76, w: kCardW-0.32, h: kCardH-0.88, fontFace: F.gothic, fontSize: 11, color: C.textBody, wrap: true });
+    s.addText(num + '  ' + title, { x: kx+0.18, y: ky+0.16, w: kCardW-0.32, h: 0.60, fontFace: F.mincho, fontSize: 12, bold: true, color: C.navy, wrap: true });
+    s.addShape(pptx.ShapeType.line, { x: kx+0.18, y: ky+0.84, w: kCardW-0.36, h: 0, line: { color: C.border, width: 0.4 } });
+    s.addText(body, { x: kx+0.18, y: ky+0.96, w: kCardW-0.32, h: kCardH-1.08, fontFace: F.gothic, fontSize: 11, color: C.textBody, wrap: true, lineSpacingMultiple: 1.3 });
   });
 
   // URL バー y=6.80
